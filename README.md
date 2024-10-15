@@ -1,1 +1,1 @@
-# Student-Researh-Repository
+# Student-Research-Repository
