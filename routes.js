@@ -1,7 +1,6 @@
 const express = require('express')
 const app = express()
-//--------------------------------USER-STUDENT ROUTES----------------------------------------
-//-----LOGIN/REGISTER-----
+//-----------------------------USERS LOGIN/LOGOUT ROUTES-------------------------------------
 //User Registration
 app.post('/register', (req, res) => {
 });
@@ -9,6 +8,8 @@ app.post('/register', (req, res) => {
 //User Login
 app.post('/login', (req, res) => {
 });
+
+//--------------------------------USER-STUDENT ROUTES----------------------------------------
 //User Logout
 app.post('/student/logout', (req, res) => {
 });
@@ -79,9 +80,84 @@ app.put('/student/profile/picture', (req, res) => {
 });
 //--------------------------------USER-INSTRUCTOR ROUTES----------------------------------------
 
+
+//--------------------------------USER-ADVISER ROUTES-------------------------------------------
+
+
 //--------------------------------ADMIN ROUTES--------------------------------------------------
+//User Logout
+app.post('/admin/logout', (req, res) => {
+});
 
+//-----DASHBOARD-----
+//view Admin Dashboard
+app.get('/admin/dashboard', (req, res) => {
+});
 
+//-----MANAGE ACCOUNTS-----
+//view all user accounts
+app.get('/admin/accounts', (req, res) => {
+});
 
+//view a specific user account
+app.put('/admin/accounts/:userId', (req, res) => {
+});
+  
+//archive a specific user account
+app.get('/admin/accounts/archive/:userId', (req, res) => {
+});
+  
+//restore a specific archived user account
+app.put('/admin/accounts/restore/:userId', (req, res) => {
+});
+
+//-----USER ACTIVITY-----
+//view user activity logs
+app.get('/admin/activity', (req, res) => {
+});
+
+//-----GENERATE REPORTS-----
+//view report statistics
+app.get('/admin/reports', (req, res) => {
+});
+
+//print reports
+app.get('/admin/reports/print', (req, res) => {
+});
+
+//-----RESEARCH TABLE-----
+//view all published research papers
+app.get('/admin/research', (req, res) => {
+});
+  
+//delete a specific published research paper
+app.delete('/admin/research/:researchId', (req, res) => {
+});
+
+//view all pending research submissions
+app.get('/admin/research/pending', (req, res) => {
+});
+  
+//approve a specific pending research submission
+app.put('/admin/research/approve/:submissionId', (req, res) => {
+});
+  
+//reject a specific pending research submission
+app.put('/admin/research/reject/:submissionId', (req, res) => {
+});
+
+//-----ROLE REQUESTS------
+//View all user role requests
+app.get('/admin/role-requests', (req, res) => {
+});
+
+//Accept a specific user role request
+app.put('/admin/role-requests/accept/:requestId', (req, res) => {
+});
+  
+// Reject a specific user role request
+app.put('/admin/role-requests/reject/:requestId', (req, res) => {
+});
+  
 //------------------------------------------------------------------------
 app.listen(3000)
