@@ -1,5 +1,7 @@
 const express = require('express')
 const app = express()
+app.use(express.json());
+
 //-----------------------------USERS LOGIN/LOGOUT ROUTES-------------------------------------
 //User Registration
 app.post('/register', (req, res) => {
@@ -237,11 +239,11 @@ app.get('/admin/accounts', (req, res) => {
 });
 
 //view a specific user account
-app.put('/admin/accounts/:userId', (req, res) => {
+app.get('/admin/accounts/:userId', (req, res) => {
 });
   
 //archive a specific user account
-app.get('/admin/accounts/archive/:userId', (req, res) => {
+app.put('/admin/accounts/archive/:userId', (req, res) => {
 });
   
 //restore a specific archived user account
