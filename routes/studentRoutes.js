@@ -1,6 +1,10 @@
 const express = require('express')
 const studentRoutes = express.Router();
-const {addResearch} = require("../services/studentServices");
+const { addResearch, editResearch, deleteResearch, toggleSubmissionStatus } = require("../services/studentServices");
+
+//User Logout
+studentRoutes.post('/logout', (req, res) => {
+}); 
 
 //-----MY_RESEARCHES-----
 //submit a new research paper
@@ -14,24 +18,50 @@ studentRoutes.post('/myResearch', (req, res) => {
         res.status(500).json({ message: "An error occurred while adding research." });
     }
 });
-/*
-//edit a pending research paper
+
+// Edit a pending research paper
 studentRoutes.put('/myResearch/:researchID', (req, res) => {
+  const { researchID } = req.params;
+  const updatedResearch = req.body;
+
+  // Check if researchID is being sent in the request body
+  if (updatedResearch.researchID) {
+      return res.status(400).json({ message: "researchID cannot be edited." });
+  }
+
+  try {
+      const msg = editResearch(researchID, updatedResearch);
+      res.status(200).json(msg); // Send a 200 status for successful update
+  } catch (error) {
+      console.error(error);
+      res.status(404).json({ message: error.message }); // Handle not found error
+  }
 });
 
-//delete a pending research project or paper
+
+// Delete a pending research project or paper
 studentRoutes.delete('/myResearch/:researchID', (req, res) => {
+  const { researchID } = req.params;
+
+  try {
+      const msg = deleteResearch(researchID);
+      res.status(200).json(msg); // Send a 200 status for successful deletion
+  } catch (error) {
+      console.error(error); // Log the error
+      res.status(500).json({ message: "An error occurred while deleting research." });
+  }
 });
 
-//unsubmit a research paper (e.g., withdraw from review)
-studentRoutes.put('/myResearch/:researchID/unsubmit', (req, res) => {
-});
-  
-//resubmit a research paper (e.g., after revision or withdrawal)
-  studentRoutes.put('/myResearch/:researchID/resubmit', (req, res) => {
-});
-//User Logout
-studentRoutes.post('/logout', (req, res) => {
+// Toggle submission status
+studentRoutes.put('/myResearch/:researchID/toggleSubmission', (req, res) => {
+  const { researchID } = req.params;
+  try {
+      const msg = toggleSubmissionStatus(researchID); // Call the service to toggle the status
+      res.status(200).json(msg);
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "An error occurred while toggling the submission status." });
+  }
 });
 
 //-----RESEARCH_REPOSITORY-----
@@ -77,5 +107,5 @@ studentRoutes.put('/profile', (req, res) => {
 //add or change the user's profile picture
 studentRoutes.put('/profile/picture', (req, res) => {
 });
-*/
+
 module.exports = studentRoutes;
