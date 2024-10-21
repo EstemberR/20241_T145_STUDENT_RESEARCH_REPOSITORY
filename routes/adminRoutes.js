@@ -74,3 +74,5 @@ adminRoutes.put('/role-requests/accept/:requestId', (req, res) => {
 // Reject a specific user role request
 adminRoutes.put('/role-requests/reject/:requestId', (req, res) => {
 });
+
+module.exports = adminRoutes;

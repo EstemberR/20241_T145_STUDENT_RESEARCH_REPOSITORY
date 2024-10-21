@@ -2,6 +2,12 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const studentRoutes = require('./routes/studentRoutes'); 
+const adminRoutes = require('./routes/adminRoutes'); 
+const panelRoutes = require('./routes/panelRoutes'); 
+const instructorRoutes = require('./routes/instructorRoutes'); 
+const adviserRoutes = require('./routes/adviserRoutes'); 
+
+
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
