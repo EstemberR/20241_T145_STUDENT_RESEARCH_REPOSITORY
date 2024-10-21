@@ -1,0 +1,101 @@
+[
+  {
+    "researchid": "R001",
+    "title": "AI-Driven Smart Parking Management System",
+    "authors": [
+      "John Doe",
+      "Jane Smith"
+    ],
+    "date_published": "2023-01-15"
+  },
+  {
+    "researchid": "R002",
+    "title": "Impact of IoT on Vehicle Emission Monitoring",
+    "authors": [
+      "Alice Johnson",
+      "Mark Lee"
+    ],
+    "date_published": "2023-02-10"
+  },
+  {
+    "researchid": "R003",
+    "title": "Enhanced License Plate Recognition Using CNN",
+    "authors": [
+      "Emily Davis",
+      "Michael Brown"
+    ],
+    "date_published": "2023-03-05"
+  },
+  {
+    "researchid": "R004",
+    "title": "Challenges in Urban Parking Systems",
+    "authors": [
+      "Sarah Wilson",
+      "David Martinez"
+    ],
+    "date_published": "2023-04-20"
+  },
+  {
+    "researchid": "R005",
+    "title": "Integrating AI with Smart City Infrastructure",
+    "authors": [
+      "Jessica Taylor",
+      "Daniel Anderson"
+    ],
+    "date_published": "2023-05-30"
+  },
+  {
+    "researchid": "R006",
+    "title": "Real-Time Data Analytics for Traffic Management",
+    "authors": [
+      "James White",
+      "Laura Green"
+    ],
+    "date_published": "2023-06-15"
+  },
+  {
+    "researchid": "R007",
+    "title": "The Future of Autonomous Vehicles",
+    "authors": [
+      "Robert Harris",
+      "Megan Clark"
+    ],
+    "date_published": "2023-07-22"
+  },
+  {
+    "researchid": "R008",
+    "title": "Sustainable Solutions for Urban Parking",
+    "authors": [
+      "Thomas Lewis",
+      "Patricia Hall"
+    ],
+    "date_published": "2023-08-11"
+  },
+  {
+    "researchid": "R009",
+    "title": "Blockchain for Enhanced Vehicle Security",
+    "authors": [
+      "Steven Young",
+      "Nancy King"
+    ],
+    "date_published": "2023-09-04"
+  },
+  {
+    "researchid": "R010",
+    "title": "Analyzing Traffic Patterns with Machine Learning",
+    "authors": [
+      "Jessica Lopez",
+      "Kevin Wright"
+    ],
+    "date_published": "2023-10-01"
+  },
+  {
+    "researchid": "111",
+    "title": "Next-Generation Parking Solutions",
+    "authors": [
+      "Alice Walker",
+      "John Smith"
+    ],
+    "date_published": "2024-01-05"
+  }
+]

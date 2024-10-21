@@ -1,0 +1,18 @@
+{
+  "name": "20241_t145_student-research-repository",
+  "version": "1.0.0",
+  "description": "",
+  "main": "routes.js",
+  "scripts": {
+    "start": "node routes.js",
+    "dev": "nodemon routes.js"
+  },
+  "author": "Nezer Gayao",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
