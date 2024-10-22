@@ -1,130 +1,214 @@
-[
-  {
-    "researchID": "0001",
-    "title": "AI-Driven Smart Parking Management System",
-    "authors": [
-      "John Doe",
-      "Jane Smith"
-    ],
-    "date_published": "2023-01-15",
-    "status": "submitted",
-    "abstract": "This research presents an AI-driven approach to optimize parking management systems in urban areas."
-  },
-  {
-    "researchID": "0002",
-    "title": "Impact of IoT on Vehicle Emission Monitoring",
-    "authors": [
-      "Alice Johnson",
-      "Mark Lee"
-    ],
-    "date_published": "2023-02-10",
-    "status": "submitted",
-    "abstract": "This paper investigates the role of IoT technology in monitoring and reducing vehicle emissions."
-  },
-  {
-    "researchID": "0003",
-    "title": "Enhanced License Plate Recognition Using CNN",
-    "authors": [
-      "Emily Davis",
-      "Michael Brown"
-    ],
-    "date_published": "2023-03-05",
-    "status": "submitted",
-    "abstract": "This study enhances license plate recognition systems using Convolutional Neural Networks (CNN)."
-  },
-  {
-    "researchID": "0004",
-    "title": "Challenges in Urban Parking Systems",
-    "authors": [
-      "Sarah Wilson",
-      "David Martinez"
-    ],
-    "date_published": "2023-04-20",
-    "status": "submitted",
-    "abstract": "The research highlights challenges faced by urban parking systems and potential solutions."
-  },
-  {
-    "researchID": "0005",
-    "title": "Integrating AI with Smart City Infrastructure",
-    "authors": [
-      "Jessica Taylor",
-      "Daniel Anderson"
-    ],
-    "date_published": "2023-05-30",
-    "status": "submitted",
-    "abstract": "This paper explores the integration of AI technologies within smart city frameworks."
-  },
-  {
-    "researchID": "0006",
-    "title": "Real-Time Data Analytics for Traffic Management",
-    "authors": [
-      "James White",
-      "Laura Green"
-    ],
-    "date_published": "2023-06-15",
-    "status": "submitted",
-    "abstract": "This research focuses on real-time data analytics for improving traffic management systems."
-  },
-  {
-    "researchID": "0007",
-    "title": "The Future of Autonomous Vehicles",
-    "authors": [
-      "Robert Harris",
-      "Megan Clark"
-    ],
-    "date_published": "2023-07-22",
-    "status": "submitted",
-    "abstract": "An exploration of the advancements and future prospects of autonomous vehicle technology."
-  },
-  {
-    "researchID": "0008",
-    "title": "Sustainable Solutions for Urban Parking",
-    "authors": [
-      "Thomas Lewis",
-      "Patricia Hall"
-    ],
-    "date_published": "2023-08-11",
-    "status": "submitted",
-    "abstract": "This study provides sustainable solutions for urban parking challenges."
-  },
-  {
-    "researchID": "0009",
-    "title": "Blockchain for Enhanced Vehicle Security",
-    "authors": [
-      "Steven Young",
-      "Nancy King"
-    ],
-    "date_published": "2023-09-04",
-    "status": "submitted",
-    "abstract": "The potential of blockchain technology to enhance vehicle security is investigated in this research."
-  },
-  {
-    "researchID": "0010",
-    "title": "Analyzing Traffic Patterns with Machine Learning",
-    "authors": [
-      "Jessica Lopez",
-      "Kevin Wright"
-    ],
-    "date_published": "2023-10-01",
-    "status": "submitted",
-    "abstract": "This research analyzes traffic patterns using machine learning algorithms."
-  },
-  {
-    "researchID": "0011",
-    "title": "Next-Generation Parking Solutions",
-    "authors": [
-      "Alice Walker",
-      "John Smith",
-      "New Author"
-    ],
-    "date_published": "2024-01-15",
-    "status": "submitted",
-    "abstract": "This research explores innovative solutions for next-generation parking systems, incorporating AI and IoT technologies."
-  },
-  {
-    "researchID": 10000
-  },
-  {
-    "id": 500
-  }
-]
+{
+  "studentResearches": [
+    {
+      "researchID": "0001",
+      "title": "SPACESHIP NI KOKEY",
+      "authors": "nigga",
+      "date_published": "2023-01-15",
+      "status": "unsent",
+      "abstract": "This research presents an AI-driven approach to optimize parking management systems in urban areas."
+    },
+    {
+      "researchID": "0002",
+      "title": "Impact of IoT on Vehicle Emission Monitoring",
+      "authors": [
+        "Alice Johnson",
+        "Mark Lee"
+      ],
+      "date_published": "2023-02-10",
+      "status": "submitted",
+      "abstract": "This paper investigates the role of IoT technology in monitoring and reducing vehicle emissions."
+    },
+    {
+      "researchID": "0003",
+      "title": "Enhanced License Plate Recognition Using CNN",
+      "authors": [
+        "Emily Davis",
+        "Michael Brown"
+      ],
+      "date_published": "2023-03-05",
+      "status": "submitted",
+      "abstract": "This study enhances license plate recognition systems using Convolutional Neural Networks (CNN)."
+    },
+    {
+      "researchID": "0004",
+      "title": "Challenges in Urban Parking Systems",
+      "authors": [
+        "Sarah Wilson",
+        "David Martinez"
+      ],
+      "date_published": "2023-04-20",
+      "status": "submitted",
+      "abstract": "The research highlights challenges faced by urban parking systems and potential solutions."
+    },
+    {
+      "researchID": "0005",
+      "title": "Integrating AI with Smart City Infrastructure",
+      "authors": [
+        "Jessica Taylor",
+        "Daniel Anderson"
+      ],
+      "date_published": "2023-05-30",
+      "status": "submitted",
+      "abstract": "This paper explores the integration of AI technologies within smart city frameworks."
+    },
+    {
+      "researchID": "0006",
+      "title": "Real-Time Data Analytics for Traffic Management",
+      "authors": [
+        "James White",
+        "Laura Green"
+      ],
+      "date_published": "2023-06-15",
+      "status": "submitted",
+      "abstract": "This research focuses on real-time data analytics for improving traffic management systems."
+    },
+    {
+      "researchID": "0007",
+      "title": "The Future of Autonomous Vehicles",
+      "authors": [
+        "Robert Harris",
+        "Megan Clark"
+      ],
+      "date_published": "2023-07-22",
+      "status": "submitted",
+      "abstract": "An exploration of the advancements and future prospects of autonomous vehicle technology."
+    },
+    {
+      "researchID": "0008",
+      "title": "Sustainable Solutions for Urban Parking",
+      "authors": [
+        "Thomas Lewis",
+        "Patricia Hall"
+      ],
+      "date_published": "2023-08-11",
+      "status": "submitted",
+      "abstract": "This study provides sustainable solutions for urban parking challenges."
+    },
+    {
+      "researchID": "0009",
+      "title": "Blockchain for Enhanced Vehicle Security",
+      "authors": [
+        "Steven Young",
+        "Nancy King"
+      ],
+      "date_published": "2023-09-04",
+      "status": "unsubmitted",
+      "abstract": "The potential of blockchain technology to enhance vehicle security is investigated in this research."
+    },
+    {
+      "id": 100000
+    },
+    {
+      "id": "1"
+    }
+  ],
+  "repositoryResearches": [
+    {
+      "researchID": "00012",
+      "title": "Cloud-Based Traffic Monitoring Systems",
+      "authors": [
+        "Emily Johnson",
+        "Michael Wilson"
+      ],
+      "date_published": "2024-02-01",
+      "status": "approved",
+      "abstract": "This paper discusses the implementation of cloud-based systems for traffic monitoring and data analysis."
+    },
+    {
+      "researchID": "00013",
+      "title": "Utilizing Big Data for Smart Cities",
+      "authors": [
+        "James Anderson",
+        "Olivia Brown"
+      ],
+      "date_published": "2024-02-15",
+      "status": "approved",
+      "abstract": "The research explores how big data can be leveraged to enhance smart city functionalities."
+    },
+    {
+      "researchID": "00014",
+      "title": "Innovative Approaches to Urban Mobility",
+      "authors": [
+        "Mia White",
+        "Daniel Johnson"
+      ],
+      "date_published": "2024-03-01",
+      "status": "approved",
+      "abstract": "This study presents innovative solutions to improve urban mobility and transportation."
+    },
+    {
+      "researchID": "00015",
+      "title": "Integrating Renewable Energy in Urban Planning",
+      "authors": [
+        "Sophia Harris",
+        "William Green"
+      ],
+      "date_published": "2024-03-15",
+      "status": "approved",
+      "abstract": "The paper investigates the integration of renewable energy sources in urban planning."
+    },
+    {
+      "researchID": "00016",
+      "title": "Advancements in Vehicle-to-Everything Communication",
+      "authors": [
+        "Emma Lewis",
+        "Jacob Martinez"
+      ],
+      "date_published": "2024-04-01",
+      "status": "approved",
+      "abstract": "This research discusses advancements in vehicle-to-everything (V2X) communication technology."
+    },
+    {
+      "researchID": "00017",
+      "title": "Data-Driven Solutions for Urban Traffic Congestion",
+      "authors": [
+        "Liam Wilson",
+        "Ava Clark"
+      ],
+      "date_published": "2024-04-15",
+      "status": "approved",
+      "abstract": "The study proposes data-driven solutions to alleviate urban traffic congestion."
+    },
+    {
+      "researchID": "00018",
+      "title": "AI Techniques for Smart Waste Management",
+      "authors": [
+        "Isabella Young",
+        "James Brown"
+      ],
+      "date_published": "2024-05-01",
+      "status": "approved",
+      "abstract": "This research focuses on AI techniques that improve waste management in urban areas."
+    },
+    {
+      "researchID": "00019",
+      "title": "Future Trends in Autonomous Transportation",
+      "authors": [
+        "Oliver King",
+        "Charlotte Davis"
+      ],
+      "date_published": "2024-05-15",
+      "status": "approved",
+      "abstract": "An exploration of future trends and technologies in autonomous transportation systems."
+    },
+    {
+      "researchID": "00020",
+      "title": "Role of AI in Smart Water Management",
+      "authors": [
+        "Aiden Smith",
+        "Ella Johnson"
+      ],
+      "date_published": "2024-06-01",
+      "status": "approved",
+      "abstract": "This paper discusses the role of AI in improving water management systems."
+    }
+  ],
+  "bookmarkedResearches": [],
+  "userProfileData": [
+    {
+      "userID": "100",
+      "name": "hey"
+    }
+  ]
+}
