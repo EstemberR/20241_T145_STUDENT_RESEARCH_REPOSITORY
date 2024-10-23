@@ -81,6 +81,19 @@ studentRoutes.put('/myResearch/:researchID/toggleSubmission', (req, res) => {
     }
 });
 
+//ADD RESEARCH TO BOOKMARKS section
+studentRoutes.post('/repository/:researchID/bookmark', (req, res) => {
+    const { researchID } = req.params;
+    
+    try {
+        const msg = addBookmark(researchID);
+        res.status(201).json(msg); // Send a 201 status for successful bookmark addition
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred while adding the bookmark." });
+    }
+});
+
 //-----RESEARCH_REPOSITORY----- 
 // View research repository
 studentRoutes.get('/repository', (req, res) => {
@@ -108,10 +121,9 @@ studentRoutes.get('/repository/:researchID', (req, res) => {
 });
 
 // Bookmark the selected research
-studentRoutes.post('/repository/:researchID/bookmark', (req, res) => {
+studentRoutes.post('/repository/:researchID/bookmarks', (req, res) => {
     const researchID = req.params.researchID;
-    // Call the bookmark function from studentServices
-    studentServices.bookmarkResearch(researchID);
+    studentServices.addBookmark(researchID);
     res.json({ message: "Research bookmarked successfully!" });
 });
 
