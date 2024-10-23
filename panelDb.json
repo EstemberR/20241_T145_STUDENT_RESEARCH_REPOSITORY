@@ -1,0 +1,60 @@
+{
+    "studentResearches": [
+      {
+        "researchID": "R001",
+        "title": "Recycling Technologies and Sustainability",
+        "authors": ["Jane Doe", "John Smith"],
+        "departmentId": "D001",
+        "status": "submitted",
+        "date_submitted": "2024-09-21",
+        "approved_date": null,
+        "feedback": [
+          {
+            "feedbackID": "FB001",
+            "comment": "Great research topic! Please include more citations.",
+            "date": "2024-09-25",
+            "instructor": "Dr. Andrew Michaels"
+          }
+        ]
+      },
+      {
+        "researchID": "R002",
+        "title": "The Impact of IoT on Smart Cities",
+        "authors": ["Alice Green"],
+        "departmentId": "D002",
+        "status": "approved",
+        "date_submitted": "2024-09-15",
+        "approved_date": "2024-09-30",
+        "feedback": [
+          {
+            "feedbackID": "FB002",
+            "comment": "Good work, but elaborate on the practical applications.",
+            "date": "2024-09-20",
+            "instructor": "Dr. Emily Johnson"
+          }
+        ]
+      }
+    ],
+    "departments": [
+      {
+        "departmentId": "D001",
+        "name": "Environmental Science",
+        "head": "Dr. Clara White",
+        "location": "Building A, Room 101"
+      },
+      {
+        "departmentId": "D002",
+        "name": "Computer Science",
+        "head": "Dr. Peter Clark",
+        "location": "Building B, Room 202"
+      }
+    ],
+    "userProfile": {
+      "userID": "U001",
+      "name": "Dr. Sarah Lee",
+      "email": "sarah.lee@example.com",
+      "role": "Instructor",
+      "picture": "/images/sarah_lee_profile.png"
+    }
+  }
+  
