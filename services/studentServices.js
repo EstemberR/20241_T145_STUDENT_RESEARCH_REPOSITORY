@@ -142,7 +142,7 @@
 
     // Add a research paper to bookmarks
 function addBookmark(researchID) {
-    const data = readData(); // Read existing data
+    const data = readData(); // Read existing datas
     const repositoryResearches = data.repositoryResearches;
     const bookmarkedResearches = data.bookmarkedResearches;
 

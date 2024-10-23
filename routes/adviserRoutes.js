@@ -82,6 +82,7 @@ adviserRoutes.get('/submissions', (req, res) =>{
   });
   
   //edit the user's profile information
+<<<<<<< HEAD
   adviserRoutes.put('/profile/picture', (req, res) => {
     const userId = req.user.id;
     const { pictureUrl } = req.body;
@@ -91,6 +92,9 @@ adviserRoutes.get('/submissions', (req, res) =>{
     } catch (error) {
         res.status(404).json({ error: error.message });
     }
+=======
+  adviserRoutes.put('/profile', (req, res) => {
+>>>>>>> 61a53a61b312d800e1fbd815a07d1fbfbf90d430
   });
   
   module.exports = adviserRoutes;
