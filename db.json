@@ -1,14 +1,6 @@
 {
   "studentResearches": [
     {
-      "researchID": "0001",
-      "title": "SPACESHIP NI KOKEY",
-      "authors": "nigga",
-      "date_published": "2023-01-15",
-      "status": "unsent",
-      "abstract": "This research presents an AI-driven approach to optimize parking management systems in urban areas."
-    },
-    {
       "researchID": "0002",
       "title": "Impact of IoT on Vehicle Emission Monitoring",
       "authors": [
@@ -16,19 +8,8 @@
         "Mark Lee"
       ],
       "date_published": "2023-02-10",
-      "status": "submitted",
+      "status": "rejected",
       "abstract": "This paper investigates the role of IoT technology in monitoring and reducing vehicle emissions."
-    },
-    {
-      "researchID": "0003",
-      "title": "Enhanced License Plate Recognition Using CNN",
-      "authors": [
-        "Emily Davis",
-        "Michael Brown"
-      ],
-      "date_published": "2023-03-05",
-      "status": "submitted",
-      "abstract": "This study enhances license plate recognition systems using Convolutional Neural Networks (CNN)."
     },
     {
       "researchID": "0004",
@@ -40,17 +21,6 @@
       "date_published": "2023-04-20",
       "status": "submitted",
       "abstract": "The research highlights challenges faced by urban parking systems and potential solutions."
-    },
-    {
-      "researchID": "0005",
-      "title": "Integrating AI with Smart City Infrastructure",
-      "authors": [
-        "Jessica Taylor",
-        "Daniel Anderson"
-      ],
-      "date_published": "2023-05-30",
-      "status": "submitted",
-      "abstract": "This paper explores the integration of AI technologies within smart city frameworks."
     },
     {
       "researchID": "0006",
@@ -104,17 +74,6 @@
     }
   ],
   "repositoryResearches": [
-    {
-      "researchID": "00012",
-      "title": "Cloud-Based Traffic Monitoring Systems",
-      "authors": [
-        "Emily Johnson",
-        "Michael Wilson"
-      ],
-      "date_published": "2024-02-01",
-      "status": "approved",
-      "abstract": "This paper discusses the implementation of cloud-based systems for traffic monitoring and data analysis."
-    },
     {
       "researchID": "00013",
       "title": "Utilizing Big Data for Smart Cities",
@@ -202,6 +161,34 @@
       "date_published": "2024-06-01",
       "status": "approved",
       "abstract": "This paper discusses the role of AI in improving water management systems."
+    },
+    {
+      "title": "Enhanced License Plate Recognition Using CNN",
+      "authors": [
+        "Emily Davis",
+        "Michael Brown"
+      ],
+      "date_published": "2023-03-05",
+      "status": "approved",
+      "abstract": "This study enhances license plate recognition systems using Convolutional Neural Networks (CNN)."
+    },
+    {
+      "title": "SPACESHIP NI KOKEY",
+      "authors": "nigga",
+      "date_published": "2023-01-15",
+      "status": "approved",
+      "abstract": "This research presents an AI-driven approach to optimize parking management systems in urban areas."
+    },
+    {
+      "researchID": "0005",
+      "title": "Integrating AI with Smart City Infrastructure",
+      "authors": [
+        "Jessica Taylor",
+        "Daniel Anderson"
+      ],
+      "date_published": "2023-05-30",
+      "status": "approved",
+      "abstract": "This paper explores the integration of AI technologies within smart city frameworks."
     }
   ],
   "bookmarkedResearches": [],
@@ -210,5 +197,144 @@
       "userID": "100",
       "name": "hey"
     }
-  ]
+  ],
+  "userAccounts": [
+    {
+      "userId": "001",
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "role": "student",
+      "researches": [
+        "Smart Parking System",
+        "AI in Parking Management"
+      ],
+      "isArchived": false
+    },
+    {
+      "userId": "002",
+      "name": "Jane Smith",
+      "email": "jane.smith@example.com",
+      "role": "student",
+      "researches": [
+        "IoT Emission Monitoring",
+        "Vehicle Emission Control"
+      ],
+      "isArchived": false
+    },
+    {
+      "userId": "003",
+      "name": "Robert Brown",
+      "email": "robert.brown@example.com",
+      "role": "student",
+      "researches": [
+        "Machine Learning in Healthcare",
+        "Predictive Analytics"
+      ],
+      "isArchived": false
+    },
+    {
+      "userId": "004",
+      "name": "Emily Clark",
+      "email": "emily.clark@example.com",
+      "role": "student",
+      "researches": [
+        "Blockchain in Supply Chain",
+        "Smart Contracts"
+      ],
+      "isArchived": false
+    },
+    {
+      "userId": "005",
+      "name": "Michael Johnson",
+      "email": "michael.johnson@example.com",
+      "role": "student",
+      "researches": [
+        "Renewable Energy Sources",
+        "Solar Power Innovations"
+      ],
+      "isArchived": false
+    },
+    {
+      "userId": "006",
+      "name": "Jessica Lee",
+      "email": "jessica.lee@example.com",
+      "role": "student",
+      "researches": [
+        "Autonomous Vehicles",
+        "AI in Transportation"
+      ],
+      "isArchived": false
+    },
+    {
+      "userId": "007",
+      "name": "David Wilson",
+      "email": "david.wilson@example.com",
+      "role": "student",
+      "researches": [
+        "Cybersecurity in IoT",
+        "Threat Detection Systems"
+      ],
+      "isArchived": false
+    },
+    {
+      "userId": "008",
+      "name": "Sophia Martinez",
+      "email": "sophia.martinez@example.com",
+      "role": "student",
+      "researches": [
+        "5G Networks",
+        "Edge Computing"
+      ],
+      "isArchived": false
+    },
+    {
+      "userId": "009",
+      "name": "James Taylor",
+      "email": "james.taylor@example.com",
+      "role": "student",
+      "researches": [
+        "Cloud Computing",
+        "Serverless Architecture"
+      ],
+      "isArchived": false
+    },
+    {
+      "userId": "010",
+      "name": "Olivia Garcia",
+      "email": "olivia.garcia@example.com",
+      "role": "student",
+      "researches": [
+        "AI in Education",
+        "Learning Management Systems"
+      ],
+      "isArchived": true
+    }
+  ],
+  "activityData": [
+    {
+      "category": "Students",
+      "count": 100
+    },
+    {
+      "category": "Instructors",
+      "count": 25
+    },
+    {
+      "category": "Panels",
+      "count": 15
+    },
+    {
+      "category": "Advisers",
+      "count": 10
+    },
+    {
+      "category": "archived",
+      "count": 5
+    },
+    {
+      "category": "active",
+      "count": 145
+    }
+  ],
+  "reportData": []
 }

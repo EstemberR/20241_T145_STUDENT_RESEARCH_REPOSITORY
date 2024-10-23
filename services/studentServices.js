@@ -95,7 +95,7 @@
         });
     }
 
-    //function to get bookmarked research PS: KULANG PA GAMAY UG FUNCTION 
+    //function to get bookmarked research 
     function getAllBookmarkedResearches() {
         const data = readData();
         return data.bookmarkedResearches;
@@ -140,6 +140,30 @@
         }
     }
 
+    // Add a research paper to bookmarks
+function addBookmark(researchID) {
+    const data = readData(); // Read existing data
+    const repositoryResearches = data.repositoryResearches;
+    const bookmarkedResearches = data.bookmarkedResearches;
+
+    const research = repositoryResearches.find(item => item.researchID === researchID);
+
+    if (!research) {
+        throw new Error('Research not found in the repository');
+    }
+
+    const isAlreadyBookmarked = bookmarkedResearches.find(item => item.researchID === researchID);
+    if (isAlreadyBookmarked) {
+        throw new Error('Research is already bookmarked');
+    }
+
+    bookmarkedResearches.push(research);
+    writeData(data);
+
+    return { message: "Research bookmarked successfully!" };
+}
+
+
     module.exports = { 
         addResearch, 
         editResearch, 
@@ -153,5 +177,6 @@
         searchResearches,
         removeBookmark,
         getUserProfile,
-        editUserProfile
+        editUserProfile,
+        addBookmark
     };
