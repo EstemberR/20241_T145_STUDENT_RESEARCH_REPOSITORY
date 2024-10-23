@@ -130,19 +130,19 @@ function approveResearchSubmission(researchID) {
     const index = data.studentResearches.findIndex(research => research.researchID === researchID); 
 
     if (index !== -1) {
-        if (data.studentResearches[index].status === 'submitted') {
+        if (data.studentResearches[index].status === 'approved') {
             const approvedResearch = {
                 ...data.studentResearches[index],
-                status: 'approved', 
+                status: 'posted', 
             };
 
             data.repositoryResearches.push(approvedResearch); 
             data.studentResearches.splice(index, 1); 
 
             writeData(data); 
-            return { message: "Research submission approved and transferred to repository successfully!" };
+            return { message: "Research submission posted and transferred to repository successfully!" };
         } else {
-            throw new Error("Research submission cannot be approved because it is not in 'submitted' status."); 
+            throw new Error("Research submission cannot be posted because it is not in 'submitted' status."); 
         }
     } else {
         throw new Error("Research submission not found."); 
@@ -155,16 +155,60 @@ function rejectResearchSubmission(researchID) {
     const index = data.studentResearches.findIndex(research => research.researchID === researchID); 
 
     if (index !== -1) {
-        if (data.studentResearches[index].status === 'submitted') {
-            data.studentResearches[index].status = 'rejected';
+        if (data.studentResearches[index].status === 'approved') {
+            data.studentResearches[index].status = 'not posted';
             writeData(data); 
-            return { message: "Research submission rejected successfully!" }; 
+            return { message: "Research submission not posted!" }; 
         } else {
             throw new Error("Research submission cannot be rejected because it is not in 'submitted' status."); 
         }
     } else {
         throw new Error("Research submission not found."); 
     }
+}
+
+// Function to get all role requests
+function getAllRoleRequests() {
+    const data = readData();
+    return data.roleRequests; // Return all role requests
+}
+
+// Function to accept a role request
+function acceptRoleRequest(requestId) {
+    const data = readData();
+    const roleRequests = data.roleRequests;
+
+    const requestIndex = roleRequests.findIndex(r => r.requestId === parseInt(requestId) && r.status === 'pending');
+
+    if (requestIndex === -1) {
+        return null; // Return null if the request is not found or already processed
+    }
+
+    // Update the status to 'accepted'
+    roleRequests[requestIndex].status = 'accepted';
+
+    // Save the updated data
+    writeData(data);
+
+    return roleRequests[requestIndex]; // Return the updated request
+}
+
+// Function to reject a role request
+function rejectRoleRequest(requestId) {
+    const data = readData();
+    const roleRequests = data.roleRequests;
+
+    const requestIndex = roleRequests.findIndex(r => r.requestId === parseInt(requestId) && r.status === 'pending');
+
+    if (requestIndex === -1) {
+        return null; 
+    }
+
+    roleRequests[requestIndex].status = 'rejected';
+
+    writeData(data);
+
+    return roleRequests[requestIndex]; // Return the updated request
 }
 
  module.exports = { 
@@ -179,5 +223,8 @@ function rejectResearchSubmission(researchID) {
     deleteResearch,
     getAllStudentResearches,
     approveResearchSubmission,
-    rejectResearchSubmission
+    rejectResearchSubmission,
+    getAllRoleRequests,
+    rejectRoleRequest,
+    acceptRoleRequest
 };

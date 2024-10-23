@@ -19,8 +19,9 @@
         "David Martinez"
       ],
       "date_published": "2023-04-20",
-      "status": "submitted",
-      "abstract": "The research highlights challenges faced by urban parking systems and potential solutions."
+      "status": "rejected",
+      "abstract": "The research highlights challenges faced by urban parking systems and potential solutions.",
+      "feedback": "doggy"
     },
     {
       "researchID": "0006",
@@ -195,7 +196,8 @@
   "userProfileData": [
     {
       "userID": "100",
-      "name": "hey"
+      "name": "hey",
+      "feedback": "doggy"
     }
   ],
   "userAccounts": [
@@ -336,5 +338,22 @@
       "count": 145
     }
   ],
-  "reportData": []
+  "reportData": [],
+  "roleRequests": [
+    {
+      "requestId": 1,
+      "userId": "123",
+      "status": "accepted"
+    },
+    {
+      "requestId": 2,
+      "userId": "123",
+      "status": "pending"
+    },
+    {
+      "requestId": 3,
+      "userId": "123",
+      "status": "pending"
+    }
+  ]
 }

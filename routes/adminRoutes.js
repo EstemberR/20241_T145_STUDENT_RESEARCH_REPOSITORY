@@ -1,6 +1,7 @@
 const express = require('express');
 const adminRoutes = express.Router();
 const adminServices = require("../services/adminServices");
+const userServices = require("../services/userServices");
 
 //User Logout
 adminRoutes.post('/logout', (req, res) => {
@@ -134,14 +135,34 @@ adminRoutes.put('/research/pending/reject/:submissionId', (req, res) => {
 //-----ROLE REQUESTS------ //PS: DIPA MASULAT SAMTANG WAPA ANG EQUIVALENT LOGIC SA INSTRUCTOR
 //View all user role requests
 adminRoutes.get('/role-requests', (req, res) => {
+    const roleRequests = adminServices.getAllRoleRequests();
+    res.json(roleRequests);
 });
 
 //Accept a specific user role request
 adminRoutes.put('/role-requests/accept/:requestId', (req, res) => {
+    const requestId = req.params.requestId;
+
+    const updatedRequest = adminServices.acceptRoleRequest(requestId);
+
+    if (updatedRequest) {
+        res.json({ message: "Role request accepted successfully.", request: updatedRequest });
+    } else {
+        res.status(404).json({ message: "Role request not found or already processed." });
+    }
 });
   
 // Reject a specific user role request
 adminRoutes.put('/role-requests/reject/:requestId', (req, res) => {
+    const requestId = req.params.requestId;
+
+    const updatedRequest = adminServices.rejectRoleRequest(requestId);
+
+    if (updatedRequest) {
+        res.json({ message: "Role request rejected successfully.", request: updatedRequest });
+    } else {
+        res.status(404).json({ message: "Role request not found or already processed." });
+    }
 });
 
 module.exports = adminRoutes;

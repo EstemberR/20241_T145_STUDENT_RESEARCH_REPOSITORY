@@ -26,7 +26,7 @@ const panelServices = require("../services/panelServices")
   //View the specific student research submission
   panelRoutes.get('/submissions/:researchId', (req, res) => {
     const { researchId } = req.params;
-    try {
+    try {asdas
         const research = panelServices.getResearchById(researchId);
         res.status(200).json(research);
     } catch (error) {

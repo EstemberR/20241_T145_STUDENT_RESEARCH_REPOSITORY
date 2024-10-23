@@ -40,8 +40,4 @@ adviserRoutes.get('/assigned', (req, res) =>{
   adviserRoutes.put('/profile', (req, res) => {
   });
   
-  //add or change the user's profile picture
-  adviserRoutes.put('/profile/picture', (req, res) => {
-  });
-  
   module.exports = adviserRoutes;
