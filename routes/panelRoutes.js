@@ -13,10 +13,10 @@ const panelServices = require("../services/panelServices")
   });
   
   //view specific department
-  panelRoutes.get('/:departmentId', (req, res) =>{
+  panelRoutes.get('/submissions/:departmentId', (req, res) =>{
       const { departmentId } = req.params;
       try {
-          const department = panelServices.getDepartmentById(departmentId);
+          const department = panelServices.getDepartment(departmentId);
           res.status(200).json(department);
       } catch (error) {
           res.status(404).json({ error: error.message });
@@ -35,7 +35,7 @@ const panelServices = require("../services/panelServices")
   });
   
   //view the approved student research
-  panelRoutes.get('/submissions/:researchId/approved', (req, res) => {
+  panelRoutes.get('/submissions/approved', (req, res) => {
     const { researchId } = req.params;
     try {
         const approvedResearch = panelServices.getApprovedResearch(researchId);
@@ -57,7 +57,7 @@ const panelServices = require("../services/panelServices")
   });
   
   //Provide feedback information
-  panelRoutes.post('/submissions/:researchId/feedback', (req, res) => {
+  panelRoutes.post('/submissions/:researchId/:feedback', (req, res) => {
     const { researchId } = req.params;
     const { feedback } = req.body;
     try {
@@ -69,10 +69,10 @@ const panelServices = require("../services/panelServices")
   });
   
   //View feedback information
-  panelRoutes.get('/submissions/:researchId/feedback', (req, res) => {
+  panelRoutes.get('/submissions/:researchId/:feedback', (req, res) => {
     const { researchId } = req.params;
     try {
-        const feedbacks = panelServices.getFeedbacksByResearchId(researchId);
+        const feedbacks = panelServices.getFeedback(researchId);
         res.status(200).json(feedbacks);
     } catch (error) {
         res.status(404).json({ error: error.message });
