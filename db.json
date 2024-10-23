@@ -353,7 +353,8 @@
     {
       "requestId": 3,
       "userId": "123",
-      "status": "pending"
+      "status": "pending",
+      "mercy":"killing"
     }
   ]
 }

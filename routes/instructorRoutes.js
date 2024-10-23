@@ -9,7 +9,7 @@ instructorRoutes.get('/submissions', (req, res) =>{
   res.json(studentResearches);
 });
   
-  //view the specific submission
+  //view the specific submissions
   instructorRoutes.get('/submissions/:researchID', (req, res) =>{
     const researchID = req.params.researchID;
 

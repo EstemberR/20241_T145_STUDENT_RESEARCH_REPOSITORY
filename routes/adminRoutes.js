@@ -139,7 +139,7 @@ adminRoutes.get('/role-requests', (req, res) => {
     res.json(roleRequests);
 });
 
-//Accept a specific user role request
+//Accept a specific user role requests
 adminRoutes.put('/role-requests/accept/:requestId', (req, res) => {
     const requestId = req.params.requestId;
 

@@ -208,7 +208,7 @@ function rejectRoleRequest(requestId) {
 
     writeData(data);
 
-    return roleRequests[requestIndex]; // Return the updated request
+    return roleRequests[requestIndex]; // Return the updated requests
 }
 
  module.exports = { 

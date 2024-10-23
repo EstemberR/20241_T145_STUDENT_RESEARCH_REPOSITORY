@@ -82,7 +82,7 @@ function approveResearchByID(researchID) {
             delete updatedUser.userID; 
 
             students.userProfileData[index] = { ...students.userProfileData[index], ...updatedUser };
-            writeData(students); // Write back to the file
+            writeData(students); // Write back to the files
             return { message: "user data updated successfully!" };
         } else {
             throw new Error("user not found.");

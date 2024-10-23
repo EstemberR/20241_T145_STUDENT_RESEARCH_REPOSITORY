@@ -36,7 +36,7 @@ function createRoleRequest(userId, requestedRole) {
         requestId: data.roleRequests.length + 1, // Simple ID generation
         userId,
         requestedRole,
-        status: 'pending' // Default status for new requests
+        status: 'pending' // Default status for new requestss
     };
     
     data.roleRequests.push(newRequest);

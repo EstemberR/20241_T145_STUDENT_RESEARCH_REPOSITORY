@@ -166,7 +166,7 @@ studentRoutes.get('/profile', (req, res) => {
     res.json(userProfile);
 });
 
-// Edit the user's profile information
+// Edit the user's profile informations
 studentRoutes.put('/profile/:userID', (req, res) => {
     const { userID } = req.params;
     const updatedUser = req.body;
