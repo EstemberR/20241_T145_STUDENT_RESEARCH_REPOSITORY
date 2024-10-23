@@ -91,18 +91,6 @@ const panelServices = require("../services/panelServices")
     }
   });
   
-  //edit the user's profile information
-  panelRoutes.put('/profile', (req, res) => {
-    const userId = req.user.id;
-    const updatedProfile = req.body;
-    try {
-        const result = panelServices.editUserProfile(userId, updatedProfile);
-        res.status(200).json(result);
-    } catch (error) {
-        res.status(404).json({ error: error.message });
-    }
-  });
-  
   //add or change the user's profile picture
   panelRoutes.put('/profile/picture', (req, res) => {
     const userId = req.user.id;
