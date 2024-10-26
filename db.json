@@ -348,13 +348,13 @@
     {
       "requestId": 2,
       "userId": "123",
-      "status": "pending"
+      "status": "accepted"
     },
     {
       "requestId": 3,
       "userId": "123",
       "status": "pending",
-      "mercy":"killing"
+      "mercy": "killing"
     }
   ]
 }

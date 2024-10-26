@@ -9,6 +9,7 @@ const adviserRoutes = require('./routes/adviserRoutes');
 
 
 
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
