@@ -1,0 +1,98 @@
+/* Login.css */
+
+.login-container {
+    display: flex;
+    height: 100vh;
+  }
+  
+  .login-image {
+    background-image: url("../components-images/cas_building.jpg");
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    
+  }
+  .overlay-image {
+    background-image: url('../components-images/cas-logo.png'); 
+    background-size: contain;
+    background-repeat: no-repeat; 
+    position: absolute;
+    top: 2%; 
+    left: 50%; 
+    transform: translateX(-50%);
+    height: 200px; 
+    width: 750px;
+    z-index: 1;
+    border-radius: 20px;
+}
+ .overlay-image::before{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 77%;
+    background-color: rgba(183, 254, 183, 0.3);
+    border-radius: 20px;
+
+ }
+
+  .login-image::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(183, 254, 183, 0.3);
+
+  }
+  .login-form-container {
+    background-color: #e6f2e6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+  }
+  
+  .login-title-container {
+    height: 33vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .login-title {
+    color: #2f6b2f;
+    font-weight: bold;
+    font-size: 65px;
+  }
+  
+  .login-form {
+    max-width: 400px;
+    width: 100%;
+  }
+  
+  .login-form h2 {
+    color: #2f6b2f;
+    text-align: center;
+  }
+  
+  .form-control {
+    border-color: #2f6b2f;
+  }
+  
+  .btn-submit {
+    background-color: #2f6b2f;
+    color: white;
+  }
+  
+  .btn-google {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .login-link {
+    color: #2f6b2f;
+  }
+  

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import "./component-css/login.css";
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -6,78 +8,72 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle login logic here
     console.log('Login attempted with:', email, password);
   };
 
+  
   return (
-    <div className="App">
-      <div className="App-header">
-        <div className="login-container" style={{
-          backgroundColor: 'white',
-          padding: '2rem',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          width: '100%',
-          maxWidth: '400px',
-        }}>
-          <h1 className="text-2xl font-bold mb-6" style={{ color: '#282c34' }}>Log in</h1>
+    <div className="login-container">
+      {/* Left Side - Image */}
+      <div className="col-md-6 d-none d-md-block login-image">
+        <div className="overlay-image"></div> 
+      </div>
+
+      {/* Right Side - Form */}
+      <div className="col-md-6 login-form-container">
+        
+        {/* Title */}
+        <div className="login-title-container text-center buksu-logo">
+          <h1 className="login-title display-5">Student Research Repository System</h1>
+        </div>
+
+        {/* Login Form */}
+        <div className="login-form">  
+          <h2 className="mb-4, login-label">Log in</h2>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex flex-col gap-2">
+          <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm bg-white">
+            <div className="form-group">
               <input
                 type="email"
+                className="form-control mb-3"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded"
-                style={{
-                  padding: '0.75rem',
-                  marginBottom: '1rem',
-                  width: '100%',
-                  borderRadius: '4px',
-                  border: '1px solid #ddd',
-                }}
+
                 required
               />
-              
+            </div>
+
+            <div className="form-group">
               <input
                 type="password"
+                className="form-control mb-3"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded"
-                style={{
-                  padding: '0.75rem',
-                  marginBottom: '1rem',
-                  width: '100%',
-                  borderRadius: '4px',
-                  border: '1px solid #ddd',
-                }}
+
                 required
               />
-              
-              <button
-                type="submit"
-                className="w-full bg-blue-500 text-white rounded"
-                style={{
-                  backgroundColor: '#61dafb',
-                  color: 'white',
-                  padding: '0.75rem',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                  fontWeight: '500',
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#4fa8d1'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#61dafb'}
-              >
-                Submit
-              </button>
             </div>
+
+            <button type="submit" className="btn btn-submit w-100 mb-3">
+              Submit
+            </button>
           </form>
+
+          {/* Additional Options */}
+          <div className="text-center mt-3">
+            <button className="btn btn-google w-100 mb-3">
+              <i className="fab fa-google me-2"></i>Login with Google
+            </button>
+
+            <p>
+              <a href="#" className="login-link">Forgot Password?</a>
+            </p>
+            <p>
+              Don't have an account? <a href="#" className="login-link">Sign up</a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
