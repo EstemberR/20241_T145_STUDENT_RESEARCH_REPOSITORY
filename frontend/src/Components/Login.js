@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "./component-css/login.css";
+import '@fortawesome/fontawesome-free/css/all.min.css';
+//firebase
+import {GoogleAuthProvider, signInWithPopup} from 'firebase/auth';
+import {auth } from '../firebase/firebaseConfig';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Login attempted with:', email, password);
   };
+  
+  //Firebase
+  const handleGoogle = async (e) =>{
+    const provider = await new GoogleAuthProvider();
+    return signInWithPopup(auth, provider)
+  }
 
   
   return (
@@ -63,16 +74,9 @@ const Login = () => {
 
           {/* Additional Options */}
           <div className="text-center mt-3">
-            <button className="btn btn-google w-100 mb-3">
+            <button onClick={handleGoogle} className="btn btn-google w-100 mb-3">
               <i className="fab fa-google me-2"></i>Login with Google
-            </button>
-
-            <p>
-              <a href="#" className="login-link">Forgot Password?</a>
-            </p>
-            <p>
-              Don't have an account? <a href="#" className="login-link">Sign up</a>
-            </p>
+            </button> 
           </div>
         </div>
       </div>
