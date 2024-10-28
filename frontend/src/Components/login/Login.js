@@ -2,27 +2,49 @@ import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "../component-css/login.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
-//firebase
+// Firebase
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase/firebaseConfig';
 
-const Login = () => {
+const Login = ({ setUserRole }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate(); 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Login attempted with:', email, password);
+    
+    // Hardcoded admin credentials (for testing purposes)
+    const adminEmail = "admin@gmail.com"; 
+    const adminPassword = "admin";
+    
+    // Check if the input matches the hardcoded credentials
+    if (email === adminEmail && password === adminPassword) {
+      console.log('Admin login successful');
+      setUserRole("admin"); // Set user role to admin
+      navigate('/admin_dashboard'); // Navigate to admin dashboard
+    } else {
+      console.error('Invalid credentials');
+    }
   };
 
-  // Firebase - Login with Google
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       console.log('User signed in: ', user);
-      // You can now send the user data to your backend if needed
+      
+      const userRole = "student"; 
+      setUserRole(userRole); 
+      if (userRole === "admin") {
+        navigate('/admin_dashboard');
+      } else if (userRole === "student") {
+        navigate('/student_dashboard');
+      } else if (userRole === "instructor") {
+        navigate('/instructor_dashboard');
+      }
     } catch (error) {
       console.error('Error during Google login:', error);
     }
@@ -50,10 +72,9 @@ const Login = () => {
             <i className="fab fa-google me-2"></i>Login with Google
           </button>
           <p className="or-label">or</p>
-          {/* Removed the Sign Up with Google button since you only want login */}
         </div>
 
-        <hr /> {/* Separator */}
+        <hr /> 
 
         {/* Admin Login Section */}
         <div className="admin-section text-center">
