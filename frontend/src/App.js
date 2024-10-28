@@ -1,6 +1,5 @@
-import Home from  "./Components/Home"
 import Login from "./Components/login/Login"
-import {BrowserRouter as Router , Routes, Route, } from "react-router-dom";
+import {BrowserRouter as Router , Routes, Route, Navigate } from "react-router-dom";
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -10,8 +9,8 @@ function App() {
     <div className="App">
     <Router>
       <Routes>
-        <Route path="/" element={<Login/>}/>
-        <Route path="/Home" element={<Home/>}/>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </Router>
   </div>
