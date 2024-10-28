@@ -15,19 +15,25 @@ const Login = () => {
     console.log('Login attempted with:', email, password);
   };
 
-  //Firebase
-  const handleGoogle = async (e) => {
+  // Firebase - Login with Google
+  const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
-  }
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      console.log('User signed in: ', user);
+      // You can now send the user data to your backend if needed
+    } catch (error) {
+      console.error('Error during Google login:', error);
+    }
+  };
 
   return (
     <div className="login-container">
       {/* Left Side - Image Container */}
       <div className="col-md-6 d-none d-md-block login-image-container login-image">
         <div className="background"></div>
-          <div className="overlay-image"></div>
-        
+        <div className="overlay-image"></div>
       </div>
 
       {/* Right Side - Form */}
@@ -40,13 +46,11 @@ const Login = () => {
         {/* User Login Section */}
         <div className="user-section text-center">
           <h2 className="login-label">User Login</h2>
-          <button onClick={handleGoogle} className="btn btn-google w-100 mb-3">
+          <button onClick={handleGoogleLogin} className="btn btn-google w-100 mb-3">
             <i className="fab fa-google me-2"></i>Login with Google
           </button>
           <p className="or-label">or</p>
-          <button onClick={handleGoogle} className="btn btn-signup w-100 mb-3">
-            <i className="fab fa-google me-2"></i>Sign Up with Google
-          </button>
+          {/* Removed the Sign Up with Google button since you only want login */}
         </div>
 
         <hr /> {/* Separator */}
