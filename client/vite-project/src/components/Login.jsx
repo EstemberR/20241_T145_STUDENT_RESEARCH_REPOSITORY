@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "./css/Login.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -36,6 +36,8 @@ const Login = () => {
       if (response.ok) {
         console.log('User authenticated successfully:', data);
         // logic redirecting to ex. dashboard
+
+
       } else {
         console.error('Authentication failed:', data.error);
         // Handle errors
