@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "./css/Login.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -6,9 +7,11 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import auth from './firebaseConfig.js';
 
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();  //hook
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -36,8 +39,7 @@ const Login = () => {
       if (response.ok) {
         console.log('User authenticated successfully:', data);
         // logic redirecting to ex. dashboard
-
-
+      navigate('/Dashboard');
       } else {
         console.error('Authentication failed:', data.error);
         // Handle errors
