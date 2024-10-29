@@ -4,6 +4,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import './firebaseAdminConfig.js';
 import authRoutes from './authRouts.js'; 
+import express from 'express'
+import bodyParser from 'body-parser';
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -13,6 +15,7 @@ const PORT = process.env.PORT || 8000;
 // Middleware
 app.use(cors()); 
 app.use(express.json()); // Enable JSON parsing for requests
+app.use(bodyParser.json());
 
 // Connect to MongoDB
 const connect = async () => {
