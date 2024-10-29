@@ -6,13 +6,12 @@ import {getAuth} from 'firebase/auth';
 
 // web app's Firebase configuration
 const firebaseConfig = {
-//hiding the API information
-  apiKey: import.meta.env.VITE_API_KEY,
-  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
-  appId:import.meta.env.VITE_APP_ID
+apiKey: "AIzaSyACPglO2oMslerC4Mrnpz-xNpSb19EUzwI",
+authDomain: "student-research-repository.firebaseapp.com",
+projectId: "student-research-repository",
+storageBucket: "student-research-repository.appspot.com",
+messagingSenderId: "387430837730",
+appId: "1:387430837730:web:742a628911906b5b545dbb"
 };
 
 
