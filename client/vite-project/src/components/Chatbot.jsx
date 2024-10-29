@@ -5,7 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './css/Dashboard.css';
 
 
-const Dashboard = () => {
+const Chatbot = () => {
   const location = useLocation();
 
   return (
@@ -75,4 +75,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Chatbot;
