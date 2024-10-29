@@ -5,7 +5,7 @@ import "./css/Login.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 // Firebase
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import auth from './firebaseConfig.js';
+import auth from './firebaseConfig';
 
 
 const Login = () => {
@@ -25,7 +25,7 @@ const Login = () => {
       const result = await signInWithPopup(auth, provider);
       const token = await result.user.getIdToken(); // Get the Google ID token
 
-      // Send the token to your backend for verification
+      // Send the token to the backend for verification
       const response = await fetch('http://localhost:8000/api/auth/google', { 
         method: 'POST',
         headers: {
