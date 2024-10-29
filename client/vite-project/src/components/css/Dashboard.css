@@ -1,0 +1,105 @@
+/* Full Height for Main Container */
+body, .dashboard-container {
+    height: 100vh;
+    overflow: hidden;
+    background-color: #FFFFFF;
+  }
+  /* Sidebar Full Height */
+  .sidebar {
+    background-color: #7efb9b; 
+    color: black;
+    height: 100vh; 
+    padding: 10px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Sidebar Title Styling */
+  .sidebar h3 {
+    color: black;
+    text-align: center;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Sidebar Links */
+  .nav-link {
+    color: black;
+    padding: 8px 15px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    transition: color 0.3s, background-color 0.3s;
+  }
+  
+  /* Hover Effect */
+  .nav-link:hover {
+    color: #000000;
+    background-color: rgba(255, 255, 255, 0.5);
+    text-decoration: none; 
+    font-weight: bold;
+  }
+  
+  /* Active Class Styling */
+  .active {
+    background-color: white; 
+    color: #28a745; 
+    font-weight: bold;
+  }
+  
+  /* Top Row Styling */
+  .top-row {
+    height: 10vh; /* 1/10th height */
+    background-color: #f8f9fa;
+  }
+  
+  /* Centered Logo */
+  .cas-logo {
+    width: 45.67%; 
+    height: auto;
+    max-height: 100%;
+    border-width: 100%;
+    border-color: #28a745;
+    object-fit: contain;
+    align-items: center;
+  }
+  
+  /* Main Content Area */
+  .main-content {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #f8f9fa;
+    overflow-y: auto;
+  }
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 20px; 
+  }
+  
+  .user-icon {
+    font-size: 1.8rem;
+    color: #28a745; 
+  }
+  
+  .user-details {
+    text-align: left;
+  }
+  
+  .user-name {
+    font-weight: bold;
+    margin: 0;
+  }
+  
+  .user-role {
+    font-size: 0.8rem;
+    color: gray;
+    margin: 0;
+  }
+  /*-----------------------------------------END OF TEMPLATE-------------------------------------------------------*/
+  
