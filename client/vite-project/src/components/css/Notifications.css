@@ -1,0 +1,15 @@
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+  
+  .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+  
+  .list-group-item {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef; 
+  }
+  
