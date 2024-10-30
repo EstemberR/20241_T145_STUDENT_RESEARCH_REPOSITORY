@@ -202,7 +202,7 @@ const Profile = () => {
                   </form>
                 ) : (
                   <div>
-                    <h4>Contact Information</h4>
+                    <h4>Student Information</h4>
                     <p><strong>Contact Number:</strong> {user.contactNumber}</p>
                     <p><strong>Address:</strong> {user.address}</p>
                     <p><strong>Course:</strong> {user.course}</p>
