@@ -1,14 +1,14 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import dotenv from 'dotenv';
+import dotenv, { configDotenv } from 'dotenv';
 import './firebaseAdminConfig.js';
 import authRoutes from './authRouts.js'; 
 import bodyParser from 'body-parser';
-import admin from 'firebase-admin'; 
+import admin from 'firebase-admin';
+import User from './model/user.js';
 
 dotenv.config(); // Load environment variables from .env file
-
 const app = express();
 const PORT = process.env.PORT || 8000; 
 
@@ -17,10 +17,16 @@ app.use(cors());
 app.use(express.json()); // Enable JSON parsing for requests
 app.use(bodyParser.json());
 
+// Assign User model to app.locals
+app.locals.userModel = User;
+
 // Connect to MongoDB
 const connect = async () => {
     try {
-        await mongoose.connect("mongodb+srv://user99:Falcon@cluster0.qpda5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
+        await mongoose.connect("mongodb+srv://user99:Falcon@cluster0.qpda5.mongodb.net/Student_RepoDB?retryWrites=true&w=majority&appName=Cluster0", {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
         console.log('Connected to MONGODB');
     } catch (error) {
         console.error('Error connecting to MONGODB:', error);
@@ -40,11 +46,11 @@ app.post('/google', async (req, res) => {
     try {
         // Check if user already exists
         const User = req.app.locals.userModel; // Access userModel from app.locals
-        let user = await User.findOne({ email });
+         const user = await User.findOne({ email });
 
         if (!user) {
             // Create new user if they don't exist
-            user = new User({
+            User = new User({
                 name,
                 email,
                 uid,
