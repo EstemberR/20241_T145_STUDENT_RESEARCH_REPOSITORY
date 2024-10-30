@@ -33,7 +33,7 @@ body, .dashboard-container {
     display: flex;
     align-items: center;
     margin-bottom: 5px;
-    transition: color 0.3s, background-color 0.3s;
+    transition: color, background-color 0.3s;
   }
   
   /* Hover Effect */

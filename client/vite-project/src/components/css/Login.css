@@ -1,8 +1,8 @@
 /* Login.css */
 
 html, body {
-    height: 100%; /* Ensure the body takes the full height of the viewport */
-    margin: 0; /* Remove default margins */
+    height: 100%; 
+    margin: 0; 
   }
   
   .overlay-image {
@@ -14,7 +14,7 @@ html, body {
     left: 50%;
     transform: translateX(-50%);
     height: 200px;
-    width: 750px;
+    width: 600px;
     z-index: 1;
     margin-top: 1%;
     border-radius: 20px;
@@ -26,21 +26,21 @@ html, body {
     left: 0;
     width: 100%;
     height: 73.5%;
-    background: linear-gradient(to bottom, rgba(34, 139, 34, 0.3), rgba(34, 139, 34, 0)); /* Fades from Forest Green to transparent */
+    background: linear-gradient(to bottom, rgba(34, 139, 34, 0.3), rgba(34, 139, 34, 0));
     border-radius: 20px;
   
   }
   
   .login-container {
     display: flex;
-    height: 100vh; /* Use the full height of the viewport */
-    background-color: #f4f4f4; /* Light background for contrast */
+    height: 100vh;
+    background-color: #f4f4f4; 
   }
   
   .login-image {
-    flex: 1; /* Allow the image section to take up equal space */
+    flex: 1; 
     position: relative;
-    overflow: hidden; /* Ensures no content spills out */
+    overflow: hidden;
   }
   
   .login-image .background {
@@ -49,34 +49,35 @@ html, body {
     background-position: center;
     width: 100%;
     height: 100%;
-    filter: blur(5px); /* Adjust the blur value as needed */
+    filter: blur(5px); 
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1; /* Ensure this layer is below the overlay */
+    z-index: 1; 
   
   }
   
   
   .login-form-container {
-    flex: 1; /* Allow the form section to take up equal space */
-    background-color: #e6f2e6; /* Light green background */
+    flex: 1;
+    background-color: #e6f2e6;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 2rem;
-    border-radius: 10px; /* Rounded corners for form */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    border-radius: 10px; 
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); 
   }
   
   .login-title-container {
-    margin-bottom: 3rem; /* Space below title */
+    margin-bottom: 1rem;
+    margin-top: -2rem;
   }
   
   .login-title {
     color: #2f6b2f; /* Dark green for title */
     font-weight: bold;
-    font-size: 4.5rem; /* Larger font for title */
+    font-size: 4.5rem;
   }
   
   .user-section, .admin-section {
@@ -84,40 +85,40 @@ html, body {
   }
   
   .login-label {
-    color: #2f6b2f; /* Dark green for section labels */
-    font-size: 2.5rem; /* Increased font size for labels */
-    margin-top: 1rem; /* Space above labels */
+    color: #2f6b2f; 
+    font-size: 2.5rem;
+    margin-top: 1rem; 
     margin-bottom: 0.5rem; /* Space below labels */
   }
   
   .btn-google {
-    background-color: #2f6b2f; /* Dark green for button */
+    background-color: #2f6b2f;
     color: white;
-    font-size: 1.1rem; /* Larger font for buttons */
-    border-radius: 5px; /* Rounded corners for buttons */
+    font-size: 1.1rem; 
+    border-radius: 5px; 
   }
   .btn-signup {
-    background-color: #2f6b2f; /* Dark green for button */
+    background-color: #2f6b2f; 
     color: white;
-    font-size: 1.1rem; /* Larger font for buttons */
-    border-radius: 5px; /* Rounded corners for buttons */
+    font-size: 1.1rem;
+    border-radius: 5px;
   }
   .btn-submit {
-    background-color: #2f6b2f; /* Dark green for button */
+    background-color: #2f6b2f;
     color: white;
-    font-size: 1.1rem; /* Larger font for buttons */
-    border-radius: 5px; /* Rounded corners for buttons */
+    font-size: 1.1rem;
+    border-radius: 5px; 
   }
   
   .or-label {
-    color: #555; /* Subtle color for 'Or' text */
-    font-size: 1.2rem; /* Slightly larger than normal text */
-    margin: 1rem 0; /* Space above and below */
+    color: #555;
+    font-size: 1.2rem; 
+    margin: 1rem 0; 
   }
   
   hr {
-    border-top: 2px solid #2f6b2f; /* Dark green for hr */
-    width: 80%; /* Width for hr */
-    margin: 20px auto; /* Center hr with margin */
+    border-top: 2px solid #2f6b2f;
+    width: 80%;
+    margin: 20px auto; 
   }
   

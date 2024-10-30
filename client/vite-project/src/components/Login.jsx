@@ -42,7 +42,6 @@
           navigate('/dashboard');
         } else {
           console.error('Authentication failed:', data.error);
-          // Handle errors (you could also show an error message to the user here)
         }
       } catch (error) {
         console.error('Error during Google sign-in:', error);

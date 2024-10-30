@@ -35,8 +35,8 @@ const MyResearch = () => {
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/chatbot' ? 'active' : ''}`} to="/chatbot">
-              <i className="fas fa-robot"></i> Chatbot
+          <Link className={`nav-link ${location.pathname === '/FAQ' ? 'active' : ''}`} to="/FAQ">
+          <i className="fas fa-robot"></i> FAQ
             </Link>
           </li>
           <li className="nav-item">
