@@ -1,11 +1,11 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 import './firebaseAdminConfig.js';
 import authRoutes from './authRouts.js'; 
-import express from 'express'
 import bodyParser from 'body-parser';
+import admin from 'firebase-admin'; 
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -20,7 +20,7 @@ app.use(bodyParser.json());
 // Connect to MongoDB
 const connect = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB_URI);
+        await mongoose.connect("mongodb+srv://user99:Falcon@cluster0.qpda5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
         console.log('Connected to MONGODB');
     } catch (error) {
         console.error('Error connecting to MONGODB:', error);
@@ -30,6 +30,35 @@ const connect = async () => {
 // MongoDB connection events
 mongoose.connection.on('disconnected', () => {
     console.log('Disconnected from MONGODB');
+});
+
+
+// Google Auth Route
+app.post('/google', async (req, res) => {
+    const { name, email, uid } = req.body;
+
+    try {
+        // Check if user already exists
+        const User = req.app.locals.userModel; // Access userModel from app.locals
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Create new user if they don't exist
+            user = new User({
+                name,
+                email,
+                uid,
+            });
+            await user.save();
+            return res.status(201).json({ message: 'User created', user });
+        } else {
+            // User already exists
+            return res.status(200).json({ message: 'User already exists', user });
+        }
+    } catch (error) {
+        console.error('Error in /api/auth/google:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // API Routes

@@ -24,6 +24,7 @@
       try {
         const result = await signInWithPopup(auth, provider);
         const token = await result.user.getIdToken(); // Get the Google ID token
+        const user = result.user; // Get user from result
     
         // Send the token to the backend for verification
         const response = await fetch('http://localhost:8000/api/auth/google', {
@@ -31,11 +32,15 @@
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ token }), // Send the token in the request body
+          body: JSON.stringify({ 
+            name: user.displayName,
+            email: user.email,
+            uid: user.uid
+           }), // Send the token in the request body
         });
     
         const data = await response.json();
-    
+        console.log('User Saved', data)
         if (response.ok) {
           console.log('User authenticated successfully:', data);
           console.log('Navigating to dashboard...'); // Debugging line
