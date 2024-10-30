@@ -1,13 +1,42 @@
-import casLogo from '../assets/cas-logo.jpg'; // Adjust the path as needed
-import React from 'react';
+import casLogo from '../assets/cas-logo.jpg'; 
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './css/Dashboard.css';
-
+import './css/UserProfile.css';
 
 const Profile = () => {
   const location = useLocation();
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const [user, setUser] = useState({
+    studentId: '2201102944',
+    firstName: 'Merryl',
+    middleName: 'M.',
+    lastName: 'Strife',
+    email: 'merryl@student.buksu.edu.ph',
+    contactNumber: '0912-345-6789',
+    address: '123 Main St, Anytown, Philippines',
+    course: 'Bachelor of Science in Computer Science',
+    birthDate: '2000-01-01',
+    profilePicture: 'https://via.placeholder.com/150', 
+  });
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setUser((prevUser) => ({ ...prevUser, [name]: value }));
+  };
+
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Updated user info:", user);
+    handleEditToggle(); 
+  };
+  
   return (
     <div className="dashboard-container d-flex">
       {/* Sidebar (Occupies full height) */}
@@ -16,37 +45,37 @@ const Profile = () => {
         <ul className="nav flex-column">
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} to="/dashboard">
-              <i className="fas fa-tachometer-alt"></i> Dashboard
+              <i className="fas fa-tachometer-alt search"></i> Dashboard
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/repository' ? 'active' : ''}`} to="/repository">
-              <i className="fas fa-book"></i> Research Repository
+              <i className="fas fa-book search"></i> Research Repository
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`} to="/profile">
-              <i className="fas fa-user"></i> User Profile
+              <i className="fas fa-user search"></i> User Profile
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/myResearch' ? 'active' : ''}`} to="/myResearch">
-              <i className="fas fa-folder-open"></i> My Research
+              <i className="fas fa-folder-open search"></i> My Research
             </Link>
           </li>
           <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/FAQ' ? 'active' : ''}`} to="/FAQ">
-          <i className="fas fa-robot"></i> FAQ
+            <Link className={`nav-link ${location.pathname === '/FAQ' ? 'active' : ''}`} to="/FAQ">
+              <i className="fas fa-robot search"></i> FAQ
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/notifications' ? 'active' : ''}`} to="/notifications">
-              <i className="fas fa-bell"></i> Notifications
+              <i className="fas fa-bell search"></i> Notifications
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/logout' ? 'active' : ''}`} to="/logout">
-              <i className="fas fa-sign-out-alt"></i> Logout
+              <i className="fas fa-sign-out-alt search"></i> Logout
             </Link>
           </li>
         </ul>
@@ -69,6 +98,120 @@ const Profile = () => {
 {/*---------------------------------END OF HEADER TEMPLATE----------------------------------------------------*/}
         {/* Main Content Area */}
         <main className="main-content">
+          <div className="container mt-5">
+            <div className="row">
+              <div className="col-md-4 text-center">
+                <img
+                  src={user.profilePicture}
+                  alt="Profile"
+                  className="img-fluid rounded-circle mb-3"
+                  style={{ width: '150px', height: '150px' }}
+                />
+                <h3>{`${user.firstName} ${user.middleName} ${user.lastName}`}</h3>
+                <p className="text-muted">{user.email}</p>
+                <button className="search1" onClick={handleEditToggle}>
+                  {isEditing ? 'Cancel' : 'Edit'}
+                </button>
+              </div>
+              <div className="col-md-8">
+                {isEditing ? (
+                  <form onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                      <label className="form-label">First Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="firstName"
+                        value={user.firstName}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Middle Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="middleName"
+                        value={user.middleName}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Last Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="lastName"
+                        value={user.lastName}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        name="email"
+                        value={user.email}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Contact Number</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="contactNumber"
+                        value={user.contactNumber}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Address</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="address"
+                        value={user.address}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Course</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="course"
+                        value={user.course}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Birth Date</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        name="birthDate"
+                        value={user.birthDate}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <button type="submit" className="btn btn-success">
+                      Save Changes
+                    </button>
+                  </form>
+                ) : (
+                  <div>
+                    <h4>Contact Information</h4>
+                    <p><strong>Contact Number:</strong> {user.contactNumber}</p>
+                    <p><strong>Address:</strong> {user.address}</p>
+                    <p><strong>Course:</strong> {user.course}</p>
+                    <p><strong>Birth Date:</strong> {user.birthDate}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </main>
       </div>
     </div>

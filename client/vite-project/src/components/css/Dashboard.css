@@ -109,5 +109,28 @@ body, .dashboard-container {
     height: calc((100vh - 10vh) * 2 / 3); /* Two-thirds of the available height below top row */
     width: 100%; /* Full width */
     border-radius: 10px;
-    margin: 0 auto; /* Centers .rectangle16 horizontally if there's extra space */
+    margin: 0 auto; 
+  }
+
+  .search {
+    margin-right: 10px;
+  }
+
+  .search1 {
+    width: 17%;
+    border-radius: 8px;
+    border-color: white;
+    background-color: #17d543 ;
+    color: white;
+    height: 40px;
+    margin-top: -2px;
+  }
+  .search1:hover {
+    width: 17%;
+    border-radius: 8px;
+    border-color: white;
+    background-color: #36eb60 ;
+    color: white;
+    height: 40px;
+    margin-top: -2px;
   }

@@ -1,4 +1,4 @@
-import casLogo from '../assets/cas-logo.jpg'; // Adjust the path as needed
+import casLogo from '../assets/cas-logo.jpg'; 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -16,38 +16,38 @@ const Dashboard = () => {
         <h3 className="text-center">STUDENT RESEARCH REPOSITORY SYSTEM</h3>
         <ul className="nav flex-column">
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} to="/dashboard">
-              <i className="fas fa-tachometer-alt"></i> Dashboard
+          <Link className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} to="/dashboard">
+              <i className="fas fa-tachometer-alt search"></i> Dashboard
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/repository' ? 'active' : ''}`} to="/repository">
-              <i className="fas fa-book"></i> Research Repository
+              <i className="fas fa-book search"></i> Research Repository
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`} to="/profile">
-              <i className="fas fa-user"></i> User Profile
+              <i className="fas fa-user search"></i> User Profile
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/myResearch' ? 'active' : ''}`} to="/myResearch">
-              <i className="fas fa-folder-open"></i> My Research
+              <i className="fas fa-folder-open search"></i> My Research
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/FAQ' ? 'active' : ''}`} to="/FAQ">
-              <i className="fas fa-robot"></i> FAQ
+          <Link className={`nav-link ${location.pathname === '/FAQ' ? 'active' : ''}`} to="/FAQ">
+          <i className="fas fa-robot search"></i> FAQ
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/notifications' ? 'active' : ''}`} to="/notifications">
-              <i className="fas fa-bell"></i> Notifications
+              <i className="fas fa-bell search"></i> Notifications
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/logout' ? 'active' : ''}`} to="/logout">
-              <i className="fas fa-sign-out-alt"></i> Logout
+              <i className="fas fa-sign-out-alt search"></i> Logout
             </Link>
           </li>
         </ul>
