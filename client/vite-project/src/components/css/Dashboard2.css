@@ -1,0 +1,87 @@
+.contentRow {
+    display: flex;
+    width: 100%;
+  }
+  .notificationDashboard {
+    background-color: #a3f2b6;
+    height: calc((100vh - 10vh) * 0.8 / 3);
+    width: 60%;
+    border-radius: 10px;
+  }
+  
+  .researchDashboard {
+    background-color: white;
+    height: calc((100vh - 10vh) * 0.8 / 3); 
+    width: 38.4%; 
+    border-radius: 10px;
+    align-items: center;
+    justify-content: space-around; 
+  }
+  .researchLabel {
+    margin-bottom: 10px; 
+    font-weight: bold; 
+    text-align: center; 
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+  .staticData {
+    text-align: center;
+    align-items: center;
+    margin: auto;
+    color: white;
+    font-weight: bold;
+    font-size: 50px;
+  }
+  .repoLabel {
+    margin-bottom: 10px; 
+    font-weight: bold; 
+    text-align: center; 
+    padding-top: 15px;
+  }
+  .researchOverviewContainer {
+    display: flex; 
+    width: 100%; 
+  }
+  
+  .researchBox1 {
+    background-color: #b3ecc4; 
+    width: 30%; 
+    border-radius: 5px;
+    padding: 10px; 
+    text-align: center;
+    align-items: center;
+    margin: auto;
+    color: green;
+    font-weight: bold;
+  }
+  .researchBox2 {
+    background-color: #b3ecc4; 
+    width: 30%; 
+    border-radius: 5px;
+    padding: 10px; 
+    text-align: center;
+    align-items: center;
+    margin: auto;
+    color: orange;
+    font-weight: bold;
+  }
+  .researchBox3 {
+    background-color: #b3ecc4; 
+    width: 30%; 
+    border-radius: 5px;
+    padding: 10px; 
+    text-align: center;
+    align-items: center;
+    margin: auto;
+    color: red;
+    font-weight: bold;
+  }
+  
+  .repositoryDashboard {
+    background-color: #7efb9b;
+    height: calc((100vh - 10vh) * 2 / 3); 
+    width: 100%;
+    border-radius: 10px;
+    margin-top: 10px; 
+  }
+  
