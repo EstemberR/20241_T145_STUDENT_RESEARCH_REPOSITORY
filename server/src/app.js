@@ -23,7 +23,7 @@ app.locals.userModel = User;
 // Connect to MongoDB
 const connect = async () => {
     try {
-        await mongoose.connect("mongodb+srv://user99:Falcon@cluster0.qpda5.mongodb.net/Student_RepoDB?retryWrites=true&w=majority&appName=Cluster0", {
+        await mongoose.connect(process.env.MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
