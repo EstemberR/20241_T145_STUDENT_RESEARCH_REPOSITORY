@@ -4,7 +4,6 @@ const { auth } = admin;
 dotenv.config();
 
 try {
-    //hiding the API info
     const serviceAccount = {
     type:process.env.type,
     project_id:process.env.project_id,
@@ -20,7 +19,6 @@ try {
 }
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        // Other configuration if necessary
     });
 } catch (error) {
     console.error('Error parsing Firebase service account:', error);
