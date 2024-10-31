@@ -22,37 +22,37 @@ const Notification = () => {
         <h3 className="text-center">STUDENT RESEARCH REPOSITORY SYSTEM</h3>
         <ul className="nav flex-column">
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} to="/dashboard">
+          <Link className={`nav-link ${location.pathname === '/student/dashboard' ? 'active' : ''}`} to="/student/dashboard">
               <i className="fas fa-tachometer-alt search"></i> Dashboard
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/repository' ? 'active' : ''}`} to="/repository">
+            <Link className={`nav-link ${location.pathname === '/student/repository' ? 'active' : ''}`} to="/student/repository">
               <i className="fas fa-book search"></i> Research Repository
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`} to="/profile">
+            <Link className={`nav-link ${location.pathname === '/student/profile' ? 'active' : ''}`} to="/student/profile">
               <i className="fas fa-user search"></i> User Profile
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/myResearch' ? 'active' : ''}`} to="/myResearch">
+            <Link className={`nav-link ${location.pathname === '/student/myResearch' ? 'active' : ''}`} to="/student/myResearch">
               <i className="fas fa-folder-open search"></i> My Research
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/FAQ' ? 'active' : ''}`} to="/FAQ">
-              <i className="fas fa-robot search"></i> FAQ
+          <Link className={`nav-link ${location.pathname === '/student/FAQ' ? 'active' : ''}`} to="/student/FAQ">
+          <i className="fas fa-robot search"></i> FAQ
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/notifications' ? 'active' : ''}`} to="/notifications">
+            <Link className={`nav-link ${location.pathname === '/student/notifications' ? 'active' : ''}`} to="/student/notifications">
               <i className="fas fa-bell search"></i> Notifications
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/logout' ? 'active' : ''}`} to="/logout">
+            <Link className={`nav-link ${location.pathname === '/student/logout' ? 'active' : ''}`} to="/student/logout">
               <i className="fas fa-sign-out-alt search"></i> Logout
             </Link>
           </li>

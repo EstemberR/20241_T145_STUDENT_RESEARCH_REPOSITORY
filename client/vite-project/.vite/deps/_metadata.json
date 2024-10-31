@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "hash": "7e1e9c38",
   "configHash": "865d48de",
   "lockfileHash": "deab9928",
@@ -49,4 +50,12 @@
       "file": "chunk-5WRI5ZAA.js"
     }
   }
+=======
+  "hash": "83238d6e",
+  "configHash": "a01034c1",
+  "lockfileHash": "c4a09a47",
+  "browserHash": "79c66f3f",
+  "optimized": {},
+  "chunks": {}
+>>>>>>> c36f0e77be8a06af15e386b83b340fc56b5c6cf3
 }
