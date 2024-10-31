@@ -10,7 +10,7 @@ import auth from './firebaseConfig';
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const navigate = useNavigate();  // Hook for navigation
+    const navigate = useNavigate(); 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -26,27 +26,26 @@ const Login = () => {
             });
 
             const data = await response.json();
-            console.log('User response:', data); // Log the response data
+            console.log('User response:', data); 
 
             if (response.ok) {
                 console.log('User authenticated successfully:', data);
-                const userRole = data.role; // Assuming the response contains the user's role
+                const userRole = data.role;
 
-                // Redirect based on user role
                 if (userRole === 'student') {
-                    navigate('/student/dashboard'); // Navigate to student's dashboard
+                    navigate('/student/dashboard');
                 } else if (userRole === 'instructor') {
-                    navigate('/instructor/dashboard'); // Navigate to instructor's dashboard
+                    navigate('/instructor/dashboard');
                 } else {
-                    alert('Unknown user role'); // Handle unexpected roles
+                    alert('Unknown user role'); 
                 }
             } else {
                 console.error('Authentication failed:', data.error || 'Unknown error');
-                alert(data.error || 'Authentication failed'); // Alert user on failure
+                alert(data.error || 'Authentication failed');
             }
         } catch (error) {
             console.error('Error during login:', error);
-            alert('An error occurred during login. Please try again.'); // Notify user on error
+            alert('An error occurred during login. Please try again.'); 
         }
     };
 
@@ -57,12 +56,10 @@ const Login = () => {
           const result = await signInWithPopup(auth, provider);
           const user = result.user; // Get user from result
   
-          // Ensure uid is not null
           if (!user.uid) {
               throw new Error('User UID is null');
           }
   
-          // Send the user information to the backend for verification
           const response = await fetch('http://localhost:8000/api/auth/google', {
               method: 'POST',
               headers: {
@@ -71,33 +68,32 @@ const Login = () => {
               body: JSON.stringify({ 
                   name: user.displayName,
                   email: user.email,
-                  uid: user.uid // This should not be null
+                  uid: user.uid 
               }),
           });
   
 
             const data = await response.json();
-            console.log('User response:', data); // Log the response data
+            console.log('User response:', data);
 
             if (response.ok) {
                 console.log('User authenticated successfully:', data);
-                const userRole = data.role; // Assuming the response contains the user's role
+                const userRole = data.role;
 
-                // Redirect based on user role
                 if (userRole === 'student') {
-                    navigate('/student/dashboard'); // Navigate to student's dashboard
+                    navigate('/student/dashboard');
                 } else if (userRole === 'instructor') {
-                    navigate('/instructor/dashboard'); // Navigate to instructor's dashboard
+                    navigate('/instructor/dashboard');
                 } else {
-                    alert('Unknown user role'); // Handle unexpected roles
+                    alert('Unknown user role'); 
                 }
             } else {
                 console.error('Authentication failed:', data.error || 'Unknown error');
-                alert(data.error || 'Authentication failed'); // Alert user on failure
+                alert(data.error || 'Authentication failed'); 
             }
         } catch (error) {
             console.error('Error during Google sign-in:', error);
-            alert('Error during Google sign-in. Please try again.'); // Notify user on error
+            alert('Error during Google sign-in. Please try again.');
         }
     };
 
