@@ -12,7 +12,6 @@ const googleLogin = async (req, res) => {
   try {
     const userData = await verifyGoogleToken(token);
 
-    // Assign token with role-based data
     const userToken = jwt.sign({ role: userData.role }, 'secretKey', { expiresIn: '1h' });
     res.json({ token: userToken, role: userData.role });
   } catch (error) {
@@ -20,7 +19,6 @@ const googleLogin = async (req, res) => {
   }
 };
 
-// Admin Login Controller
 const adminLogin = (req, res) => {
   const { email, password } = req.body;
   if (email === adminCredentials.email && password === adminCredentials.password) {

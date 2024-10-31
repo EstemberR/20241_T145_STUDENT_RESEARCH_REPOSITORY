@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 try {
-    //hiding the API info
     const serviceAccount = {
   "type": "service_account",
   "project_id": "student-research-repository",
@@ -21,7 +20,6 @@ try {
 
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        // Other configuration if necessary
     });
 } catch (error) {
     console.error('Error parsing Firebase service account:', error);

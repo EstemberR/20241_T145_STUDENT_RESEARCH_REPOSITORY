@@ -23,7 +23,7 @@ function App() {
           <Route path="/student/myResearch" element={<MyResearch />} />
           <Route path="/student/FAQ" element={<FAQ />} />
           <Route path="/student/notifications" element={<Notification />} />
-        {/* ADMIN */}
+        {/* INSTRUCTOR */}
           <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
 
 
