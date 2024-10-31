@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 package-lock.json
-services/firebase.js
+client/src/services/firebase.js
