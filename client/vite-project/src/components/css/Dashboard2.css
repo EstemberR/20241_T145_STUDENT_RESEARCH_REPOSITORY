@@ -18,7 +18,7 @@
     justify-content: space-around; 
   }
   .researchLabel {
-    margin-bottom: 10px; 
+    margin-bottom: -10px; 
     font-weight: bold; 
     text-align: center; 
     margin-top: 10px;

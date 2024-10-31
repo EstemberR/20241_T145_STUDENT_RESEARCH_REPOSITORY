@@ -6,6 +6,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 // Firebase
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import auth from './firebaseConfig';
+import ReCAPTCHA from "react-google-recaptcha";
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -34,8 +35,10 @@ const Login = () => {
 
                 if (userRole === 'student') {
                     navigate('/student/dashboard');
+                    console.log(userRolee)
                 } else if (userRole === 'instructor') {
                     navigate('/instructor/dashboard');
+                    console.log(userRolee)
                 } else {
                     alert('Unknown user role'); 
                 }
@@ -97,6 +100,7 @@ const Login = () => {
         }
     };
 
+    {/*ReCAPCHA*/}
     return (
         <div className="login-container">
             {/* Left Side - Image Container */}
@@ -148,6 +152,8 @@ const Login = () => {
                             />
                         </div>
 
+                        {/*ReCAPTCHA*/}
+                        <ReCAPTCHA className="ReCapcha"  sitekey="6LfhrXEqAAAAAGnZSuJmLvDYlaNiBtWojYht08wy"onChange={onChange}/>,
                         <button type="submit" className="btn btn-submit w-50 mb-3">
                             Submit
                         </button>

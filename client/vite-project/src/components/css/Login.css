@@ -77,17 +77,20 @@ html, body {
   .login-title {
     color: #2f6b2f; /* Dark green for title */
     font-weight: bold;
-    font-size: 4.5rem;
+    font-size: 2.8rem;
   }
   
-  .user-section, .admin-section {
+  .user-section{
     width: 100%; /* Full width for sections */
+  }
+  .admin-section {
+    width: 70%;
   }
   
   .login-label {
     color: #2f6b2f; 
-    font-size: 2.5rem;
-    margin-top: 1rem; 
+    font-size: 1.5rem;
+    margin-top: 0.4rem; 
     margin-bottom: 0.5rem; /* Space below labels */
   }
   
@@ -108,6 +111,7 @@ html, body {
     color: white;
     font-size: 1.1rem;
     border-radius: 5px; 
+    margin-top: 0.7rem;
   }
   
   .or-label {
@@ -120,5 +124,10 @@ html, body {
     border-top: 2px solid #2f6b2f;
     width: 80%;
     margin: 20px auto; 
+  }
+  .ReCapcha{
+    display: flex;
+    align-content: center;
+    justify-content: center;
   }
   
