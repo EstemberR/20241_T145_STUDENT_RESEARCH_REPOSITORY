@@ -11,14 +11,10 @@ import ReCAPTCHA from "react-google-recaptcha";
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-<<<<<<< HEAD
-    const navigate = useNavigate(); 
     //Capcha
-    const [recaptchaVerified, setRecaptchaVerified] = useState(false); 
-=======
+    const recaptchaVerified = useState(false); 
     const [recaptchaToken, setRecaptchaToken] = useState(null);
     const navigate = useNavigate();
->>>>>>> 42e80b379d978ff19a47cefec53ccff8d2042678
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -46,17 +42,12 @@ const Login = () => {
 
                 if (userRole === 'student') {
                     navigate('/student/dashboard');
-<<<<<<< HEAD
                     console.log(userRole)
                 } else if (userRole === 'instructor') {
                     navigate('/instructor/dashboard');
                     console.log(userRole)
                 } else if (userRole === 'admin'){
                     navigate('/admin/admin_dashboard');
-=======
-                } else if (userRole === 'instructor') {
-                    navigate('/instructor/dashboard');
->>>>>>> 42e80b379d978ff19a47cefec53ccff8d2042678
                 } else {
                     alert('Unknown user role'); 
                 }
@@ -117,15 +108,9 @@ const Login = () => {
         }
     };
 
-<<<<<<< HEAD
     {/*ReCAPCHA*/}
-    const onreCapchaChange = (value) =>{
-        setRecaptchaVerified(!!value); 
-=======
-    // Handle ReCAPTCHA response
     const handleRecaptchaChange = (token) => {
         setRecaptchaToken(token);
->>>>>>> 42e80b379d978ff19a47cefec53ccff8d2042678
     };
     return (
         <div className="login-container">
@@ -173,18 +158,13 @@ const Login = () => {
                             />
                         </div>
 
-<<<<<<< HEAD
                         {/*ReCAPTCHA*/}
-                        <ReCAPTCHA className="ReCapcha"  sitekey="6LfhrXEqAAAAAGnZSuJmLvDYlaNiBtWojYht08wy"onChange={onreCapchaChange}/>,
-                        <button type="submit" className="btn btn-submit w-50 mb-3" disabled={!recaptchaVerified}>
-=======
                         <ReCAPTCHA
                             className="ReCapcha"
                             sitekey="6LfhrXEqAAAAAGnZSuJmLvDYlaNiBtWojYht08wy"
                             onChange={handleRecaptchaChange}
                         />
                         <button type="submit" className="btn btn-submit w-50 mb-3">
->>>>>>> 42e80b379d978ff19a47cefec53ccff8d2042678
                             Submit
                         </button>
                     </form>
