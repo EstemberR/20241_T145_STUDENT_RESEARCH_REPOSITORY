@@ -23,4 +23,5 @@ try {
 } catch (error) {
     console.error('Error parsing Firebase service account:', error);
 }
+
 export default admin;

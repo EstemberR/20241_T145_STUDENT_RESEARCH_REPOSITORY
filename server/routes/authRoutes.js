@@ -12,7 +12,6 @@ router.post('/google', async (req, res) => {
     if (!name || !email || !uid) {
         return res.status(400).json({ error: 'Name, email, and UID are required' });
     }
-
     try {
         let user = await User.findOne({ uid });
 
@@ -25,7 +24,6 @@ router.post('/google', async (req, res) => {
             } else {
                 return res.status(400).json({ message: 'Invalid email domain' });
             }
-
             user = new User({ name, email, uid, role });
             await user.save(); 
         }
