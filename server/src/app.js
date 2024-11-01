@@ -35,7 +35,6 @@ const connect = async () => {
 mongoose.connection.on('disconnected', () => {
     console.log('Disconnected from MONGODB');
 });
-
 app.use('/api/auth', authRoutes);
 
 app.listen(PORT, () => {
