@@ -95,6 +95,8 @@ const Login = () => {
                     navigate('/student/dashboard');
                 } else if (userRole === 'instructor') {
                     navigate('/instructor/dashboard');
+                } else if(userRole === 'admin'){
+                    navigate('/admin/admin-dashboard')
                 } else {
                     alert('Unknown user role'); 
                 }
