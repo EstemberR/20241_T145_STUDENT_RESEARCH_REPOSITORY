@@ -12,13 +12,15 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate(); 
+    //Capcha
+    const [recaptchaVerified, setRecaptchaVerified] = useState(false); 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         console.log('Login attempted with:', email, password);
 
         try {
-            const response = await fetch('http://localhost:8000/api/auth/login', {
+            const response = await fetch('http://localhost:8000/api/admin-login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -35,10 +37,12 @@ const Login = () => {
 
                 if (userRole === 'student') {
                     navigate('/student/dashboard');
-                    console.log(userRolee)
+                    console.log(userRole)
                 } else if (userRole === 'instructor') {
                     navigate('/instructor/dashboard');
-                    console.log(userRolee)
+                    console.log(userRole)
+                } else if (userRole === 'admin'){
+                    navigate('/admin/admin_dashboard');
                 } else {
                     alert('Unknown user role'); 
                 }
@@ -101,8 +105,8 @@ const Login = () => {
     };
 
     {/*ReCAPCHA*/}
-    const onChange = () =>{
-
+    const onreCapchaChange = (value) =>{
+        setRecaptchaVerified(!!value); 
     };
     return (
         <div className="login-container">
@@ -156,8 +160,8 @@ const Login = () => {
                         </div>
 
                         {/*ReCAPTCHA*/}
-                        <ReCAPTCHA className="ReCapcha"  sitekey="6LfhrXEqAAAAAGnZSuJmLvDYlaNiBtWojYht08wy"onChange={onChange}/>,
-                        <button type="submit" className="btn btn-submit w-50 mb-3">
+                        <ReCAPTCHA className="ReCapcha"  sitekey="6LfhrXEqAAAAAGnZSuJmLvDYlaNiBtWojYht08wy"onChange={onreCapchaChange}/>,
+                        <button type="submit" className="btn btn-submit w-50 mb-3" disabled={!recaptchaVerified}>
                             Submit
                         </button>
                     </form>

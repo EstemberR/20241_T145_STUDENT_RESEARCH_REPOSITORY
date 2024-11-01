@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
-const adminCredentials = { email: 'admin@example.com', password: 'adminpassword' };
+const adminCredentials = { email: "admin@gmail.com",
+                           password: "adminpassword"
+                          };
 
 const verifyGoogleToken = async (token) => {
   const dummyData = { role: Math.random() > 0.5 ? 'student' : 'instructor' };

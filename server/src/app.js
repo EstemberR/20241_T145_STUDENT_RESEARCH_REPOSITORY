@@ -13,8 +13,9 @@ const PORT = process.env.PORT || 8000;
 
 app.use(cors({
     origin: 'http://localhost:3000', 
+    method: "POST",
     credentials: true,
-}));
+}));    
 app.use(express.json()); 
 app.use(bodyParser.json());
 
@@ -35,8 +36,10 @@ const connect = async () => {
 mongoose.connection.on('disconnected', () => {
     console.log('Disconnected from MONGODB');
 });
+//google auth
 app.use('/api/auth', authRoutes);
-
+//manual login
+app.use('/api', authRoutes);
 app.listen(PORT, () => {
     connect(); 
     console.log(`Listening on PORT ${PORT}`);
