@@ -106,7 +106,6 @@ const Login = () => {
     const handleRecaptchaChange = (token) => {
         setRecaptchaToken(token);
     };
-
     return (
         <div className="login-container">
             <div className="col-md-6 d-none d-md-block login-image-container login-image">
