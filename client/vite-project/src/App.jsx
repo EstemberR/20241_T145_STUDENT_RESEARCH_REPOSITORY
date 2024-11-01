@@ -26,7 +26,7 @@ function App() {
         {/* INSTRUCTOR */}
           <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
           {/*ADMIN*/}
-          <Route path="/admin/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/admin_dashboard" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );
