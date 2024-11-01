@@ -11,10 +11,15 @@ import ReCAPTCHA from "react-google-recaptcha";
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const navigate = useNavigate(); 
+    const [recaptchaToken, setRecaptchaToken] = useState(null);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!recaptchaToken) {
+            alert("Please complete the ReCAPTCHA verification.");
+            return;
+        }
         console.log('Login attempted with:', email, password);
 
         try {
@@ -27,7 +32,7 @@ const Login = () => {
             });
 
             const data = await response.json();
-            console.log('User response:', data); 
+            console.log('User response:', data);
 
             if (response.ok) {
                 console.log('User authenticated successfully:', data);
@@ -35,10 +40,8 @@ const Login = () => {
 
                 if (userRole === 'student') {
                     navigate('/student/dashboard');
-                    console.log(userRolee)
                 } else if (userRole === 'instructor') {
                     navigate('/instructor/dashboard');
-                    console.log(userRolee)
                 } else {
                     alert('Unknown user role'); 
                 }
@@ -54,27 +57,26 @@ const Login = () => {
 
     // Firebase Google login function
     const handleGoogle = async () => {
-      const provider = new GoogleAuthProvider();
-      try {
-          const result = await signInWithPopup(auth, provider);
-          const user = result.user; // Get user from result
-  
-          if (!user.uid) {
-              throw new Error('User UID is null');
-          }
-  
-          const response = await fetch('http://localhost:8000/api/auth/google', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ 
-                  name: user.displayName,
-                  email: user.email,
-                  uid: user.uid 
-              }),
-          });
-  
+        const provider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            if (!user.uid) {
+                throw new Error('User UID is null');
+            }
+
+            const response = await fetch('http://localhost:8000/api/auth/google', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    name: user.displayName,
+                    email: user.email,
+                    uid: user.uid 
+                }),
+            });
 
             const data = await response.json();
             console.log('User response:', data);
@@ -100,23 +102,23 @@ const Login = () => {
         }
     };
 
-    {/*ReCAPCHA*/}
+    // Handle ReCAPTCHA response
+    const handleRecaptchaChange = (token) => {
+        setRecaptchaToken(token);
+    };
+
     return (
         <div className="login-container">
-            {/* Left Side - Image Container */}
             <div className="col-md-6 d-none d-md-block login-image-container login-image">
                 <div className="background"></div>
                 <div className="overlay-image"></div>
             </div>
 
-            {/* Right Side - Form */}
             <div className="login-form-container">
-                {/* Title */}
                 <div className="login-title-container text-center buksu-logo">
                     <h1 className="login-title">Student Research Repository System</h1>
                 </div>
 
-                {/* User Login Section */}
                 <div className="user-section text-center">
                     <h2 className="login-label">User Login</h2>
                     <button onClick={handleGoogle} className="btn btn-google w-50 mb-3">
@@ -124,9 +126,8 @@ const Login = () => {
                     </button>
                 </div>
 
-                <hr /> {/* Separator */}
+                <hr />
 
-                {/* Admin Login Section */}
                 <div className="admin-section text-center">
                     <h2 className="login-label">Admin Login</h2>
                     <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm bg-white">
@@ -152,8 +153,11 @@ const Login = () => {
                             />
                         </div>
 
-                        {/*ReCAPTCHA*/}
-                        <ReCAPTCHA className="ReCapcha"  sitekey="6LfhrXEqAAAAAGnZSuJmLvDYlaNiBtWojYht08wy"onChange={onChange}/>,
+                        <ReCAPTCHA
+                            className="ReCapcha"
+                            sitekey="6LfhrXEqAAAAAGnZSuJmLvDYlaNiBtWojYht08wy"
+                            onChange={handleRecaptchaChange}
+                        />
                         <button type="submit" className="btn btn-submit w-50 mb-3">
                             Submit
                         </button>
