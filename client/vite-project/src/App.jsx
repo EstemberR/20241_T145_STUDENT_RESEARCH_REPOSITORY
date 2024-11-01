@@ -8,7 +8,7 @@ import FAQ from './components/FAQ';
 import Notification from './components/Notification';
 import Repository from './components/ResearchRepository';
 import Profile from './components/UserProfile';
-
+import AdminDashboard from './components/admin_dashboard';
 import InstructorDashboard from './components/instructor_dashboard';
 
 function App() {
@@ -25,8 +25,8 @@ function App() {
           <Route path="/student/notifications" element={<Notification />} />
         {/* INSTRUCTOR */}
           <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
-
-
+          {/*ADMIN*/}
+          <Route path="/admin/admin-dashboard" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );

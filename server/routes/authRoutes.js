@@ -41,8 +41,7 @@ router.post('/google', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-router.post('/login', async (req, res) => {
+router.post('/admin-login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
@@ -51,12 +50,21 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
+        // Check if the user is an admin
+        if (user.role !== 'admin') {
+            return res.status(403).json({ message: 'Access denied: Admins only' });
+        }
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ userId: user._id, role: user.role }, 'your_jwt_secret', { expiresIn: '1h' });
+        const token = jwt.sign(
+            { userId: user._id, role: user.role },
+            process.env.JWT_SECRET || 'your_jwt_secret',
+            { expiresIn: '1h' }
+        );
 
         res.json({
             message: 'Login successful',
@@ -64,44 +72,40 @@ router.post('/login', async (req, res) => {
             role: user.role 
         });
     } catch (error) {
-        console.error('Error during login:', error);
+        console.error('Error during admin login:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
-router.post('/register', async (req, res) => {
-    const { name, email, password } = req.body;
-
+// One-time admin creation script
+const createAdmin = async () => {
     try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'Email already in use' });
+        const existingAdmin = await User.findOne({ email: 'admin@example.com' });
+        if (existingAdmin) {
+            console.log('Admin user already exists');
+            return;
         }
 
-        let role;
-        if (email.endsWith('@student.buksu.edu.ph')) {
-            role = 'student';
-        } else if (email.endsWith('@gmail.com')) {
-            role = 'instructor';
-        } else {
-            return res.status(400).json({ message: 'Invalid email domain' });
-        }
+        const email = "admin@example.com";
+        const plainPassword = "adminpassword";
+        const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const newUser = new User({
-            name,
+        const admin = new User({
+            name: "Admin",
             email,
             password: hashedPassword,
-            role,
+            role: "admin",
+            uid: "admin_uid" // Provide a placeholder or static uid for the admin
         });
 
-        await newUser.save();
-        return res.status(201).json({ message: 'User registered successfully' });
+        await admin.save();
+        console.log("Admin user created");
     } catch (error) {
-        console.error('Error registering user:', error);
-        return res.status(500).json({ message: 'Error registering user', error });
+        console.error('Error creating admin user:', error);
     }
-});
+};
+
+// Call the createAdmin function to run only once at startup
+createAdmin();
 
 export default router;
