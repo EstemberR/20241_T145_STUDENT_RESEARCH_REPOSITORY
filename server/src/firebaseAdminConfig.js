@@ -17,6 +17,7 @@ try {
     client_x509_cert_urlwin:process.env.MY_CLIENT_X509_CERT_URL,
     universe_domain:process.env.MY_UNIVERSE_DOMAIN
 }
+console.log(serviceAccount)
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
     });
