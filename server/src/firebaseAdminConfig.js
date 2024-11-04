@@ -21,7 +21,7 @@ try {
         credential: admin.credential.cert(serviceAccount),
     });
 } catch (error) {
-    console.error('Error parsing Firebase service account:', error);
+    console.error('Error parsing Firebase service accounts:', error);
 }
 
 export default admin;
