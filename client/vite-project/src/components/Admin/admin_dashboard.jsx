@@ -1,12 +1,12 @@
-import casLogo from '../assets/cas-logo.jpg'; 
+import casLogo from '../../assets/cas-logo.jpg'; 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './css/Dashboard.css';
-import './css/Dashboard2.css';
-import './css/admin_dashboard.css';
+import '../css/Dashboard.css';
+import '../css/Dashboard2.css';
+import '../css/admin_dashboard.css';
 
-const InstructorDashboard = () => {
+const AdminDashboard = () => {
   const location = useLocation();
 
   return (
@@ -16,37 +16,37 @@ const InstructorDashboard = () => {
         <h3 className="text-center x">ADMIN VIEW RESEARCH REPOSITORY</h3>
         <ul className="nav flex-column">
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin_dashboard' ? 'active' : ''}`} to="/admin_dashboard">
+            <Link className={`nav-link ${location.pathname === '/admin/admin_dashboard' ? 'active' : ''}`} to="/admin/admin_dashboard">
               <i className="fas fa-tachometer-alt search"></i> Admin Dashboard
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/repositoryTable' ? 'active' : ''}`} to="/repositoryTable">
+            <Link className={`nav-link ${location.pathname === '/admin/repositoryTable' ? 'active' : ''}`} to="/admin/repositoryTable">
               <i className="fas fa-book search"></i> Repository Table
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/accounts' ? 'active' : ''}`} to="/accounts">
+            <Link className={`nav-link ${location.pathname === '/admin/accounts' ? 'active' : ''}`} to="/admin/accounts">
               <i className="fas fa-user search"></i> Manage Accounts
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/request' ? 'active' : ''}`} to="/request">
+            <Link className={`nav-link ${location.pathname === '/admin/request' ? 'active' : ''}`} to="/admin/request">
               <i className="fas fa-folder-open search"></i> Role Requests
             </Link>
           </li>
           <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/activity' ? 'active' : ''}`} to="/activity">
+          <Link className={`nav-link ${location.pathname === '/admin/activity' ? 'active' : ''}`} to="/admin/activity">
           <i className="fas fa-robot search"></i> User Activity
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/report' ? 'active' : ''}`} to="/report">
+            <Link className={`nav-link ${location.pathname === '/admin/report' ? 'active' : ''}`} to="/admin/report">
               <i className="fas fa-bell search"></i> Generate Report
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/logout' ? 'active' : ''}`} to="/logout">
+            <Link className={`nav-link ${location.pathname === '/admin/logout' ? 'active' : ''}`} to="/admin/logout">
               <i className="fas fa-sign-out-alt search"></i> Logout
             </Link>
           </li>
@@ -69,13 +69,13 @@ const InstructorDashboard = () => {
         <main className="main-content">
           <div className="contentRow d-flex align-items-start">
             <div className="notificationDashboard">
-              <h4 className="researchLabel">Generate Report</h4>
+              <h4 className="researchLabel2">Generate Report</h4>
               <div className="staticData">[]</div>
             </div>
             <div className="researchDashboard">
-              <h4 className="researchLabel">Repository Table Submissions</h4>
+              <h4 className="researchLabel2">Repository Table Submissions</h4>
               <div className="researchOverviewContainer">
-                <div className="researchBox1">REVIEWED
+                <div className="researchBox1">PUBLISHED
                   <p>[]</p>
                 </div>
                 <div className="researchBox2">PENDING
@@ -107,4 +107,4 @@ const InstructorDashboard = () => {
   );
 };
 
-export default InstructorDashboard;
+export default AdminDashboard;

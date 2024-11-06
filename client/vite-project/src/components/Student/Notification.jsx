@@ -1,34 +1,18 @@
-import casLogo from '../assets/cas-logo.jpg';
+import casLogo from '../../assets/cas-logo.jpg'; 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './css/Dashboard.css';
-import './css/FAQ.css'
+import '../css/Dashboard.css';
 
-const FAQ = () => {
+const Notification = () => {
   const location = useLocation();
 
-  const faqs = [
-    {
-      question: "What is the Student Research Repository System?",
-      answer: "The Student Research Repository System is an online platform that allows students to submit, manage, and share their research work."
-    },
-    {
-      question: "How can I submit my research?",
-      answer: "You can submit your research by navigating to the 'My Research' section and following the submission instructions."
-    },
-    {
-      question: "Who can access my research?",
-      answer: "Only registered users with appropriate permissions can access your research submissions."
-    },
-    {
-      question: "How do I update my profile?",
-      answer: "You can update your profile information in the 'User Profile' section."
-    },
-    {
-      question: "What should I do if I forget my password?",
-      answer: "If you forget your password, use the 'Forgot Password' link on the login page to reset it."
-    },
+  // Sample notification data
+  const notifications = [
+    { id: 1, message: 'Your research submission has been approved.', timestamp: '2024-10-25 10:30 AM' },
+    { id: 2, message: 'New guidelines for research submissions are available.', timestamp: '2024-10-26 01:15 PM' },
+    { id: 3, message: 'Your profile has been updated successfully.', timestamp: '2024-10-27 08:00 AM' },
+    { id: 4, message: 'Reminder: Submit your final project by next week.', timestamp: '2024-10-28 09:00 AM' },
   ];
 
   return (
@@ -93,32 +77,15 @@ const FAQ = () => {
         
         {/* Main Content Area */}
         <main className="main-content p-3">
-          <h4 className="mb-3">Frequently Asked Questions</h4>
-          <div className="accordion" id="faqAccordion">
-            {faqs.map((faq, index) => (
-              <div className="accordion-item" key={index}>
-                <h2 className="accordion-header" id={`heading${index}`}>
-                  <button
-                    className="accordion-button"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target={`#collapse${index}`}
-                    aria-expanded="true"
-                    aria-controls={`collapse${index}`}
-                  >
-                    {faq.question}
-                  </button>
-                </h2>
-                <div
-                  id={`collapse${index}`}
-                  className="accordion-collapse collapse"
-                  aria-labelledby={`heading${index}`}
-                  data-bs-parent="#faqAccordion"
-                >
-                  <div className="accordion-body">
-                    {faq.answer}
-                  </div>
+          <h4 className="mb-3">Notifications</h4>
+          <div className="list-group">
+            {notifications.map((notification) => (
+              <div key={notification.id} className="list-group-item d-flex justify-content-between align-items-start">
+                <div className="ms-2 me-auto">
+                  <div className="fw-bold">{notification.message}</div>
+                  <small className="text-muted">{notification.timestamp}</small>
                 </div>
+                <button className="search1">Mark as Read</button> {/* Green-themed button */}
               </div>
             ))}
           </div>
@@ -128,4 +95,4 @@ const FAQ = () => {
   );
 };
 
-export default FAQ;
+export default Notification;

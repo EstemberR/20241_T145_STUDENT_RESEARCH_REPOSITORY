@@ -1,9 +1,9 @@
-import './css/ResearchRepository.css';
+import '../css/ResearchRepository.css';
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './css/Dashboard.css';
-import casLogo from '../assets/cas-logo.jpg'; 
+import '../css/Dashboard.css';
+import casLogo from '../../assets/cas-logo.jpg'; 
 
 const Repository = () => {
   const location = useLocation();
