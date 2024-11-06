@@ -1,10 +1,10 @@
-import casLogo from '../assets/cas-logo.jpg'; 
+import casLogo from '../../assets/cas-logo.jpg'; 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './css/Dashboard.css';
-import './css/Dashboard2.css';
-import './css/admin_dashboard.css';
+import '../css/Dashboard.css';
+import '../css/Dashboard2.css';
+import '../css/admin_dashboard.css';
 
 const InstructorDashboard = () => {
   const location = useLocation();

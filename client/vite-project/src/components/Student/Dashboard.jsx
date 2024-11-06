@@ -1,18 +1,19 @@
-import casLogo from '../assets/cas-logo.jpg'; 
+import casLogo from '../../assets/cas-logo.jpg'; 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './css/Dashboard.css';
+import '../css/Dashboard.css';
+import '../css/Dashboard2.css';
 
 
-const MyResearch = () => {
+const StudentDashboard = () => {
   const location = useLocation();
 
   return (
     <div className="dashboard-container d-flex">
       {/* Sidebar (Occupies full height) */}
       <nav className="col-2 sidebar">
-        <h3 className="text-center">STUDENT RESEARCH REPOSITORY SYSTEM</h3>
+        <h3 className="text-center">STUDENT RESEARCH REPOSITORY</h3>
         <ul className="nav flex-column">
           <li className="nav-item">
           <Link className={`nav-link ${location.pathname === '/student/dashboard' ? 'active' : ''}`} to="/student/dashboard">
@@ -68,11 +69,42 @@ const MyResearch = () => {
         </div>
 {/*---------------------------------END OF HEADER TEMPLATE----------------------------------------------------*/}
         {/* Main Content Area */}
+        {/* CONTENT DATA EDIT DIRI PAG DYNAMIC NA */}
         <main className="main-content">
+          <div className="contentRow d-flex align-items-start">
+            <div className="notificationDashboard">
+              <h4 className="researchLabel">Notifications Overview</h4>
+              <div className="staticData">
+                []
+              </div>
+            </div>
+            <div className="researchDashboard">
+            <h4 className="researchLabel">Research Submissions</h4>
+              <div className="researchOverviewContainer">
+                <div className="researchBox1">REVIEWED
+                  <p>[]</p>
+                </div>
+                <div className="researchBox2">PENDING
+                  <p>[]</p>
+                </div>
+                <div className="researchBox3">REJECTED
+                  <p>[]</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="repositoryDashboard">
+            <h4 className="repoLabel">Research Repository Overview</h4>
+            <div className="staticData">
+              []
+            </div>
+
+          </div>
         </main>
       </div>
     </div>
   );
 };
 
-export default MyResearch;
+export default StudentDashboard;

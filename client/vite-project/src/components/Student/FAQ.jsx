@@ -1,19 +1,41 @@
-import casLogo from '../assets/cas-logo.jpg'; 
+import casLogo from '../../assets/cas-logo.jpg';
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './css/Dashboard.css';
-import './css/Dashboard2.css';
+import '../css/Dashboard.css';
+import '../css/FAQ.css'
 
-
-const StudentDashboard = () => {
+const FAQ = () => {
   const location = useLocation();
+
+  const faqs = [
+    {
+      question: "What is the Student Research Repository System?",
+      answer: "The Student Research Repository System is an online platform that allows students to submit, manage, and share their research work."
+    },
+    {
+      question: "How can I submit my research?",
+      answer: "You can submit your research by navigating to the 'My Research' section and following the submission instructions."
+    },
+    {
+      question: "Who can access my research?",
+      answer: "Only registered users with appropriate permissions can access your research submissions."
+    },
+    {
+      question: "How do I update my profile?",
+      answer: "You can update your profile information in the 'User Profile' section."
+    },
+    {
+      question: "What should I do if I forget my password?",
+      answer: "If you forget your password, use the 'Forgot Password' link on the login page to reset it."
+    },
+  ];
 
   return (
     <div className="dashboard-container d-flex">
       {/* Sidebar (Occupies full height) */}
       <nav className="col-2 sidebar">
-        <h3 className="text-center">STUDENT RESEARCH REPOSITORY</h3>
+        <h3 className="text-center">STUDENT RESEARCH REPOSITORY SYSTEM</h3>
         <ul className="nav flex-column">
           <li className="nav-item">
           <Link className={`nav-link ${location.pathname === '/student/dashboard' ? 'active' : ''}`} to="/student/dashboard">
@@ -67,39 +89,38 @@ const StudentDashboard = () => {
             </div>
           </div>
         </div>
-{/*---------------------------------END OF HEADER TEMPLATE----------------------------------------------------*/}
+        {/*---------------------------------END OF HEADER TEMPLATE----------------------------------------------------*/}
+        
         {/* Main Content Area */}
-        {/* CONTENT DATA EDIT DIRI PAG DYNAMIC NA */}
-        <main className="main-content">
-          <div className="contentRow d-flex align-items-start">
-            <div className="notificationDashboard">
-              <h4 className="researchLabel">Notifications Overview</h4>
-              <div className="staticData">
-                []
+        <main className="main-content p-3">
+          <h4 className="mb-3">Frequently Asked Questions</h4>
+          <div className="accordion" id="faqAccordion">
+            {faqs.map((faq, index) => (
+              <div className="accordion-item" key={index}>
+                <h2 className="accordion-header" id={`heading${index}`}>
+                  <button
+                    className="accordion-button"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target={`#collapse${index}`}
+                    aria-expanded="true"
+                    aria-controls={`collapse${index}`}
+                  >
+                    {faq.question}
+                  </button>
+                </h2>
+                <div
+                  id={`collapse${index}`}
+                  className="accordion-collapse collapse"
+                  aria-labelledby={`heading${index}`}
+                  data-bs-parent="#faqAccordion"
+                >
+                  <div className="accordion-body">
+                    {faq.answer}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="researchDashboard">
-            <h4 className="researchLabel">Research Submissions</h4>
-              <div className="researchOverviewContainer">
-                <div className="researchBox1">REVIEWED
-                  <p>[]</p>
-                </div>
-                <div className="researchBox2">PENDING
-                  <p>[]</p>
-                </div>
-                <div className="researchBox3">REJECTED
-                  <p>[]</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="repositoryDashboard">
-            <h4 className="repoLabel">Research Repository Overview</h4>
-            <div className="staticData">
-              []
-            </div>
-
+            ))}
           </div>
         </main>
       </div>
@@ -107,4 +128,4 @@ const StudentDashboard = () => {
   );
 };
 
-export default StudentDashboard;
+export default FAQ;
