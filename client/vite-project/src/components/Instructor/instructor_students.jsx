@@ -6,8 +6,13 @@ import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 
-const InstructorDashboard = () => {
+const InstructorStudents = () => {
   const location = useLocation();
+  const studentData = [
+    { id: 1, name: "Maria Perez", email: "maria.perez@example.com", course: "Computer Science", researchTitle: "AI in Smart Parking Systems", status: "Approved" },
+    { id: 2, name: "John Doe", email: "john.doe@example.com", course: "Information Technology", researchTitle: "IoT-based Emission Monitoring", status: "Pending" },
+    { id: 3, name: "Alice Johnson", email: "alice.johnson@example.com", course: "Engineering", researchTitle: "Vehicle Speed Sensor Development", status: "In Progress" },
+  ];
 
   return (
     <div className="dashboard-container d-flex">
@@ -66,45 +71,48 @@ const InstructorDashboard = () => {
           </div>
         </div>
 
-        <main className="main-content">
-          <div className="contentRow d-flex align-items-start">
-            <div className="notificationDashboard">
-              <h4 className="researchLabel">Generate Report rename</h4>
-              <div className="staticData">[]</div>
-            </div>
-            <div className="researchDashboard">
-              <h4 className="researchLabel">Repository Table Submissions rename</h4>
-              <div className="researchOverviewContainer">
-                <div className="researchBox1">REVIEWED
-                  <p>[]</p>
-                </div>
-                <div className="researchBox2">PENDING
-                  <p>[]</p>
-                </div>
-                <div className="researchBox3">REJECTED
-                  <p>[]</p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <main className="main-content ">
+        <div className="container mt-4 notify">
+            <h4>STUDENT PROFILES</h4>
+            <div className="container">
+                <div className="row">
+                {/* Example of a single student profile card */}
+                {studentData.map((student, index) => (
+                    <div className="col-md-4 mb-4" key={index}>
+                    <div className="card h-100 shadow-sm">
+                    <div className="card h-100 shadow-sm">
+                    <div className="card-body d-flex align-items-center">
+                        <img
+                        src="https://via.placeholder.com/50"
+                        alt="Profile"
+                        className="rounded-circle me-3 studProfile"
+                        width="50"
+                        height="50"   
+                        />
+                        <div>
+                        <h5 className="card-title mb-1">{student.name}</h5>
+                        <p className="card-text"><strong>Email:</strong> {student.email}</p>
+                        <p className="card-text"><strong>Course:</strong> {student.course}</p>
+                        <p className="card-text"><strong>Research Title:</strong> {student.researchTitle}</p>
+                        <p className="card-text"><strong>Status:</strong> {student.status}</p>
+                        </div>
+                    </div>
+                    <Link to={`/instructor/student/${student.id}`} className="btn btn-primary mt-2 w-100">
+                        View Details
+                    </Link>
+                    </div>
+                    
 
-          <div className="repositoryDashboards">
-            <div className="repositoryOverviewContainer d-flex">
-              <div className="repoBox">
-                <p className="repoData">[MANAGE ACCOUNTS] rename</p>
-              </div>
-              <div className="repoBox">
-                <p className="repoData">[ROLE REQUESTS] rename</p>
-              </div>
-              <div className="repoBox">
-                <p className="repoData">[USER ACTIVITY] rename</p>
-              </div>
+                    </div>
+                    </div>
+                ))}
+                </div>
             </div>
-          </div>
+            </div>
         </main>
       </div>
     </div>
   );
 };
 
-export default InstructorDashboard;
+export default InstructorStudents;
