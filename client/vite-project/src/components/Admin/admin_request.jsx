@@ -51,38 +51,38 @@ const AdminRequest = () => {
         <h3 className="text-center">ADMIN VIEW RESEARCH REPOSITORY</h3>
         <ul className="nav flex-column">
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/admin_dashboard' ? 'active' : ''}`} to="/admin/admin_dashboard">
-              <i className="fas fa-tachometer-alt"></i> Admin Dashboard
+          <Link className={`nav-link ${location.pathname === '/admin/admin_dashboard' ? 'active' : ''}`} to="/admin/admin_dashboard">
+              <i className="fas fa-tachometer-alt search zx"></i> Admin Dashboard
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/admin/repositoryTable' ? 'active' : ''}`} to="/admin/repositoryTable">
-              <i className="fas fa-book"></i> Repository Table
+              <i className="fas fa-book search zx"></i> Repository Table
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/admin/accounts' ? 'active' : ''}`} to="/admin/accounts">
-              <i className="fas fa-user"></i> Manage Accounts
+              <i className="fas fa-user search zx"></i> Manage Accounts
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/admin/request' ? 'active' : ''}`} to="/admin/request">
-              <i className="fas fa-folder-open"></i> Role Requests
+              <i className="fas fa-folder-open search zx"></i> Role Requests
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/activity' ? 'active' : ''}`} to="/admin/activity">
-              <i className="fas fa-robot"></i> User Activity
+          <Link className={`nav-link ${location.pathname === '/admin/activity' ? 'active' : ''}`} to="/admin/activity">
+          <i className="fas fa-robot search zx"></i> User Activity
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/admin/report' ? 'active' : ''}`} to="/admin/report">
-              <i className="fas fa-bell"></i> Generate Report
+              <i className="fas fa-bell search zx"></i> Generate Report
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/admin/logout' ? 'active' : ''}`} to="/admin/logout">
-              <i className="fas fa-sign-out-alt"></i> Logout
+              <i className="fas fa-sign-out-alt search zx"></i> Logout
             </Link>
           </li>
         </ul>

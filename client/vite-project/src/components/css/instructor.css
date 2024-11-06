@@ -1,0 +1,17 @@
+.btn-primary {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+  }
+  .btn-primary:hover {
+    background-color: #117f2b;
+    border-color: #117f2b;
+    color: white;
+  }
+  .studProfile {
+    margin-top: -170px;
+  }
+  
+  .notify {
+    background-color: #b3ecc4;
+  }

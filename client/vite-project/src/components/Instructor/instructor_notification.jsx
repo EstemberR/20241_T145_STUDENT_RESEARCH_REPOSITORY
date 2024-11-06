@@ -6,7 +6,7 @@ import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 
-const InstructorDashboard = () => {
+const InstructorNotification = () => {
   const location = useLocation();
 
   return (
@@ -67,37 +67,55 @@ const InstructorDashboard = () => {
         </div>
 
         <main className="main-content">
-          <div className="contentRow d-flex align-items-start">
-            <div className="notificationDashboard">
-              <h4 className="researchLabel">Generate Report rename</h4>
-              <div className="staticData">[]</div>
-            </div>
-            <div className="researchDashboard">
-              <h4 className="researchLabel">Repository Table Submissions rename</h4>
-              <div className="researchOverviewContainer">
-                <div className="researchBox1">REVIEWED
-                  <p>[]</p>
+          <div className="container mt-4 notify">
+            <h4 className="mb-3">NOTIFICATIONS</h4>
+            <div className="list-group">
+              {/* Notification 1 */}
+              <div className="list-group-item list-group-item-action mb-2">
+                <div className="d-flex justify-content-between">
+                  <div>
+                    <h6 className="mb-1">New Research Submission</h6>
+                    <p className="mb-1">You have a new research submission from John Doe.</p>
+                  </div>
+                  <span className="badge badge-primary">New</span>
                 </div>
-                <div className="researchBox2">PENDING
-                  <p>[]</p>
-                </div>
-                <div className="researchBox3">REJECTED
-                  <p>[]</p>
-                </div>
+                <small>2 hours ago</small>
               </div>
-            </div>
-          </div>
 
-          <div className="repositoryDashboards">
-            <div className="repositoryOverviewContainer d-flex">
-              <div className="repoBox">
-                <p className="repoData">[MANAGE ACCOUNTS] rename</p>
+              {/* Notification 2 */}
+              <div className="list-group-item list-group-item-action mb-2">
+                <div className="d-flex justify-content-between">
+                  <div>
+                    <h6 className="mb-1">Meeting Reminder</h6>
+                    <p className="mb-1">Reminder for your meeting with student Sarah on Wednesday at 10 AM.</p>
+                  </div>
+                  <span className="badge badge-warning">Pending</span>
+                </div>
+                <small>1 day ago</small>
               </div>
-              <div className="repoBox">
-                <p className="repoData">[ROLE REQUESTS] rename</p>
+
+              {/* Notification 3 */}
+              <div className="list-group-item list-group-item-action mb-2">
+                <div className="d-flex justify-content-between">
+                  <div>
+                    <h6 className="mb-1">Research Review Request</h6>
+                    <p className="mb-1">Your review is requested for research submission titled "AI in Education".</p>
+                  </div>
+                  <span className="badge badge-success">Reviewed</span>
+                </div>
+                <small>3 days ago</small>
               </div>
-              <div className="repoBox">
-                <p className="repoData">[USER ACTIVITY] rename</p>
+
+              {/* Notification 4 */}
+              <div className="list-group-item list-group-item-action mb-2">
+                <div className="d-flex justify-content-between">
+                  <div>
+                    <h6 className="mb-1">New Course Material</h6>
+                    <p className="mb-1">New course material has been uploaded for your course: "Introduction to Programming".</p>
+                  </div>
+                  <span className="badge badge-info">Info</span>
+                </div>
+                <small>5 days ago</small>
               </div>
             </div>
           </div>
@@ -107,4 +125,4 @@ const InstructorDashboard = () => {
   );
 };
 
-export default InstructorDashboard;
+export default InstructorNotification;

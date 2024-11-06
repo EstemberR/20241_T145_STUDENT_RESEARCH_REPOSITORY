@@ -36,12 +36,12 @@
   .search1 {
     border-radius: 8px;
     border-color: white;
-    background-color: #7efb9b;
+    background-color: #4CAF50;
     color: white;
   }
   
   .search1:hover {
-    background-color: #5bfb80;
+    background-color: #4CAF50;
     color: white;
   }
   
