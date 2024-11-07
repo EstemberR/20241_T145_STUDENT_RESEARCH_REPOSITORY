@@ -6,6 +6,9 @@ import './firebaseAdminConfig.js';
 import authRoutes from '../routes/authRoutes.js'; 
 import bodyParser from 'body-parser';
 import User from '../model/user.js';
+import Admin from '../model/Admin.js';
+import Instructor from '../model/Instructor.js';
+import Student from '../model/Student.js'
 
 dotenv.config(); 
 const app = express();
@@ -20,6 +23,9 @@ app.use(express.json());
 app.use(bodyParser.json());
 
 app.locals.userModel = User;
+app.locals.userModel = Admin;
+app.locals.userModel = Instructor;
+app.locals.userModel = Student;
 
 const connect = async () => {
     try {
