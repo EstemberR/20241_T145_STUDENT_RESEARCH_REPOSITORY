@@ -1,12 +1,19 @@
-import casLogo from '../assets/cas-logo.jpg';
-import React from 'react';
+import casLogo from '../../assets/cas-logo.jpg';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './css/Dashboard.css';
-import './css/FAQ.css'
+import '../css/Dashboard.css';
+import '../css/FAQ.css'
 
 const FAQ = () => {
   const location = useLocation();
+  const [userName, setUserName] = useState('');
+  useEffect(() => {
+    const storedName = localStorage.getItem('userName');
+    if (storedName) {
+        setUserName(storedName);
+    }
+}, []);
 
   const faqs = [
     {
@@ -39,37 +46,37 @@ const FAQ = () => {
         <ul className="nav flex-column">
           <li className="nav-item">
           <Link className={`nav-link ${location.pathname === '/student/dashboard' ? 'active' : ''}`} to="/student/dashboard">
-              <i className="fas fa-tachometer-alt search"></i> Dashboard
+              <i className="fas fa-tachometer-alt search zx"></i> Dashboard
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/student/repository' ? 'active' : ''}`} to="/student/repository">
-              <i className="fas fa-book search"></i> Research Repository
+              <i className="fas fa-book search zx"></i> Research Repository
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/student/profile' ? 'active' : ''}`} to="/student/profile">
-              <i className="fas fa-user search"></i> User Profile
+              <i className="fas fa-user search zx"></i> User Profile
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/student/myResearch' ? 'active' : ''}`} to="/student/myResearch">
-              <i className="fas fa-folder-open search"></i> My Research
+              <i className="fas fa-folder-open search zx"></i> My Research
             </Link>
           </li>
           <li className="nav-item">
           <Link className={`nav-link ${location.pathname === '/student/FAQ' ? 'active' : ''}`} to="/student/FAQ">
-          <i className="fas fa-robot search"></i> FAQ
+          <i className="fas fa-robot search zx"></i> FAQ
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/student/notifications' ? 'active' : ''}`} to="/student/notifications">
-              <i className="fas fa-bell search"></i> Notifications
+              <i className="fas fa-bell search zx"></i> Notifications
             </Link>
           </li>
           <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/student/logout' ? 'active' : ''}`} to="/student/logout">
-              <i className="fas fa-sign-out-alt search"></i> Logout
+              <i className="fas fa-sign-out-alt search zx"></i> Logout
             </Link>
           </li>
         </ul>
@@ -83,8 +90,14 @@ const FAQ = () => {
             <img src={casLogo} alt="CAS Logo" className="cas-logo" />
           </header>
           <div className="col-2 user-info ms-auto d-flex align-items-center">
+          <img
+          src={'https://via.placeholder.com/150'} //STATIC NALANG
+          alt="Profile"
+          className="img-fluid rounded-circle"
+          style={{ width: '50PX', height: '50px' }}
+        />
             <div className="user-details">
-              <p className="user-name">Merryl Strife</p>
+              <p className="user-name">{userName}</p>
               <p className="user-role">Student</p>
             </div>
           </div>

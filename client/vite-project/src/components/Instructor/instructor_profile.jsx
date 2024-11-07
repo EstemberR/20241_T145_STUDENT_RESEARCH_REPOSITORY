@@ -1,23 +1,31 @@
-import casLogo from '../assets/cas-logo.jpg'; 
-import React, { useState } from 'react';
+import casLogo from '../../assets/cas-logo.jpg'; 
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './css/Dashboard.css';
-import './css/UserProfile.css';
+import '../css/Dashboard.css';
+import '../css/Dashboard2.css';
+import '../css/admin_dashboard.css';
 
-const Profile = () => {
+const InstructorProfile = () => {
   const location = useLocation();
+  const [userName, setUserName] = useState('');
+  useEffect(() => {
+    const storedName = localStorage.getItem('userName');
+    if (storedName) {
+        setUserName(storedName);
+    }
+}, []);
   const [isEditing, setIsEditing] = useState(false);
   
   const [user, setUser] = useState({
     studentId: '2201102944',
-    firstName: 'Merryl',
+    firstName: 'Jonard',
     middleName: 'M.',
-    lastName: 'Strife',
-    email: 'merryl@student.buksu.edu.ph',
+    lastName: 'Sanico',
+    email: 'jonard@buksu.edu.ph',
     contactNumber: '0912-345-6789',
     address: '123 Main St, Anytown, Philippines',
-    course: 'Bachelor of Science in Computer Science',
+    course: 'College of Arts and Sciences',
     birthDate: '2000-01-01',
     profilePicture: 'https://via.placeholder.com/150', 
   });
@@ -36,69 +44,72 @@ const Profile = () => {
     console.log("Updated user info:", user);
     handleEditToggle(); 
   };
-  
+
   return (
     <div className="dashboard-container d-flex">
       {/* Sidebar (Occupies full height) */}
       <nav className="col-2 sidebar">
-        <h3 className="text-center">STUDENT RESEARCH REPOSITORY SYSTEM</h3>
+        <h3 className="text-center x">INSTRUCTOR VIEW RESEARCH REPOSITORY</h3>
         <ul className="nav flex-column">
           <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/student/dashboard' ? 'active' : ''}`} to="/student/dashboard">
-              <i className="fas fa-tachometer-alt search"></i> Dashboard
+          <Link className={`nav-link ${location.pathname === '/instructor/instructor_dashboard' ? 'active' : ''}`} to="/instructor/instructor_dashboard">
+              <i className="fas fa-tachometer-alt dashboard zx"></i> Dashboard
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/repository' ? 'active' : ''}`} to="/student/repository">
-              <i className="fas fa-book search"></i> Research Repository
+          <Link className={`nav-link ${location.pathname === '/instructor/submissions' ? 'active' : ''}`} to="/instructor/submissions">
+          <i className="fas fa-file-alt submission zx"></i> Student Submissions
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/profile' ? 'active' : ''}`} to="/student/profile">
-              <i className="fas fa-user search"></i> User Profile
+          <Link className={`nav-link ${location.pathname === '/instructor/profile' ? 'active' : ''}`} to="/instructor/profile">
+          <i className="fas fa-user-circle profile zx"></i> Profile
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/myResearch' ? 'active' : ''}`} to="/student/myResearch">
-              <i className="fas fa-folder-open search"></i> My Research
+          <Link className={`nav-link ${location.pathname === '/instructor/requesting' ? 'active' : ''}`} to="/instructor/requesting">
+          <i className="fas fa-user-shield request zx"></i> Role Request
             </Link>
           </li>
           <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/student/FAQ' ? 'active' : ''}`} to="/student/FAQ">
-          <i className="fas fa-robot search"></i> FAQ
+          <Link className={`nav-link ${location.pathname === '/instructor/students' ? 'active' : ''}`} to="/instructor/students">
+          <i className="fas fa-users students zx"></i> Student Profiles
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/notifications' ? 'active' : ''}`} to="/student/notifications">
-              <i className="fas fa-bell search"></i> Notifications
+          <Link className={`nav-link ${location.pathname === '/instructor/notifications' ? 'active' : ''}`} to="/instructor/notifications">
+          <i className="fas fa-bell notification zx"></i> Notifications
             </Link>
-          </li>
+          </li>       
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/logout' ? 'active' : ''}`} to="/student/logout">
-              <i className="fas fa-sign-out-alt search"></i> Logout
+            <Link className={`nav-link ${location.pathname === '/logout' ? 'active' : ''}`} to="/logout">
+              <i className="fas fa-sign-out-alt logout zx"></i> Logout
             </Link>
           </li>
         </ul>
       </nav>
 
-      {/* Main Section (Top logo row + Main content) */}
       <div className="main-section col-10 d-flex flex-column">
-        {/* Top Row (Logo and Right Empty Space) */}
         <div className="top-row d-flex align-items-center">
           <header className="col-8 d-flex justify-content-center align-items-center">
             <img src={casLogo} alt="CAS Logo" className="cas-logo" />
           </header>
           <div className="col-2 user-info ms-auto d-flex align-items-center">
+          <img
+          src={'https://via.placeholder.com/150'} //STATIC NALANG
+          alt="Profile"
+          className="img-fluid rounded-circle"
+          style={{ width: '50PX', height: '50px' }}
+        />
             <div className="user-details">
-              <p className="user-name">Merryl Strife</p>
-              <p className="user-role">Student</p>
+              <p className="user-name">{userName}</p>
+              <p className="user-role">Instructor</p>
             </div>
           </div>
         </div>
-{/*---------------------------------END OF HEADER TEMPLATE----------------------------------------------------*/}
-        {/* Main Content Area */}
+
         <main className="main-content">
-          <div className="container mt-5">
+        <div className="container mt-5">
             <div className="row">
               <div className="col-md-4 text-center">
                 <img
@@ -109,7 +120,7 @@ const Profile = () => {
                 />
                 <h3>{`${user.firstName} ${user.middleName} ${user.lastName}`}</h3>
                 <p className="text-muted">{user.email}</p>
-                <button className="search1" onClick={handleEditToggle}>
+                <button className="search1" onClick={handleEditToggle} style={{ width: '100px', height: '40px' }}> {/*WITH STYLE OF THE BUTTON*/}
                   {isEditing ? 'Cancel' : 'Edit'}
                 </button>
               </div>
@@ -202,10 +213,10 @@ const Profile = () => {
                   </form>
                 ) : (
                   <div>
-                    <h4>Student Information</h4>
+                    <h4>Instructor Information</h4>
                     <p><strong>Contact Number:</strong> {user.contactNumber}</p>
                     <p><strong>Address:</strong> {user.address}</p>
-                    <p><strong>Course:</strong> {user.course}</p>
+                    <p><strong>Department:</strong> {user.course}</p>
                     <p><strong>Birth Date:</strong> {user.birthDate}</p>
                   </div>
                 )}
@@ -218,4 +229,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default InstructorProfile;

@@ -3,7 +3,9 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken'; 
 import User from '../model/user.js'; 
 import '../src/firebaseAdminConfig.js'; 
-
+import Admin from '../model/Admin.js';
+import Instructor from '../model/Instructor.js';
+import Student from '../model/Student.js'
 const router = express.Router();
 
 router.post('/google', async (req, res) => {
@@ -13,19 +15,19 @@ router.post('/google', async (req, res) => {
         return res.status(400).json({ error: 'Name, email, and UID are required' });
     }
     try {
-        let user = await User.findOne({ uid });
+        //FIND THE EXISTING USERS LIKE STUDENTS AND INSTRUCTOR
+        let user = await Student.findOne({ uid }) || await Instructor.findOne({ uid });
 
         if (!user) {
             let role;
             if (email.endsWith('@student.buksu.edu.ph')) {
-                role = 'student';
+                user = new Student({ name, email, uid, role: 'student' });
             } else if (email.endsWith('@gmail.com')) { //TEST EMAIL FORMAT ONLY
-                role = 'instructor';
+                user = new Instructor({ name, email, uid, role: 'instructor' });
             } else {
                 return res.status(400).json({ message: 'Invalid email domain' });
             }
-            user = new User({ name, email, uid, role });
-            await user.save(); 
+            await user.save();
         }
 
         const token = jwt.sign({ userId: user._id, role: user.role }, 'your_jwt_secret', { expiresIn: '1h' });
@@ -34,7 +36,11 @@ router.post('/google', async (req, res) => {
             message: 'Login successful',
             token,
             userId: user._id,
-            role: user.role
+            role: user.role,
+            name: user.name,
+            email: user.email
+            
+
         });
     } catch (error) {
         console.error('Error saving or verifying user:', error);
@@ -45,7 +51,7 @@ router.post('/admin-login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const user = await User.findOne({ email });
+        const user = await Admin.findOne({ email });
         if (!user) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
@@ -55,10 +61,13 @@ router.post('/admin-login', async (req, res) => {
             return res.status(403).json({ message: 'Access denied: Admins only' });
         }
 
+        //CHEKING THE CREDETIALS
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
+        //DEBUGGER
+        console.log("Password match result:", isMatch);
 
         const token = jwt.sign(
             { userId: user._id, role: user.role },
@@ -72,7 +81,7 @@ router.post('/admin-login', async (req, res) => {
             role: user.role 
         });
     } catch (error) {
-        console.error('Error during admin login:', error);
+        console.error('Detailed error during admin login:', error); //DEBUGGER
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -80,7 +89,7 @@ router.post('/admin-login', async (req, res) => {
 // One-time admin creation script
 const createAdmin = async () => {
     try {
-        const existingAdmin = await User.findOne({ email: 'admin@example.com' });
+        const existingAdmin = await Admin.findOne({ email: 'admin@example.com' });
         if (existingAdmin) {
             console.log('Admin user already exists');
             return;
@@ -90,22 +99,21 @@ const createAdmin = async () => {
         const plainPassword = "adminpassword";
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-        const admin = new User({
+        const user = new Admin({
             name: "Admin",
             email,
             password: hashedPassword,
             role: "admin",
-            uid: "admin_uid" // Provide a placeholder or static uid for the admin
+            uid: "admin_uid" 
         });
 
-        await admin.save();
+        await user.save();
         console.log("Admin user created");
     } catch (error) {
         console.error('Error creating admin user:', error);
     }
 };
 
-// Call the createAdmin function to run only once at startup
 createAdmin();
 
 export default router;

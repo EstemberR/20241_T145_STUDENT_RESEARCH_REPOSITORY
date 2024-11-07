@@ -2,10 +2,17 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from 'dotenv';
-import './firebaseAdminConfig.js';
-import authRoutes from '../routes/authRoutes.js'; 
 import bodyParser from 'body-parser';
+
+import './firebaseAdminConfig.js';
+
+import authRoutes from '../routes/authRoutes.js'; 
+import studentRoutes from '../routes/studentRoutes.js'; 
+
 import User from '../model/user.js';
+import Admin from '../model/Admin.js';
+import Instructor from '../model/Instructor.js';
+import Student from '../model/Student.js'
 
 dotenv.config(); 
 const app = express();
@@ -20,12 +27,13 @@ app.use(express.json());
 app.use(bodyParser.json());
 
 app.locals.userModel = User;
+app.locals.userModel = Admin;
+app.locals.userModel = Instructor;
+app.locals.userModel = Student;
 
 const connect = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
+        await mongoose.connect("mongodb+srv://user99:cMYlXBtV3YfXWtAe@cluster0.qpda5.mongodb.net/Student_RepoDB?retryWrites=true&w=majority&appName=Cluster0", {
         });
         console.log('Connected to MONGODB');
     } catch (error) {
@@ -40,6 +48,10 @@ mongoose.connection.on('disconnected', () => {
 app.use('/api/auth', authRoutes);
 //manual login
 app.use('/api', authRoutes);
+
+app.use('/student', studentRoutes);
+
+
 app.listen(PORT, () => {
     connect(); 
     console.log(`Listening on PORT ${PORT}`);

@@ -1,53 +1,53 @@
-import casLogo from '../assets/cas-logo.jpg'; 
+import casLogo from '../../assets/cas-logo.jpg'; 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './css/Dashboard.css';
-import './css/Dashboard2.css';
-import './css/admin_dashboard.css';
+import '../css/Dashboard.css';
+import '../css/Dashboard2.css';
+import '../css/admin_dashboard.css';
 
-const InstructorDashboard = () => {
+const AdminDashboard = () => {
   const location = useLocation();
 
   return (
     <div className="dashboard-container d-flex">
       {/* Sidebar (Occupies full height) */}
       <nav className="col-2 sidebar">
-        <h3 className="text-center x">STUDENT RESEARCH REPOSITORY</h3>
+        <h3 className="text-center x">ADMIN VIEW RESEARCH REPOSITORY</h3>
         <ul className="nav flex-column">
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} to="/dashboard">
-              <i className="fas fa-tachometer-alt search"></i> Admin Dashboard rename
+          <Link className={`nav-link ${location.pathname === '/admin/admin_dashboard' ? 'active' : ''}`} to="/admin/admin_dashboard">
+              <i className="fas fa-tachometer-alt search zx"></i> Admin Dashboard
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/repositoryTable' ? 'active' : ''}`} to="/repositoryTable">
-              <i className="fas fa-book search"></i> Repository Table rename
+            <Link className={`nav-link ${location.pathname === '/admin/repositoryTable' ? 'active' : ''}`} to="/admin/repositoryTable">
+              <i className="fas fa-book search zx"></i> Repository Table
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/accounts' ? 'active' : ''}`} to="/accounts">
-              <i className="fas fa-user search"></i> Manage Accounts rename
+            <Link className={`nav-link ${location.pathname === '/admin/accounts' ? 'active' : ''}`} to="/admin/accounts">
+              <i className="fas fa-user search zx"></i> Manage Accounts
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/request' ? 'active' : ''}`} to="/request">
-              <i className="fas fa-folder-open search"></i> Role Requests
+            <Link className={`nav-link ${location.pathname === '/admin/request' ? 'active' : ''}`} to="/admin/request">
+              <i className="fas fa-folder-open search zx"></i> Role Requests
             </Link>
           </li>
           <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/activity' ? 'active' : ''}`} to="/activity">
-          <i className="fas fa-robot search"></i> User Activity rename
+          <Link className={`nav-link ${location.pathname === '/admin/activity' ? 'active' : ''}`} to="/admin/activity">
+          <i className="fas fa-robot search zx"></i> User Activity
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/report' ? 'active' : ''}`} to="/report">
-              <i className="fas fa-bell search"></i> Generate Report rename
+            <Link className={`nav-link ${location.pathname === '/admin/report' ? 'active' : ''}`} to="/admin/report">
+              <i className="fas fa-bell search zx"></i> Generate Report
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/logout' ? 'active' : ''}`} to="/logout">
-              <i className="fas fa-sign-out-alt search"></i> Logout
+            <Link className={`nav-link ${location.pathname === '/admin/logout' ? 'active' : ''}`} to="/admin/logout">
+              <i className="fas fa-sign-out-alt search zx"></i> Logout
             </Link>
           </li>
         </ul>
@@ -61,7 +61,7 @@ const InstructorDashboard = () => {
           <div className="col-2 user-info ms-auto d-flex align-items-center">
             <div className="user-details">
               <p className="user-name">JONARD SANICO</p>
-              <p className="user-role">Instructor</p>
+              <p className="user-role">Admin</p>
             </div>
           </div>
         </div>
@@ -69,13 +69,13 @@ const InstructorDashboard = () => {
         <main className="main-content">
           <div className="contentRow d-flex align-items-start">
             <div className="notificationDashboard">
-              <h4 className="researchLabel">Generate Report rename</h4>
+              <h4 className="researchLabel2">Generate Report</h4>
               <div className="staticData">[]</div>
             </div>
             <div className="researchDashboard">
-              <h4 className="researchLabel">Repository Table Submissions rename</h4>
+              <h4 className="researchLabel2">Repository Table Submissions</h4>
               <div className="researchOverviewContainer">
-                <div className="researchBox1">REVIEWED
+                <div className="researchBox1">PUBLISHED
                   <p>[]</p>
                 </div>
                 <div className="researchBox2">PENDING
@@ -91,13 +91,13 @@ const InstructorDashboard = () => {
           <div className="repositoryDashboards">
             <div className="repositoryOverviewContainer d-flex">
               <div className="repoBox">
-                <p className="repoData">[MANAGE ACCOUNTS] rename</p>
+                <p className="repoData">[MANAGE ACCOUNTS]</p>
               </div>
               <div className="repoBox">
-                <p className="repoData">[ROLE REQUESTS] rename</p>
+                <p className="repoData">[ROLE REQUESTS]</p>
               </div>
               <div className="repoBox">
-                <p className="repoData">[USER ACTIVITY] rename</p>
+                <p className="repoData">[USER ACTIVITY]</p>
               </div>
             </div>
           </div>
@@ -107,4 +107,4 @@ const InstructorDashboard = () => {
   );
 };
 
-export default InstructorDashboard;
+export default AdminDashboard;
