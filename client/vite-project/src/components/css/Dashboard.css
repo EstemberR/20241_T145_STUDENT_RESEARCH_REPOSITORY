@@ -55,6 +55,7 @@ body, .dashboard-container {
 .cas-logo {
   width: 60%; 
   max-height: 100%;
+  margin-left: -20rem;
 }
 
 .main-content {

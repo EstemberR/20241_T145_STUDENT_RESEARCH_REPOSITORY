@@ -85,7 +85,7 @@ const Notification = () => {
                   <div className="fw-bold">{notification.message}</div>
                   <small className="text-muted">{notification.timestamp}</small>
                 </div>
-                <button className="search1">Mark as Read</button> {/* Green-themed button */}
+                <button className="search1" style={{ width: "120px", height: "40px"}}>Mark as Read</button>{/* Green-themed button */}
               </div>
             ))}
           </div>
