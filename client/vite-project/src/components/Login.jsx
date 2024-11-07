@@ -11,6 +11,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [userName, setUserName] = useState(null); 
     //Capcha
     const recaptchaVerified = useState(false); 
     const [recaptchaToken, setRecaptchaToken] = useState(null);
@@ -39,6 +40,7 @@ const Login = () => {
             if (response.ok) {
                 console.log('User authenticated successfully:', data);
                 const userRole = data.role;
+                localStorage.setItem('userName', data.name); 
 
                 if (userRole === 'student') {
                     navigate('/student/dashboard');
@@ -67,11 +69,11 @@ const Login = () => {
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
-
+    
             if (!user.uid) {
                 throw new Error('User UID is null');
             }
-
+    
             const response = await fetch('http://localhost:8000/api/auth/google', {
                 method: 'POST',
                 headers: {
@@ -83,33 +85,35 @@ const Login = () => {
                     uid: user.uid 
                 }),
             });
-
-            const data = await response.json();
-            console.log('User response:', data);
-
+    
+            const data = await response.json(); 
+    
             if (response.ok) {
                 console.log('User authenticated successfully:', data);
-                const userRole = data.role;
-
-                //ROUTES
-                if (userRole === 'student') {
+                const { token, role, name } = data;
+    
+                localStorage.setItem('token', token); 
+                setUserName(name);
+                localStorage.setItem('userName', name);
+    
+                // Navigate based on user role
+                if (role === 'student') {
                     navigate('/student/dashboard');
-                } else if (userRole === 'instructor') {
+                } else if (role === 'instructor') {
                     navigate('/instructor/instructor_dashboard');
                 } else {
                     alert('Unknown user role'); 
                 }
-            }  else if (userRole === 'instructor') {
-                    navigate('/instructor/instructor_dashboard');
-                } else {
+            } else {
                 console.error('Authentication failed:', data.error || 'Unknown error');
-                alert(data.error || 'Authentication failed'); 
+                alert(data.error || 'Authentication failed');
             }
         } catch (error) {
             console.error('Error during Google sign-in:', error);
             alert('Error during Google sign-in. Please try again.');
         }
     };
+    
 
     {/*ReCAPCHA*/}
     const handleRecaptchaChange = (token) => {

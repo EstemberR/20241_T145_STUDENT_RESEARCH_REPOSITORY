@@ -1,5 +1,5 @@
 import casLogo from '../../assets/cas-logo.jpg'; 
-import React, {useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
@@ -8,6 +8,13 @@ import '../css/admin_dashboard.css';
 
 const InstructorProfile = () => {
   const location = useLocation();
+  const [userName, setUserName] = useState('');
+  useEffect(() => {
+    const storedName = localStorage.getItem('userName');
+    if (storedName) {
+        setUserName(storedName);
+    }
+}, []);
   const [isEditing, setIsEditing] = useState(false);
   
   const [user, setUser] = useState({
@@ -88,8 +95,14 @@ const InstructorProfile = () => {
             <img src={casLogo} alt="CAS Logo" className="cas-logo" />
           </header>
           <div className="col-2 user-info ms-auto d-flex align-items-center">
+          <img
+          src={'https://via.placeholder.com/150'} //STATIC NALANG
+          alt="Profile"
+          className="img-fluid rounded-circle"
+          style={{ width: '50PX', height: '50px' }}
+        />
             <div className="user-details">
-              <p className="user-name">JONARD SANICO</p>
+              <p className="user-name">{userName}</p>
               <p className="user-role">Instructor</p>
             </div>
           </div>
