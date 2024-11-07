@@ -107,7 +107,7 @@ const InstructorProfile = () => {
                 />
                 <h3>{`${user.firstName} ${user.middleName} ${user.lastName}`}</h3>
                 <p className="text-muted">{user.email}</p>
-                <button className="search1" onClick={handleEditToggle}>
+                <button className="search1" onClick={handleEditToggle} style={{ width: '100px', height: '40px' }}> {/*WITH STYLE OF THE BUTTON*/}
                   {isEditing ? 'Cancel' : 'Edit'}
                 </button>
               </div>

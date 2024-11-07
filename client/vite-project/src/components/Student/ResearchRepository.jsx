@@ -86,8 +86,8 @@ const Repository = () => {
               className="form-control search"
               placeholder="Search..."
             />
-            <button className="search1" onClick={handleFilterClick}>+ Apply Filter Results</button>
-            <button className="btn btn-secondary search2">
+            <button className="search1" onClick={handleFilterClick} style={{ width: "180px", height: "40px"}}>+ Apply Filter Results</button>
+            <button className="btn btn-secondary search2" style={{ width: "130px", height: "40px"}}>
               <i className="fas fa-bookmark search"></i>
             Bookmark</button>
           </div>
