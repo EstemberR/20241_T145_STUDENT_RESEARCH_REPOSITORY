@@ -1,11 +1,18 @@
 import casLogo from '../../assets/cas-logo.jpg'; 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 
 const Notification = () => {
   const location = useLocation();
+  const [userName, setUserName] = useState('');
+  useEffect(() => {
+    const storedName = localStorage.getItem('userName');
+    if (storedName) {
+        setUserName(storedName);
+    }
+}, []);
 
   // Sample notification data
   const notifications = [
@@ -67,8 +74,14 @@ const Notification = () => {
             <img src={casLogo} alt="CAS Logo" className="cas-logo" />
           </header>
           <div className="col-2 user-info ms-auto d-flex align-items-center">
+          <img
+          src={'https://via.placeholder.com/150'} //STATIC NALANG
+          alt="Profile"
+          className="img-fluid rounded-circle"
+          style={{ width: '50PX', height: '50px' }}
+        />
             <div className="user-details">
-              <p className="user-name">Merryl Strife</p>
+              <p className="user-name">{userName}</p>
               <p className="user-role">Student</p>
             </div>
           </div>
