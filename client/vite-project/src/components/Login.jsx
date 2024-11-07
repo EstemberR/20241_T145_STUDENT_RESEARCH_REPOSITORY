@@ -91,14 +91,17 @@ const Login = () => {
                 console.log('User authenticated successfully:', data);
                 const userRole = data.role;
 
+                //ROUTES
                 if (userRole === 'student') {
                     navigate('/student/dashboard');
                 } else if (userRole === 'instructor') {
-                    navigate('/instructor/dashboard');
+                    navigate('/instructor/instructor_dashboard');
                 } else {
                     alert('Unknown user role'); 
                 }
-            } else {
+            }  else if (userRole === 'instructor') {
+                    navigate('/instructor/instructor_dashboard');
+                } else {
                 console.error('Authentication failed:', data.error || 'Unknown error');
                 alert(data.error || 'Authentication failed'); 
             }
