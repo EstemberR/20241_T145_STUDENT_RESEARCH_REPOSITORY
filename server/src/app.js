@@ -2,9 +2,13 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from 'dotenv';
-import './firebaseAdminConfig.js';
-import authRoutes from '../routes/authRoutes.js'; 
 import bodyParser from 'body-parser';
+
+import './firebaseAdminConfig.js';
+
+import authRoutes from '../routes/authRoutes.js'; 
+import studentRoutes from '../routes/studentRoutes.js'; 
+
 import User from '../model/user.js';
 import Admin from '../model/Admin.js';
 import Instructor from '../model/Instructor.js';
@@ -44,6 +48,10 @@ mongoose.connection.on('disconnected', () => {
 app.use('/api/auth', authRoutes);
 //manual login
 app.use('/api', authRoutes);
+
+app.use('/student', studentRoutes);
+
+
 app.listen(PORT, () => {
     connect(); 
     console.log(`Listening on PORT ${PORT}`);

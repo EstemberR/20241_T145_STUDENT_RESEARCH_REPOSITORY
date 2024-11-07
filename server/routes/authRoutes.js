@@ -6,7 +6,6 @@ import '../src/firebaseAdminConfig.js';
 import Admin from '../model/Admin.js';
 import Instructor from '../model/Instructor.js';
 import Student from '../model/Student.js'
-
 const router = express.Router();
 
 router.post('/google', async (req, res) => {
@@ -37,7 +36,11 @@ router.post('/google', async (req, res) => {
             message: 'Login successful',
             token,
             userId: user._id,
-            role: user.role
+            role: user.role,
+            name: user.name,
+            email: user.email
+            
+
         });
     } catch (error) {
         console.error('Error saving or verifying user:', error);
@@ -111,7 +114,6 @@ const createAdmin = async () => {
     }
 };
 
-// Call the createAdmin function to run only once at startup
 createAdmin();
 
 export default router;
