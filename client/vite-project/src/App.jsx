@@ -35,6 +35,8 @@ function App() {
           <Route path="/student/myResearch" element={<MyResearch />} />
           <Route path="/student/FAQ" element={<FAQ />} />
           <Route path="/student/notifications" element={<Notification />} />
+          <Route path="/student/logout" element={<Navigate to="/" replace />} />
+
         {/* INSTRUCTOR */}
           <Route path="/instructor/instructor_dashboard" element={<InstructorDashboard />} />
           <Route path="/instructor/submissions" element={<InstructorSubmissions />} />
@@ -42,6 +44,8 @@ function App() {
           <Route path="/instructor/students" element={<InstructorStudents />} />
           <Route path="/instructor/requesting" element={<InstructorRequest />} />
           <Route path="/instructor/notifications" element={<InstructorNotification />} />
+          <Route path="/instructor/logout" element={<Navigate to="/" replace />} />
+
 
           {/*ADMIN*/}
           <Route path="/admin/admin_dashboard" element={<AdminDashboard />} />
@@ -50,6 +54,8 @@ function App() {
           <Route path="/admin/repositoryTable" element={<AdminRepo />} />
           <Route path="/admin/report" element={<AdminReports />} />
           <Route path="/admin/request" element={<AdminRequest />} />
+          <Route path="/admin/logout" element={<Navigate to="/" replace />} />
+
 
       </Routes>
     </Router>
