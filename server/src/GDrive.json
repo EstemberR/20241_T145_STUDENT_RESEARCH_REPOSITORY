@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "gdrive-project-441200",
+  "private_key_id": "0db84bea69f4351cdac577e69fbf0793b1d7c675",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCOFtts0dRXpFGB\n4n/70w8Pr1VGNhcPHYOQVpvj8U6l4O0OAnFuzYkVTUj00i0SU33HSgurs9WMmO0n\nQ7xZ68k0YscUzNOylx3c2+Vsl1PVlyB/+W3mJx+R6HIcQ6yGiAdJWt/A+nSNfV8K\n/kR3MjbZpzXQ7gpP2Rh+30B+pEiwSLu2//OBN0mkkztkU5Wc+VF9Sdz+1oSjxqlP\nHn39V896AHghn4nTuSrWYirz21e6rQbgG0ICjdc6IqBB/ejSiePEXSlISwGRXgfS\nmkEGfrAooBnnfc3Ho/zjE3DKL/mvbW+63RvIU2Oh3GQQ7v2Tu61epwF3e9EoZuhK\nkjFE4nprAgMBAAECggEAANsMBPsU5/nx7h2aMER5yGcZuxfsMUOF3dC+xtee/+EW\nbupuuF4PwTwmdDpVcJXKbsJUCY/yySEsvlfPXRanRT+vaFAk7yxlBpPi8cfn419l\n7AuobvoNhpDeRFL5IpI8E9bQTneUkmf1u748Z54bMXP1PrlzYMelcld6QJhJq+qq\nYJDCYmfqgqfdqjRUBSZtFWej0Jt7dsH+hIqroG5WCwHtbffQYe7ijMsIbaAWSs3Y\nc4WA7OTyt6tWxa9wNvgsw6mEGRh8y/p8h52F2aiC+DAEnc2QepFn3uJgpl/psp3G\neE1azrtyDYV9pC7NVmZwqTsyZLd+k3Nd+7LvrURf8QKBgQDFCNtBQiKDtqZeFbYd\nBhYLf/yR3MozeDqZ4lOD9FsbSenmANCggxgZ2Lb+CezRP2h8juiFyUBK3Sm1sqgC\nmRb4l3OFjFQ8KoeTM4nj1uVK7kx0MWMXoBGAE8LUAy4xklC4HmL+FLDBhDBDyiWV\nKO1ZOMJGUjzTUcA+HhaR5JnROwKBgQC4nIzj+SjyAX+MyQh8a5R1v1nSxxcC6D2R\nSMJs7Y5V6ybicRzEhi1NAhNaedSYQ2v7BqVFvE5qdnC4rCm/RBF8m/xKlqcd4aB6\n02IfTgCAVT6u/3zirQbakvXITx6AXbfqsnPXHEuto6m6By8njTPMt0keCtdaugBM\nSpSSuhlokQKBgFfMOX8bzCtq8TlNbWgDdUFMl6wbeVJ0CZDWpCZRdWN0jTA7Pru3\njr69rdUHcSpQmeue9offBLIXWOWpJWp68xx0yDpDLKnevajfN1t6P5QjGZhRBXna\njtHGfHNis2vNagCRMcVMTPL+R099vT95DEJMo20Yahgz/njviVkbR1tPAoGAOpa8\nhBFsNDnTgBvBDLObvy7GVAWJQQvxli0wPx+5X30srwrU5W3r7JevCrTFirlDCLzY\nMOSNQm5qYcGJ0kDJB/H9RLLBQNN9ed2iM2su74ueRC2jNdFR7oZbaIHrnTOhDeQq\nrWc2gVoCoJ5tEbFXci3tD5LDO/Dx7URyGIrlS3ECgYEAnLianPEsa+im3rIzI8ON\nFKEti/+friOlIA6iAU8rmr/CN5ZeICF9ADQgJBLei+51t4EpBYeu4R3tI6hEldQy\nzjCVFa5RyGv07Wd+iMV/aKdosnOHXyYDX6o6jLrrDWfLhvB2yGU98HtR6n9gOAP3\nvTF1Zc0pm/vpT6Rh33i94tA=\n-----END PRIVATE KEY-----\n",
+  "client_email": "student-reseach-repository@gdrive-project-441200.iam.gserviceaccount.com",
+  "client_id": "115495286781539719246",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/student-reseach-repository%40gdrive-project-441200.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
