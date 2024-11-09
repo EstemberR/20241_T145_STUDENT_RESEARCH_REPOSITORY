@@ -1,229 +1,167 @@
-import casLogo from '../../assets/cas-logo.jpg'; 
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import Sidebar from './resources/Sidebar';
+import Header from './resources/Header';
+import { getToken } from './resources/Utils';
+import { useUser } from './resources/userContext'; // Import useUser
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 
 const InstructorProfile = () => {
-  const location = useLocation();
-  const [userName, setUserName] = useState('');
-  useEffect(() => {
-    const storedName = localStorage.getItem('userName');
-    if (storedName) {
-        setUserName(storedName);
-    }
-}, []);
+  const { userName, updateUserName } = useUser(); // Get userName and updateUserName
+  const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  
   const [user, setUser] = useState({
-    studentId: '2201102944',
-    firstName: 'Jonard',
-    middleName: 'M.',
-    lastName: 'Sanico',
-    email: 'jonard@buksu.edu.ph',
-    contactNumber: '0912-345-6789',
-    address: '123 Main St, Anytown, Philippines',
-    course: 'College of Arts and Sciences',
-    birthDate: '2000-01-01',
-    profilePicture: 'https://via.placeholder.com/150', 
+    name: '',
+    email: '',
+    role: ''
   });
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUser((prevUser) => ({ ...prevUser, [name]: value }));
-  };
+  // Fetch profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = getToken();
+        if (!token) {
+          alert('Please log in first.');
+          localStorage.removeItem('userName');
+          localStorage.removeItem('token');
+          navigate('/');
+          return;
+        }
 
+        const response = await fetch('http://localhost:8000/instructor/profile', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          setProfile(data);
+          setUser(data);
+          updateUserName(data.name);
+        } else {
+          alert(data.message || 'Error fetching profile');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [navigate, updateUserName]);
+
+  // Toggle Edit Mode
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Updated user info:", user);
-    handleEditToggle(); 
+  // Handle Input Changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setUser((prevUser) => ({
+      ...prevUser,
+      [name]: value,
+    }));
   };
 
+  // Handle Form Submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token'); // Get the token from local storage
+      if (!token) {
+        alert('Please log in first.');
+        navigate('/');
+        return;
+      }
+
+      const response = await fetch('http://localhost:8000/instructor/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Include the token in the request headers
+        },
+        body: JSON.stringify(user),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setProfile(data); // Update profile state with new data
+        alert('Profile updated successfully');
+        setIsEditing(false); // Exit edit mode
+        updateUserName(data.name);
+      } else {
+        alert(data.message || 'Error updating profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
+  if (!profile) {
+    return <div>Loading...</div>; // Wait until profile data is loaded
+  }
   return (
     <div className="dashboard-container d-flex">
-      {/* Sidebar (Occupies full height) */}
-      <nav className="col-2 sidebar">
-        <h3 className="text-center x">INSTRUCTOR VIEW RESEARCH REPOSITORY</h3>
-        <ul className="nav flex-column">
-          <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/instructor/instructor_dashboard' ? 'active' : ''}`} to="/instructor/instructor_dashboard">
-              <i className="fas fa-tachometer-alt dashboard zx"></i> Dashboard
-            </Link>
-          </li>
-          <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/instructor/submissions' ? 'active' : ''}`} to="/instructor/submissions">
-          <i className="fas fa-file-alt submission zx"></i> Student Submissions
-            </Link>
-          </li>
-          <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/instructor/profile' ? 'active' : ''}`} to="/instructor/profile">
-          <i className="fas fa-user-circle profile zx"></i> Profile
-            </Link>
-          </li>
-          <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/instructor/requesting' ? 'active' : ''}`} to="/instructor/requesting">
-          <i className="fas fa-user-shield request zx"></i> Role Request
-            </Link>
-          </li>
-          <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/instructor/students' ? 'active' : ''}`} to="/instructor/students">
-          <i className="fas fa-users students zx"></i> Student Profiles
-            </Link>
-          </li>
-          <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/instructor/notifications' ? 'active' : ''}`} to="/instructor/notifications">
-          <i className="fas fa-bell notification zx"></i> Notifications
-            </Link>
-          </li>       
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/logout' ? 'active' : ''}`} to="/logout">
-              <i className="fas fa-sign-out-alt logout zx"></i> Logout
-            </Link>
-          </li>
-        </ul>
-      </nav>
-
+      <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
-        <div className="top-row d-flex align-items-center">
-          <header className="col-8 d-flex justify-content-center align-items-center">
-            <img src={casLogo} alt="CAS Logo" className="cas-logo" />
-          </header>
-          <div className="col-2 user-info ms-auto d-flex align-items-center">
-          <img
+        <Header userName={userName} />
+
+        <main className="main-content">
+  <div className="container mt-5">
+    <div className="row">
+      <div className="col-md-4 text-center">
+        <img
           src={'https://via.placeholder.com/150'} //STATIC NALANG
           alt="Profile"
           className="img-fluid rounded-circle"
-          style={{ width: '50PX', height: '50px' }}
+          style={{ width: '150px', height: '150px' }}
         />
-            <div className="user-details">
-              <p className="user-name">{userName}</p>
-              <p className="user-role">Instructor</p>
+        <h3 className="fs-4 mt-3">{profile.name}</h3>
+        <p className="text-muted fs-6">{profile.email}</p>
+        <button
+          className="btn btn-primary mt-3"
+          onClick={handleEditToggle}
+          style={{ width: '120px', height: '40px', fontSize: '14px' }}
+        >
+          {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+        </button>
+      </div>
+      <div className="col-md-8">
+        {isEditing ? (
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label className="form-label fs-6">Name</label>
+              <input
+                type="text"
+                className="form-control"
+                name="name"
+                value={user.name}
+                onChange={handleChange}
+              />
             </div>
+            <button type="submit" className="btn btn-success fs-6">
+              Save Changes
+            </button>
+          </form>
+        ) : (
+          <div>
+            <p className="profile-name"><strong>NAME:</strong> {profile.name}</p>
+            <p className="profile-name"><strong>EMAIL:</strong> {profile.email}</p>
+            <p className="profile-name"><strong>ROLE:</strong> {profile.role}</p>
           </div>
-        </div>
-
-        <main className="main-content">
-        <div className="container mt-5">
-            <div className="row">
-              <div className="col-md-4 text-center">
-                <img
-                  src={user.profilePicture}
-                  alt="Profile"
-                  className="img-fluid rounded-circle mb-3"
-                  style={{ width: '150px', height: '150px' }}
-                />
-                <h3>{`${user.firstName} ${user.middleName} ${user.lastName}`}</h3>
-                <p className="text-muted">{user.email}</p>
-                <button className="search1" onClick={handleEditToggle} style={{ width: '100px', height: '40px' }}> {/*WITH STYLE OF THE BUTTON*/}
-                  {isEditing ? 'Cancel' : 'Edit'}
-                </button>
-              </div>
-              <div className="col-md-8">
-                {isEditing ? (
-                  <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                      <label className="form-label">First Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="firstName"
-                        value={user.firstName}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Middle Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="middleName"
-                        value={user.middleName}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Last Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="lastName"
-                        value={user.lastName}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Email</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        name="email"
-                        value={user.email}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Contact Number</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="contactNumber"
-                        value={user.contactNumber}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Address</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="address"
-                        value={user.address}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Course</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="course"
-                        value={user.course}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Birth Date</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        name="birthDate"
-                        value={user.birthDate}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <button type="submit" className="btn btn-success">
-                      Save Changes
-                    </button>
-                  </form>
-                ) : (
-                  <div>
-                    <h4>Instructor Information</h4>
-                    <p><strong>Contact Number:</strong> {user.contactNumber}</p>
-                    <p><strong>Address:</strong> {user.address}</p>
-                    <p><strong>Department:</strong> {user.course}</p>
-                    <p><strong>Birth Date:</strong> {user.birthDate}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </main>
+        )}
+      </div>
+    </div>
+  </div>
+</main>
       </div>
     </div>
   );

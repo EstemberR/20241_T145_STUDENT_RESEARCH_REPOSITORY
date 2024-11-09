@@ -8,6 +8,7 @@ import './firebaseAdminConfig.js';
 
 import authRoutes from '../routes/authRoutes.js'; 
 import studentRoutes from '../routes/studentRoutes.js'; 
+import instructorRoutes from '../routes/instructorRoutes.js'; 
 
 import User from '../model/user.js';
 import Admin from '../model/Admin.js';
@@ -50,6 +51,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api', authRoutes);
 
 app.use('/student', studentRoutes);
+
+app.use('/instructor', instructorRoutes);
+
 
 
 app.listen(PORT, () => {
