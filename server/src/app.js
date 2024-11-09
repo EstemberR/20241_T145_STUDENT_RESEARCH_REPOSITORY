@@ -9,6 +9,7 @@ import './firebaseAdminConfig.js';
 import authRoutes from '../routes/authRoutes.js'; 
 import studentRoutes from '../routes/studentRoutes.js'; 
 import instructorRoutes from '../routes/instructorRoutes.js'; 
+import adminRoutes from '../routes/adminRoutes.js';
 
 import User from '../model/user.js';
 import Admin from '../model/Admin.js';
@@ -53,6 +54,8 @@ app.use('/api', authRoutes);
 app.use('/student', studentRoutes);
 
 app.use('/instructor', instructorRoutes);
+
+app.use('/admin', adminRoutes);
 
 
 

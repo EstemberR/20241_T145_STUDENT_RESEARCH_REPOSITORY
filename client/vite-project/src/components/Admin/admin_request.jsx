@@ -1,7 +1,9 @@
-import casLogo from '../../assets/cas-logo.jpg';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef,useState } from 'react';
 import { Chart } from 'chart.js/auto';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import Sidebar from './resources/Sidebar';
+import Header from './resources/Header';
+import { getUserName, getToken } from './resources/Utils';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
@@ -13,9 +15,19 @@ const AdminRequest = () => {
   const totalInstructors = 1;
   const totalAdvisers = 1;
   const pendingRequest = 2;
+  const navigate = useNavigate();
+  const [userName] = useState(getUserName());
 
   const total = pendingRequest;
   useEffect(() => {
+    const token = getToken();
+
+    if (!token) {
+      alert('Please log in first.');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('token');
+      navigate('/');
+    }
     let chartInstance;
     if (chartRef.current) {
       chartInstance = new Chart(chartRef.current, {
@@ -42,65 +54,13 @@ const AdminRequest = () => {
         chartInstance.destroy();
       }
     };
-  }, [totalInstructors, totalAdvisers, pendingRequest]);
+  }, [totalInstructors, totalAdvisers, pendingRequest, navigate]);
 
   return (
     <div className="dashboard-container d-flex">
-      {/* Sidebar */}
-      <nav className="col-2 sidebar">
-        <h3 className="text-center">ADMIN VIEW RESEARCH REPOSITORY</h3>
-        <ul className="nav flex-column">
-          <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/admin/admin_dashboard' ? 'active' : ''}`} to="/admin/admin_dashboard">
-              <i className="fas fa-tachometer-alt search zx"></i> Admin Dashboard
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/repositoryTable' ? 'active' : ''}`} to="/admin/repositoryTable">
-              <i className="fas fa-book search zx"></i> Repository Table
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/accounts' ? 'active' : ''}`} to="/admin/accounts">
-              <i className="fas fa-user search zx"></i> Manage Accounts
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/request' ? 'active' : ''}`} to="/admin/request">
-              <i className="fas fa-folder-open search zx"></i> Role Requests
-            </Link>
-          </li>
-          <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/admin/activity' ? 'active' : ''}`} to="/admin/activity">
-          <i className="fas fa-robot search zx"></i> User Activity
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/report' ? 'active' : ''}`} to="/admin/report">
-              <i className="fas fa-bell search zx"></i> Generate Report
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/logout' ? 'active' : ''}`} to="/admin/logout">
-              <i className="fas fa-sign-out-alt search zx"></i> Logout
-            </Link>
-          </li>
-        </ul>
-      </nav>
-
-      {/* Main Section */}
+      <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
-        <div className="top-row d-flex align-items-center">
-          <header className="col-8 d-flex justify-content-center align-items-center">
-            <img src={casLogo} alt="CAS Logo" className="cas-logo" />
-          </header>
-          <div className="col-2 user-info ms-auto d-flex align-items-center">
-            <div className="user-details">
-              <p className="user-name">JONARD SANICO</p>
-              <p className="user-role">Admin</p>
-            </div>
-          </div>
-        </div>
+        <Header userName={userName} />
 {/*========================MAIN============================================================*/}
         <main className="main-content">
         <h4 className="my-3">Role Requests Data</h4>
