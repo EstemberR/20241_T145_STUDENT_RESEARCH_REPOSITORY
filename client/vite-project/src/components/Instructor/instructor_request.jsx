@@ -8,7 +8,6 @@ import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 
-
 const InstructorRequest = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
@@ -45,33 +44,42 @@ const InstructorRequest = () => {
         <Header userName={userName} />
 
         <main className="main-content p-4">
-        <div className="container mt-4 notify">
-          <h4 className="my-3">REQUEST AS ADVISER</h4>
-          <div className="card mt-4">
-            <div className="card-body">
-              <form>
-                <div className="mb-3">
-                  <label htmlFor="researchSelect" className="form-label">Select Research to Apply As Adviser</label>
-                  <select 
-                    id="researchSelect" 
-                    className="form-select" 
-                    value={selectedResearch} 
-                    onChange={handleResearchChange}
-                  >
-                    <option value="">Choose a research project...</option>
-                    {researchList.map((research, index) => (
-                      <option key={index} value={research}>{research}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="text-center">
-                  <button type="submit" className="btn btn-primary">
-                    Submit Request
-                  </button>
-                </div>
-              </form>
+          <div className="container mt-4 notify">
+            <h4 className="my-3">REQUEST AS ADVISER</h4>
+            <div className="card mt-4">
+              <div className="card-body">
+                <form>
+                  <div className="mb-3">
+                    <label htmlFor="researchSelect" className="form-label">Select Research to Apply As Adviser</label>
+                    <select 
+                      id="researchSelect" 
+                      className="form-select" 
+                      value={selectedResearch} 
+                      onChange={handleResearchChange}
+                    >
+                      <option value="">Choose a research project...</option>
+                      {researchList.map((research, index) => (
+                        <option key={index} value={research}>{research}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="adviserMessage" className="form-label">Message to Admin (Optional)</label>
+                    <textarea
+                      id="adviserMessage"
+                      className="form-control"
+                      rows="3"
+                      placeholder="Explain why you wish to be the adviser..."
+                    ></textarea>
+                  </div>
+                  <div className="text-center">
+                    <button type="submit" className="btn btn-primary">
+                      Submit Request
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </div>
           </div>
         </main>
       </div>
