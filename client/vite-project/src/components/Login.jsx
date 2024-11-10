@@ -43,9 +43,10 @@ const Login = () => {
                     alert('Your account is archived. Please contact the admin to restore your account.');
                     return;
                 }
-    
+                const { token } = data;
                 const userRole = data.role;
                 localStorage.setItem('userName', data.name);
+                localStorage.setItem('token', token); 
     
                 if (userRole === 'student') {
                     navigate('/student/dashboard');
@@ -68,8 +69,6 @@ const Login = () => {
         }
     };
     
-    
-
     // Firebase Google login function
     const handleGoogle = async () => {
         const provider = new GoogleAuthProvider();
