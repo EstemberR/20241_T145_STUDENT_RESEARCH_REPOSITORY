@@ -1,7 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcrypt'; 
 import jwt from 'jsonwebtoken'; 
-import User from '../model/user.js'; 
 import '../src/firebaseAdminConfig.js'; 
 import Admin from '../model/Admin.js';
 import Instructor from '../model/Instructor.js';

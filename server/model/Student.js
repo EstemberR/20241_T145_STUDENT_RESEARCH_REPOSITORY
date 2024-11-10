@@ -1,6 +1,5 @@
 // Student.js
 import mongoose from 'mongoose';
-import User from './user.js'; 
 
 const studentSchema = new mongoose.Schema({
     name: { type: String, required: true },
