@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcrypt'; 
 import jwt from 'jsonwebtoken'; 
+import User from '../model/user.js'; 
 import '../src/firebaseAdminConfig.js'; 
 import Admin from '../model/Admin.js';
 import Instructor from '../model/Instructor.js';
@@ -15,14 +16,17 @@ router.post('/google', async (req, res) => {
     }
 
     try {
+        // Check if the user already exists (student or instructor)
         let user = await Student.findOne({ uid }) || await Instructor.findOne({ uid });
 
+        // If no existing user is found, create a new one
         if (!user) {
             let role;
             if (email.endsWith('@student.buksu.edu.ph')) {
                 user = new Student({ name, email, uid, role: 'student' });
-                user.studentId = studentId; 
-            } else if (email.endsWith('@gmail.com')) { 
+                const studentId = email.slice(0, 10);  // Extract the student ID from the email
+                user.studentId = studentId;  // Assign the studentId field
+            } else if (email.endsWith('@gmail.com')) { // Example for instructors, adjust accordingly
                 user = new Instructor({ name, email, uid, role: 'instructor' });
             } else {
                 return res.status(400).json({ message: 'Invalid email domain' });
@@ -31,18 +35,21 @@ router.post('/google', async (req, res) => {
             await user.save();
         } else {
             if (!user.studentId) {
-                const studentId = email.slice(0, 10);
-                user.studentId = studentId;
+                const studentId = email.slice(0, 10);  // Extract the student ID from the email
+                user.studentId = studentId;  // Assign the studentId field
                 await user.save();
             }
         }
 
+        // Check if the user is archived
         if (user.archived) {
             return res.status(403).json({ message: 'Your account is archived. Please contact the admin to restore your account.' });
         }
 
+        // Generate a JWT token for the user
         const token = jwt.sign({ userId: user._id, role: user.role }, 'your_jwt_secret', { expiresIn: '1h' });
 
+        // Respond with the token and user details, including the new 'id' field
         res.status(200).json({
             message: 'Login successful',
             token,
@@ -50,8 +57,7 @@ router.post('/google', async (req, res) => {
             role: user.role,
             name: user.name,
             email: user.email,
-            user_id: user.id,  
-            archived: user.archived, 
+            user_id: user.id
         });
     } catch (error) {
         console.error('Error saving or verifying user:', error);
@@ -69,14 +75,7 @@ router.post('/admin-login', async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        if (user.role !== 'admin') {
-            return res.status(403).json({ message: 'Access denied: Admins only' });
-        }
-
-        if (user.archived) {
-            return res.status(403).json({ message: 'Your account is archived. Please contact the admin to restore your account.' });
-        }
-
+        // Check if the credentials are correct
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
