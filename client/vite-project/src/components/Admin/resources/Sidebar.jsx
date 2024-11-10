@@ -49,10 +49,10 @@ const Sidebar = () => {
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/logout' ? 'active' : ''}`} to="/admin/logout">
-              <i className="fas fa-sign-out-alt search zx"></i> Logout
-            </Link>
-          </li>
+          <span className="nav-link" onClick={handleLogoutClick} to="/">
+            <i className="fas fa-sign-out-alt logout zx"></i> Logout
+          </span>
+        </li>
         </ul>
       </nav>
   )
