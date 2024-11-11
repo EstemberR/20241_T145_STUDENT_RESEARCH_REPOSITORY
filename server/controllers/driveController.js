@@ -11,17 +11,20 @@ const uploadToDrive = async (req, res) => {
     console.log('Received file upload request'); // Add logging
     
      // Update the path to point to your GDrive.json file
-     const keyFilePath = path.join(__dirname, '..', 'src', './GDrive.json');
+     const keyFilePath = path.join(__dirname, '..', 'src', '.env_Display copy');
      console.log('Looking for credentials file at:', keyFilePath); // Debug log
  
+     // INITIALIZE GOOGLE AUTH
      const auth = new google.auth.GoogleAuth({
        keyFile: keyFilePath,
        scopes: ['https://www.googleapis.com/auth/drive.file'],
      });
 
+     // GET THE CLIENT
     const client = await auth.getClient();
     const drive = google.drive({ version: 'v3', auth: client });
 
+    // GET THE FILE DATA
     const fileData = req.file;
     if (!fileData) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -29,7 +32,7 @@ const uploadToDrive = async (req, res) => {
 
     console.log('Processing file:', fileData.originalname); // Add logging
 
-    // Create a folder (if it doesn't exist)
+    // CREATE FOLDER (if it doesn't exist)
     const folderMetadata = {
       name: 'SRRS Uploads',
       mimeType: 'application/vnd.google-apps.folder',
