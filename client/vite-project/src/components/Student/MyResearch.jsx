@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
+import { Link } from 'react-router-dom';
 import { getUserName, getToken } from './resources/Utils';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
@@ -33,6 +34,38 @@ const MyResearch = () => {
       navigate('/');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      alert('Please log in first.');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('token');
+      navigate('/');
+      return;
+    }
+
+  //AVAILABILITY OF THE FILE AFTER UPLOAD
+   // Add fetch research entries
+   const fetchResearchEntries = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/research-entries', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setResearchEntries(data);
+      }
+    } catch (error) {
+      console.error('Error fetching research entries:', error);
+    }
+  };
+  fetchResearchEntries();
+}, [navigate]);
+  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -243,7 +276,7 @@ const MyResearch = () => {
                 </div>
               </div>
             </div>
-            <button type="submit" className="btn btn-primary" style={{width: '100px'}}>
+            <button type="submit" className="btn btn-primary" style={{width: '100px', background: '#4CAF50', color: 'white', border: 'none'}}>
               Submit
             </button>
           </form>
@@ -368,7 +401,9 @@ const MyResearch = () => {
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="button" className="btn btn-primary" data-bs-dismiss="modal">Save changes</button>
+              <button type="button" className="btn btn-primary" data-bs-dismiss="modal" style={{
+                background: '#4CAF50', color: 'white', border: 'none'
+              }}>Save changes</button>
             </div>
           </div>
         </div>
