@@ -169,129 +169,28 @@ const MyResearch = () => {
         <Header userName={userName} />
 
         <main className="main-content p-4">
-          <h2 className="mb-4">Submit Research</h2>
-          <form className="research-form" onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label htmlFor="title" className="form-label">Research Title</label>
-              <input
-                type="text"
-                className="form-control"
-                id="title"
-                name="title"
-                value={researchData.title}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="authors" className="form-label">Authors</label>
-              <input
-                type="text"
-                className="form-control"
-                id="authors"
-                name="authors"
-                value={researchData.authors}
-                onChange={handleInputChange}
-                placeholder="Separate multiple authors with commas"
-                required
-              />
-            </div>
-
-            <div className="row">
-              <div className="col-6 pe-0"> {/* Added pe-0 to remove padding-right */}
-                <div className="mb-3">
-                  <label htmlFor="abstract" className="form-label">Abstract</label>
-                  <textarea
-                    className="form-control"
-                    id="abstract"
-                    name="abstract"
-                    rows="12"
-                    value={researchData.abstract}
-                    onChange={handleInputChange}
-                    required
-                    style={{width: '90%'}}
-                  ></textarea>
-                </div>
-              </div>
-
-              <div className="col-md-4 ps-0"> {/* Added ps-0 to remove padding-left */}
-                <div className="mb-3">
-                  <label htmlFor="keywords" className="form-label">Keywords</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="keywords"
-                    name="keywords"
-                    value={researchData.keywords}
-                    onChange={handleInputChange}
-                    placeholder="Separate keywords with commas"
-                    required
-                    style={{width: '100%'}}
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="status" className="form-label">Research Status</label>
-                  <select
-                    className="form-select"
-                    id="status"
-                    name="status"
-                    value={researchData.status}
-                    onChange={handleInputChange}
-                    required>
-                    <option value="pending">Pending</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="revise">Revise</option>
-                    <option value="approved">Approved</option>
-                  </select>
-                </div>
-
-
-                <div className="mb-3">
-                  <label htmlFor="uploadDate" className="form-label">Upload Date</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    id="uploadDate"
-                    name="uploadDate"
-                    value={researchData.uploadDate}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-            {/* Button to trigger modal */}
-            <div className="mb-3">
-                  <button 
-                    type="button" 
-                    className="btn w-150" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#fileUploadModal" 
-                    style={{background: '#4CAF50', color: 'white'}}>
-                    Select File
-                  </button>
-                  <small className="form-text text-muted d-block mt-2">
-                    The file must be in PDF format
-                  </small>
-                </div>
-              </div>
-            </div>
-            <button type="submit" className="btn btn-primary" style={{width: '100px', background: '#4CAF50', color: 'white', border: 'none'}}>
-              Submit
+          {/* Research Table Section */}
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h2 className="page-title">List of Research</h2>
+            <button 
+              className="btn btn-success" 
+              data-bs-toggle="modal" 
+              data-bs-target="#submitResearchModal"
+            >
+              <i className="fas fa-plus me-2"></i>Submit New Research
             </button>
-          </form>
+          </div>
 
-
-            {/* Research Table */}
-      <div className="table-responsive mb-4">
-      <h2 className="page-title md-8">List of Research</h2>
           <nav aria-label="breadcrumb">
             <ol className="breadcrumb">
               <li className="breadcrumb-item"><Link to="/student/dashboard">Dashboard</Link></li>
               <li className="breadcrumb-item active">Research List</li>
             </ol>
           </nav>
-          <table className="table table-striped table-hover">
+
+          {/* Your existing table code */}
+          <div className="table-responsive">
+            <table className="table table-striped table-hover">
               <thead>
                 <tr>
                   <th>Title</th>
@@ -359,54 +258,195 @@ const MyResearch = () => {
                 )}
               </tbody>
             </table>
-      </div>
-
-      {/* Submission Form */}
-      {showForm && (
-        <div className="card mb-4">
-          <div className="card-body">
-            <h3 className="card-title mb-4">Submit New Research</h3>
-            {/* Your existing form code here */}
           </div>
-        </div>
-      )}
-        </main>
-      </div>
 
-      {/* Modal for file upload */}
-      <div className="modal fade" id="fileUploadModal" tabIndex="-1" aria-labelledby="fileUploadModalLabel" aria-hidden="true">
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="fileUploadModalLabel">Upload File</h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div className="modal-body">
-              <input type="file" className="form-control mb-3" onChange={handleFileChange} />
-              <div
-                className="drop-zone"
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                style={{
-                  border: '2px dashed #ccc',
-                  borderRadius: '5px',
-                  padding: '20px',
-                  textAlign: 'center',
-                  cursor: 'pointer'
-                }}
-              >
-                Drag & Drop your file here
+          {/* Submit Research Modal */}
+          <div className="modal fade" id="submitResearchModal" tabIndex="-1" aria-labelledby="submitResearchModalLabel" aria-hidden="true">
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="submitResearchModalLabel">Submit New Research</h5>
+                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div className="modal-body">
+                  <form className="research-form" onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                      <label htmlFor="title" className="form-label">Research Title</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="title"
+                        name="title"
+                        value={researchData.title}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label htmlFor="authors" className="form-label">Authors</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="authors"
+                        name="authors"
+                        value={researchData.authors}
+                        onChange={handleInputChange}
+                        placeholder="Separate multiple authors with commas"
+                        required
+                      />
+                    </div>
+
+                    <div className="row">
+                      <div className="col-md-7">
+                        <div className="mb-3">
+                          <label htmlFor="abstract" className="form-label">Abstract</label>
+                          <textarea
+                            className="form-control"
+                            id="abstract"
+                            name="abstract"
+                            rows="8"
+                            value={researchData.abstract}
+                            onChange={handleInputChange}
+                            required
+                          ></textarea>
+                        </div>
+                      </div>
+
+                      <div className="col-md-5">
+                        <div className="mb-3">
+                          <label htmlFor="keywords" className="form-label">Keywords</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            id="keywords"
+                            name="keywords"
+                            value={researchData.keywords}
+                            onChange={handleInputChange}
+                            placeholder="Separate keywords with commas"
+                            required
+                          />
+                        </div>
+
+                        <div className="mb-3">
+                          <label htmlFor="status" className="form-label">Research Status</label>
+                          <select
+                            className="form-select"
+                            id="status"
+                            name="status"
+                            value={researchData.status}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="revise">Revise</option>
+                            <option value="approved">Approved</option>
+                          </select>
+                        </div>
+
+                        <div className="mb-3">
+                          <label htmlFor="uploadDate" className="form-label">Upload Date</label>
+                          <input
+                            type="date"
+                            className="form-control"
+                            id="uploadDate"
+                            name="uploadDate"
+                            value={researchData.uploadDate}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+
+                        <div className="mb-3">
+                          <button 
+                            type="button" 
+                            className="btn btn-success w-100" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#fileUploadModal"
+                            data-bs-dismiss="modal"
+                          >
+                            Select File
+                          </button>
+                          <small className="form-text text-muted d-block mt-2">
+                            The file must be in PDF format
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button type="submit" className="btn btn-success">Submit Research</button>
+                    </div>
+                  </form>
+                </div>
               </div>
-              {file && <p className="mt-2">Selected file: {file.name}</p>}
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="button" className="btn btn-primary" data-bs-dismiss="modal" style={{
-                background: '#4CAF50', color: 'white', border: 'none'
-              }}>Save changes</button>
             </div>
           </div>
-        </div>
+
+          {/* Modal for file upload */}
+          <div 
+            className="modal fade" 
+            id="fileUploadModal" 
+            tabIndex="-1" 
+            aria-labelledby="fileUploadModalLabel" 
+            aria-hidden="true"
+            data-bs-backdrop="static"
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="fileUploadModalLabel">Upload File</h5>
+                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div className="modal-body">
+                  <input type="file" className="form-control mb-3" onChange={handleFileChange} />
+                  <div
+                    className="drop-zone"
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    style={{
+                      border: '2px dashed #ccc',
+                      borderRadius: '5px',
+                      padding: '20px',
+                      textAlign: 'center',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Drag & Drop your file here
+                  </div>
+                  {file && <p className="mt-2">Selected file: {file.name}</p>}
+                </div>
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary" 
+                    data-bs-dismiss="modal"
+                    data-bs-toggle="modal"
+                    data-bs-target="#submitResearchModal"
+                  >
+                    Close
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary" 
+                    data-bs-dismiss="modal"
+                    data-bs-toggle="modal"
+                    data-bs-target="#submitResearchModal"
+                    style={{
+                      background: '#4CAF50', 
+                      color: 'white', 
+                      border: 'none'
+                    }}
+                  >
+                    Save changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );

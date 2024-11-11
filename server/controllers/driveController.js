@@ -13,7 +13,7 @@ const uploadToDrive = async (req, res) => {
     console.log('Received file upload request'); // Add logging
     
      // Update the path to point to your GDrive.json file
-     const keyFilePath = path.join(__dirname, '..', 'src', 'GDrive.json');
+     const keyFilePath = path.join(__dirname, '..', 'src', './Assets/GDrive.json');
      console.log('Looking for credentials file at:', keyFilePath); // Debug log
  
      // INITIALIZE GOOGLE AUTH
