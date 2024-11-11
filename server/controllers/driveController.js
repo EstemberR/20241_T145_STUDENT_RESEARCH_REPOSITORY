@@ -2,6 +2,8 @@ import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+// import dotenv from 'dotenv';
+// dotenv.config();
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -11,7 +13,7 @@ const uploadToDrive = async (req, res) => {
     console.log('Received file upload request'); // Add logging
     
      // Update the path to point to your GDrive.json file
-     const keyFilePath = path.join(__dirname, '..', 'src', '.env_Display copy');
+     const keyFilePath = path.join(__dirname, '..', 'src', 'GDrive.json');
      console.log('Looking for credentials file at:', keyFilePath); // Debug log
  
      // INITIALIZE GOOGLE AUTH
