@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
-import { getUserName, getToken } from './resources/Utils';
+import {getToken } from './resources/Utils';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useUser } from '../Instructor/resources/userContext'; // Import useUser
 import '../css/Dashboard.css';
 import '../css/UserProfile.css';
 
 const Profile = () => {
-  const [userName] = useState(getUserName());
-  const navigate = useNavigate();
+  const { userName, updateUserName } = useUser(); // Get userName and updateUserName
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [user, setUser] = useState({
@@ -17,6 +17,7 @@ const Profile = () => {
     email: '',
     role: ''
   });
+  const navigate = useNavigate();
 
   // Fetch profile data
   useEffect(() => {
@@ -28,6 +29,7 @@ const Profile = () => {
           localStorage.removeItem('userName');
           localStorage.removeItem('token');
           navigate('/');
+          return;
         }
 
         const response = await fetch('http://localhost:8000/student/profile', {
@@ -42,6 +44,7 @@ const Profile = () => {
         if (response.ok) {
           setProfile(data);
           setUser(data);
+          updateUserName(data.name);
         } else {
           alert(data.message || 'Error fetching profile');
         }
@@ -51,7 +54,7 @@ const Profile = () => {
     };
 
     fetchProfile();
-  }, [navigate]);
+  }, [navigate, updateUserName]);
 
   // Toggle Edit Mode
   const handleEditToggle = () => {
@@ -92,6 +95,7 @@ const Profile = () => {
         setProfile(data); // Update profile state with new data
         alert('Profile updated successfully');
         setIsEditing(false); // Exit edit mode
+        updateUserName(data.name);
       } else {
         alert(data.message || 'Error updating profile');
       }
