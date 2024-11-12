@@ -32,6 +32,10 @@ const uploadToDrive = async (req, res) => {
       const client = await auth.getClient();
       return google.drive({ version: 'v3', auth: client });
     };
+    console.log('Credentials:', {
+      ...auth.credentials,
+      private_key: '[REDACTED]'
+    });
 
      
 
