@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 
 package-lock.json
+server/src/Assets/GDrive.json

@@ -2,8 +2,8 @@ import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-// import dotenv from 'dotenv';
-// dotenv.config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,6 +21,19 @@ const uploadToDrive = async (req, res) => {
        keyFile: keyFilePath,
        scopes: ['https://www.googleapis.com/auth/drive.file'],
      });
+
+     // Create a function to initialize drive
+    const initializeDrive = async () => {
+      const keyFilePath = path.join(__dirname, '..', 'src', './Assets/GDrive.json');
+      const auth = new google.auth.GoogleAuth({
+        keyFile: keyFilePath,
+        scopes: ['https://www.googleapis.com/auth/drive.file'],
+      });
+      const client = await auth.getClient();
+      return google.drive({ version: 'v3', auth: client });
+    };
+
+     
 
      // GET THE CLIENT
     const client = await auth.getClient();

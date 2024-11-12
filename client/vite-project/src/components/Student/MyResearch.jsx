@@ -12,6 +12,7 @@ const MyResearch = () => {
   const [userName] = useState(getUserName());
   const [file, setFile] = useState(null);
 
+
   // Add new state for research entries
   const [researchEntries, setResearchEntries] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -38,34 +39,48 @@ const MyResearch = () => {
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      alert('Please log in first.');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('token');
-      navigate('/');
+      const cachedEntries = localStorage.getItem('researchEntries');
+      if (cachedEntries) {
+        setResearchEntries(JSON.parse(cachedEntries));
+      }
       return;
     }
 
-  //AVAILABILITY OF THE FILE AFTER UPLOAD
-   // Add fetch research entries
-   const fetchResearchEntries = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/api/auth/research-entries', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    const fetchDriveFiles = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/auth/google-drive/list', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const files = await response.json();
+          // Transform the files data to match your research entries format
+          const formattedEntries = files.map(file => ({
+            title: file.name,
+            driveLink: file.id,
+            fileName: file.name,
+            submissionDate: new Date(file.createdTime).toLocaleDateString(),
+            status: 'pending',
+            // Add other default fields as needed
+          }));
+
+          setResearchEntries(formattedEntries);
+          localStorage.setItem('researchEntries', JSON.stringify(formattedEntries));
         }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setResearchEntries(data);
+      } catch (error) {
+        console.error('Error fetching Drive files:', error);
+        // Fallback to cached entries
+        const cachedEntries = localStorage.getItem('researchEntries');
+        if (cachedEntries) {
+          setResearchEntries(JSON.parse(cachedEntries));
+        }
       }
-    } catch (error) {
-      console.error('Error fetching research entries:', error);
-    }
-  };
-  fetchResearchEntries();
-}, [navigate]);
-  
+    };
+
+    fetchDriveFiles();
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -177,7 +192,7 @@ const MyResearch = () => {
               data-bs-toggle="modal" 
               data-bs-target="#submitResearchModal"
             >
-              <i className="fas fa-plus me-2"></i>Submit New Research
+              <i className="fas fa-plus me-2"></i>Add New Research
             </button>
           </div>
 
@@ -265,13 +280,13 @@ const MyResearch = () => {
             <div className="modal-dialog modal-lg">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title" id="submitResearchModalLabel">Submit New Research</h5>
+                  <h5 className="modal-title" id="submitResearchModalLabel">New Research</h5>
                   <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div className="modal-body">
                   <form className="research-form" onSubmit={handleSubmit}>
                     <div className="mb-3">
-                      <label htmlFor="title" className="form-label">Research Title</label>
+                      <label htmlFor="title" className="form-label" style={{marginLeft: '5%'}}>Research Title</label>
                       <input
                         type="text"
                         className="form-control"
@@ -280,11 +295,12 @@ const MyResearch = () => {
                         value={researchData.title}
                         onChange={handleInputChange}
                         required
+                        style={{width: '90%', marginLeft: '5%'}}
                       />
                     </div>
 
                     <div className="mb-3">
-                      <label htmlFor="authors" className="form-label">Authors</label>
+                      <label htmlFor="authors" className="form-label" style={{marginLeft: '5%'}}>Authors</label>
                       <input
                         type="text"
                         className="form-control"
@@ -294,6 +310,7 @@ const MyResearch = () => {
                         onChange={handleInputChange}
                         placeholder="Separate multiple authors with commas"
                         required
+                        style={{width: '90%', marginLeft: '5%'}}
                       />
                     </div>
 
@@ -361,7 +378,7 @@ const MyResearch = () => {
                         <div className="mb-3">
                           <button 
                             type="button" 
-                            className="btn btn-success w-100" 
+                            className="btn btn-success w-60" 
                             data-bs-toggle="modal" 
                             data-bs-target="#fileUploadModal"
                             data-bs-dismiss="modal"
