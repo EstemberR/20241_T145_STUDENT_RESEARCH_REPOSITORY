@@ -23,11 +23,15 @@ import AdminRepo from './components/Admin/admin_repositoryTable';
 import AdminReports from './components/Admin/admin_reports';
 import AdminRequest from './components/Admin/admin_request';
 
+{/*LANDING PAGE*/ }
+import LandingPage from './components/landingPage';
+
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
         {/* STUDENT */}
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/student/repository" element={<Repository />} />
