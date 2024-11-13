@@ -133,3 +133,34 @@ body, .dashboard-container {
 .zx {
   margin-right: 8px;
 }
+.research-details .row {
+  margin-bottom: 1rem;
+}
+
+.research-details .fw-bold {
+  color: #495057;
+}
+
+.modal-lg {
+  max-width: 800px;
+}
+
+.research-details {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+}
+
+.research-details .badge {
+  font-size: 0.9rem;
+  padding: 0.5em 1em;
+}
+
+.research-details a.btn {
+  text-decoration: none;
+}
+
+.modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
