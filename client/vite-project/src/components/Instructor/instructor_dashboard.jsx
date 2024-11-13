@@ -25,7 +25,7 @@ const InstructorDashboard = () => {
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
-      <div className="main-section col-10 d-flex flex-column">x
+      <div className="main-section col-10 d-flex flex-column">
         <Header userName={userName} />
 
         <main className="main-content">

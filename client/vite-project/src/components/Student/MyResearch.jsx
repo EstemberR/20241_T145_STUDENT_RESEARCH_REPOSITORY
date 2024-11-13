@@ -39,47 +39,35 @@ const MyResearch = () => {
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      const cachedEntries = localStorage.getItem('researchEntries');
-      if (cachedEntries) {
-        setResearchEntries(JSON.parse(cachedEntries));
-      }
-      return;
-    }
+      alert('Please log in first.');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('token');
+      navigate('/');
+    } else {
+      // Fetch research entries from MongoDB
+      const fetchResearchEntries = async () => {
+        try {
+          const response = await fetch('http://localhost:8000/student/research', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
 
-    const fetchDriveFiles = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/api/auth/google-drive/list', {
-          headers: {
-            'Authorization': `Bearer ${token}`
+          if (!response.ok) {
+            throw new Error(`Failed to fetch research entries: ${response.status}`);
           }
-        });
 
-        if (response.ok) {
-          const files = await response.json();
-          // Transform the files data to match your research entries format
-          const formattedEntries = files.map(file => ({
-            title: file.name,
-            driveLink: file.id,
-            fileName: file.name,
-            submissionDate: new Date(file.createdTime).toLocaleDateString(),
-            status: 'pending',
-            // Add other default fields as needed
-          }));
-
-          setResearchEntries(formattedEntries);
-          localStorage.setItem('researchEntries', JSON.stringify(formattedEntries));
+          const data = await response.json();
+          setResearchEntries(data);
+        } catch (error) {
+          console.error('Error fetching research entries:', error);
+          alert(`Error fetching research entries: ${error.message}`);
         }
-      } catch (error) {
-        console.error('Error fetching Drive files:', error);
-        // Fallback to cached entries
-        const cachedEntries = localStorage.getItem('researchEntries');
-        if (cachedEntries) {
-          setResearchEntries(JSON.parse(cachedEntries));
-        }
-      }
-    };
+      };
 
-    fetchDriveFiles();
+      fetchResearchEntries();
+    }
   }, [navigate]);
 
   const handleInputChange = (e) => {

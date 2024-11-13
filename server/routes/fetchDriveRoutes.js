@@ -1,22 +1,16 @@
+// Example Express.js route to fetch all research entries
 const express = require('express');
+const Research = require('./models/Research'); // Your Research model
 const router = express.Router();
-const auth = require('../middleware/auth');
-const drive = require('../services/drive');
-import { default as uploadToDrive, listFiles } from '../controllers/driveController.js';
 
-// ... your other routes ...
-router.get('/google-drive/list', listFiles);
-
-router.get('/research-entries', auth, async (req, res) => {
+router.get('/student/research-entries', async (req, res) => {
   try {
-    // Your logic to fetch files from Google Drive
-    const files = await drive.files.list({
-      // Your Google Drive API parameters
-    });
-    res.json(files.data.files);
+    const researchEntries = await Research.find(); // Fetch all research entries
+    res.json(researchEntries);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching files', error });
+    console.error('Error fetching research entries:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-module.exports = fetchDriveRoutes; 
+module.exports = router;
