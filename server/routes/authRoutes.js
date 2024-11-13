@@ -6,6 +6,75 @@ import Admin from '../model/Admin.js';
 import Instructor from '../model/Instructor.js';
 import Student from '../model/Student.js'
 const router = express.Router();
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// Nodemailer setup
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.USER,
+      pass: process.env.MY_PASSWORD,
+    },
+  });
+  // FUNCTION TO SEND PRIVACY POLICY EMAIL
+  const sendPrivacyPolicyEmail = async (userEmail) => {
+    const mailOptions = {
+      from: {
+        name: "Student Research Repository",
+        address: process.env.USER,
+      },
+      to: userEmail,
+      subject: "Welcome to the College of Arts and Sciences!",
+      html: `
+        <p>Dear ${userEmail},</p>
+        <p>Welcome to the College of Arts and Sciences!</p>
+        <p>We value your privacy and are committed to protecting your personal information. Below is our Privacy Policy:</p>
+        <hr>
+        <h2>Privacy Policy</h2>
+        <p><strong>Effective Date:</strong> November 14, 2024</p>
+        <ol>
+          <li><strong>Introduction</strong><br>
+            We value your privacy and are committed to protecting your personal information.
+          </li>
+          <li><strong>Information We Collect</strong><br>
+            We collect personal information that you provide to us when you register, log in, or use our services.
+          </li>
+          <li><strong>How We Use Your Information</strong><br>
+            We use your information to provide and improve our services, communicate with you, and comply with legal obligations.
+          </li>
+          <li><strong>Sharing Your Information</strong><br>
+            We do not sell or rent your personal information to third parties.
+          </li>
+          <li><strong>Your Rights</strong><br>
+            You have the right to access, correct, or delete your personal information.
+          </li>
+          <li><strong>Changes to This Policy</strong><br>
+            We may update this privacy policy from time to time. We will notify you of any changes.
+          </li>
+          <li><strong>Contact Us</strong><br>
+            If you have any questions about this privacy policy, please contact us at [Your Contact Information].
+          </li>
+        </ol>
+        <hr>
+        <p>Best regards,</p>
+        <p>College of Arts and Sciences</p>
+        <hr>
+        <p>This is the official email from the Student Research Repository of the College of Arts and Sciences.<br>
+        Please do not reply to this email.<br>
+        © 2024 College of Arts and Sciences. All rights reserved.</p>
+      `,
+    };
+  
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          return console.log('Error sending email:', error);
+        }
+        console.log('Email sent:', info.response);
+      });
+    }
 
 router.post('/google', async (req, res) => {
     const { name, email, uid } = req.body;
@@ -17,6 +86,7 @@ router.post('/google', async (req, res) => {
     try {
         // Check if the user already exists (student or instructor)
         let user = await Student.findOne({ uid }) || await Instructor.findOne({ uid });
+        
 
         // If no existing user is found, create a new one
         if (!user) {
@@ -30,6 +100,8 @@ router.post('/google', async (req, res) => {
             } else {
                 return res.status(400).json({ message: 'Invalid email domain' });
             }
+             // User authenticated successfully
+            await sendPrivacyPolicyEmail(user.email);
 
             await user.save();
         } else {
