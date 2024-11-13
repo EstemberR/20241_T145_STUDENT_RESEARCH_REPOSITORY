@@ -10,17 +10,21 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="container-wrapper">
-      <nav className="navbar navbar-expand-lg fixed-top custom-navbar">
+    <div className="landing-page-container-wrapper">
+      <nav className="navbar navbar-expand-lg fixed-top landing-page-navbar">
         <div className="container-fluid">
-          <div className="navbar-brand nav-brand">
-            <img src={casLogo} alt="Department Logo" height="50" />
-            <span className="ms-3">Student Research Repository</span>
+          <div className="navbar-brand landing-page-nav-brand">
+            <img src={casLogo} alt="Department Logo" height="50" style={{borderRadius: '50%'}}/>
+            <span className="ms-3" style={{ fontWeight: 'bold' }}>Student Research Repository</span>
           </div>
           <div className="nav-links">
-            <a href="#about" className="nav-link">About</a>
-            <a href="#features" className="nav-link">Features</a>
-            <button className="login-button" onClick={() => navigate('/login')}>
+            <button className="landing-page-nav-button" onClick={() => navigate('#about')}>
+              About
+            </button>
+            <button className="landing-page-nav-button" onClick={() => navigate('#features')}>
+              Features
+            </button>
+            <button className="landing-page-login-button" onClick={() => navigate('/login')}>
               <i className="fas fa-sign-in-alt me-2"></i>
               Sign In
             </button>
@@ -28,47 +32,50 @@ const LandingPage = () => {
         </div>
       </nav>
 
-      <section className="hero-section container-fluid">
+      <section className="landing-page-hero-section container-fluid">
         <div className="row align-items-center">
           <div className="col-md-6">
-            <div className="hero-content">
-              <h1>Welcome to College of Arts and Science</h1>
-              <h2>Student Research Repository</h2>
+            <div className="landing-page-hero-content">
+              <h1 className="landing-page-welcome-title">Welcome to the College of Arts and Science</h1>
+              <h2 className="landing-page-subtitle">Student Research Repository</h2>
               <p className="lead">
                 Access and manage research papers efficiently. A centralized platform 
                 for students, instructors, and administrators.
               </p>
               <div className="button-group">
-                <button className="login-button me-3" onClick={() => navigate('/login')} style={{width: '50%', fontSize: '1.6rem'}}>
+                <button className="landing-page-login-button me-3" onClick={() => navigate('/login')}>
                   Sign in 
+                </button>
+                <button className="landing-page-explore-button" onClick={() => navigate('/explore')}>
+                  Explore
                 </button>
               </div>
             </div>
           </div>
           <div className="col-md-6">
-            <img src={casBuilding} alt="BukSU Building" className="hero-image" />
+            <img src={casBuilding} alt="BukSU Building" className="landing-page-hero-image" />
           </div>
         </div>
       </section>
 
-      <section className="features-section container-fluid" id="features">
+      <section className="landing-page-features-section container-fluid" id="features">
         <div className="row">
           <div className="col-md-4">
-            <div className="feature-card">
+            <div className="landing-page-feature-card">
               <i className="fas fa-book-reader fa-3x text-success mb-3"></i>
               <h3>Easy Access</h3>
               <p>Access research papers anytime, anywhere with our digital repository.</p>
             </div>
           </div>
           <div className="col-md-4">
-            <div className="feature-card">
+            <div className="landing-page-feature-card">
               <i className="fas fa-search fa-3x text-success mb-3"></i>
               <h3>Smart Search</h3>
               <p>Find relevant research papers quickly with our advanced search features.</p>
             </div>
           </div>
           <div className="col-md-4">
-            <div className="feature-card">
+            <div className="landing-page-feature-card">
               <i className="fas fa-shield-alt fa-3x text-success mb-3"></i>
               <h3>Secure Storage</h3>
               <p>Your research papers are safely stored and protected in our system.</p>
@@ -77,7 +84,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <footer className="custom-footer">
+      <footer className="landing-page-custom-footer">
         <div className="container-fluid">
           <p className="mb-0">&copy; 2024 Bukidnon State University - Student Research Repository</p>
         </div>

@@ -18,7 +18,7 @@ import driveRoutes from '../routes/driveRoutes.js';
 
 dotenv.config(); 
 const app = express();
-const PORT = process.env.PORT || 8000; 
+const PORT = process.env.PORT || 6000; 
 
 app.use(cors({
     origin: 'http://localhost:3000', 
