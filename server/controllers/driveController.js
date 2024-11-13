@@ -3,43 +3,70 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-dotenv.config();
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load environment variables from the server folder
+const envPath = path.join(__dirname, '../.env');
+dotenv.config({ path: envPath });
+console.log('Looking for .env at:', envPath);
+
 const uploadToDrive = async (req, res) => {
   try {
-    console.log('Received file upload request'); // Add logging
-    
-     // Update the path to point to your GDrive.json file
-     const keyFilePath = path.join(__dirname, '..', 'src', './Assets/GDrive.json');
-     console.log('Looking for credentials file at:', keyFilePath); // Debug log
- 
-     // INITIALIZE GOOGLE AUTH
-     const auth = new google.auth.GoogleAuth({
-       keyFile: keyFilePath,
-       scopes: ['https://www.googleapis.com/auth/drive.file'],
-     });
+    console.log('Received file upload request');
 
-     // Create a function to initialize drive
-    const initializeDrive = async () => {
-      const keyFilePath = path.join(__dirname, '..', 'src', './Assets/GDrive.json');
-      const auth = new google.auth.GoogleAuth({
-        keyFile: keyFilePath,
-        scopes: ['https://www.googleapis.com/auth/drive.file'],
-      });
-      const client = await auth.getClient();
-      return google.drive({ version: 'v3', auth: client });
+    // Check if environment variables are loaded
+    if (!process.env.MY_DRIVE_PRIVATE_KEY) {
+      console.error('Environment variables not loaded. Check .env file path.');
+      throw new Error('Environment variables not loaded');
+    }
+
+    // Format the private key properly
+    let privateKey = process.env.MY_DRIVE_PRIVATE_KEY;
+    if (privateKey) {
+      privateKey = privateKey
+        .replace(/\\n/g, '\n')
+        .replace(/^["']|["']$/g, '');
+    }
+
+    // Create credentials object
+    const credentials = {
+      type: process.env.MY_DRIVE_TYPE,
+      project_id: process.env.MY_DRIVE_PROJECT_ID,
+      private_key_id: process.env.MY_DRIVE_PRIVATE_KEY_ID,
+      private_key: privateKey,
+      client_email: process.env.MY_DRIVE_CLIENT_EMAIL,
+      client_id: process.env.MY_DRIVE_CLIENT_ID,
+      auth_uri: process.env.MY_DRIVE_AUTH_URI,
+      token_uri: process.env.MY_DRIVE_TOKEN_URI,
+      auth_provider_x509_cert_url: process.env.MY_DRIVE_AUTH_PROVIDER_X509_CERT_URL,
+      client_x509_cert_url: process.env.MY_DRIVE_CLIENT_X509_CERT_URL,
+      universe_domain: process.env.MY_DRIVE_UNIVERSE_DOMAIN
     };
-    console.log('Credentials:', {
-      ...auth.credentials,
-      private_key: '[REDACTED]'
+
+    // Log credentials for debugging (excluding private key)
+    console.log('Using credentials:', {
+      type: process.env.MY_DRIVE_TYPE,
+      project_id: process.env.MY_DRIVE_PROJECT_ID,
+      private_key_id: process.env.MY_DRIVE_PRIVATE_KEY_ID,
+      private_key: privateKey,
+      client_email: process.env.MY_DRIVE_CLIENT_EMAIL,
+      client_id: process.env.MY_DRIVE_CLIENT_ID,
+      auth_uri: process.env.MY_DRIVE_AUTH_URI,
+      token_uri: process.env.MY_DRIVE_TOKEN_URI,
+      auth_provider_x509_cert_url: process.env.MY_DRIVE_AUTH_PROVIDER_X509_CERT_URL,
+      client_x509_cert_url: process.env.MY_DRIVE_CLIENT_X509_CERT_URL,
+      universe_domain: process.env.MY_DRIVE_UNIVERSE_DOMAIN
     });
 
-     
+    // Initialize auth with credentials object
+    const auth = new google.auth.GoogleAuth({
+      credentials: credentials,
+      scopes: ['https://www.googleapis.com/auth/drive.file']
+    });
 
-     // GET THE CLIENT
+    // Get the client and create drive instance
     const client = await auth.getClient();
     const drive = google.drive({ version: 'v3', auth: client });
 
@@ -49,7 +76,7 @@ const uploadToDrive = async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    console.log('Processing file:', fileData.originalname); // Add logging
+    console.log('Processing file:', fileData.originalname);
 
     // CREATE FOLDER (if it doesn't exist)
     const folderMetadata = {
@@ -76,7 +103,7 @@ const uploadToDrive = async (req, res) => {
     // Upload file to the folder
     const fileMetadata = {
       name: fileData.originalname,
-      parents: [folder.id], // This places the file in the specified folder
+      parents: [folder.id],
     };
 
     const media = {
@@ -87,7 +114,7 @@ const uploadToDrive = async (req, res) => {
     const response = await drive.files.create({
       requestBody: fileMetadata,
       media: media,
-      fields: 'id, webViewLink', // Add webViewLink to get the direct URL
+      fields: 'id, webViewLink',
     });
 
     // Make the file publicly accessible
@@ -107,7 +134,7 @@ const uploadToDrive = async (req, res) => {
 
     console.log('File uploaded successfully with ID:', response.data.id);
     console.log('File URL:', file.data.webViewLink);
-    
+
     res.json({ 
       fileId: response.data.id,
       fileUrl: file.data.webViewLink 
@@ -115,6 +142,7 @@ const uploadToDrive = async (req, res) => {
 
   } catch (error) {
     console.error('Error uploading file:', error);
+    console.error('Error details:', error.message);
     res.status(500).json({ error: 'Failed to upload to Google Drive' });
   }
 };
