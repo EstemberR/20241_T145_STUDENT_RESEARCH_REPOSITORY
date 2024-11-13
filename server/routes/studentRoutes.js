@@ -1,6 +1,7 @@
 import express from 'express';
 import Student from '../model/Student.js'; 
 import authenticateToken from '../middleware/authenticateToken.js';
+import FAQ from '../model/FAQ.js';
 
 const studentRoutes = express.Router();
 
@@ -48,5 +49,16 @@ studentRoutes.put('/profile', authenticateToken, async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+studentRoutes.get('/faqs', async (req, res) => {
+    try {
+        const faqs = await FAQ.find();
+        res.json(faqs);
+    } catch (err) {
+        console.error('Error fetching FAQs:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
 
 export default studentRoutes;

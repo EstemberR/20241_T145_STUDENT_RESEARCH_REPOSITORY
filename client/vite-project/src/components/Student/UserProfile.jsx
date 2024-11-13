@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import Sidebar from './resources/Sidebar';
+import Header from './resources/Header';
+import {getToken } from './resources/Utils';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useUser } from '../Instructor/resources/userContext'; // Import useUser
 import '../css/Dashboard.css';
 import '../css/UserProfile.css';
-import casLogo from '../../assets/cas-logo.jpg';
 
 const Profile = () => {
-  const location = useLocation();
+  const { userName, updateUserName } = useUser(); // Get userName and updateUserName
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [user, setUser] = useState({
@@ -20,9 +23,11 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('token'); 
+        const token = getToken();
         if (!token) {
           alert('Please log in first.');
+          localStorage.removeItem('userName');
+          localStorage.removeItem('token');
           navigate('/');
           return;
         }
@@ -39,6 +44,7 @@ const Profile = () => {
         if (response.ok) {
           setProfile(data);
           setUser(data);
+          updateUserName(data.name);
         } else {
           alert(data.message || 'Error fetching profile');
         }
@@ -48,7 +54,7 @@ const Profile = () => {
     };
 
     fetchProfile();
-  }, [navigate]);
+  }, [navigate, updateUserName]);
 
   // Toggle Edit Mode
   const handleEditToggle = () => {
@@ -89,6 +95,7 @@ const Profile = () => {
         setProfile(data); // Update profile state with new data
         alert('Profile updated successfully');
         setIsEditing(false); // Exit edit mode
+        updateUserName(data.name);
       } else {
         alert(data.message || 'Error updating profile');
       }
@@ -103,69 +110,9 @@ const Profile = () => {
 
   return (
     <div className="dashboard-container d-flex">
-      {/* Sidebar (Occupies full height) */}
-      <nav className="col-2 sidebar">
-        <h3 className="text-center">STUDENT RESEARCH REPOSITORY SYSTEM</h3>
-        <ul className="nav flex-column">
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/dashboard' ? 'active' : ''}`} to="/student/dashboard">
-              <i className="fas fa-tachometer-alt search zx"></i> Dashboard
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/repository' ? 'active' : ''}`} to="/student/repository">
-              <i className="fas fa-book search zx"></i> Research Repository
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/profile' ? 'active' : ''}`} to="/student/profile">
-              <i className="fas fa-user search zx"></i> User Profile
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/myResearch' ? 'active' : ''}`} to="/student/myResearch">
-              <i className="fas fa-folder-open search zx"></i> My Research
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/FAQ' ? 'active' : ''}`} to="/student/FAQ">
-              <i className="fas fa-robot search zx"></i> FAQ
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/notifications' ? 'active' : ''}`} to="/student/notifications">
-              <i className="fas fa-bell search zx"></i> Notifications
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/student/logout' ? 'active' : ''}`} to="/student/logout">
-              <i className="fas fa-sign-out-alt search zx"></i> Logout
-            </Link>
-          </li>
-        </ul>
-      </nav>
-
-      {/* Main Section (Top logo row + Main content) */}
+      <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
-        {/* Top Row (Logo and Right Empty Space) */}
-        <div className="top-row d-flex align-items-center">
-          <header className="col-8 d-flex justify-content-center align-items-center">
-            <img src={casLogo} alt="CAS Logo" className="cas-logo" />
-          </header>
-          <div className="col-2 user-info ms-auto d-flex align-items-center">
-          <img
-          src={'https://via.placeholder.com/150'} //STATIC NALANG
-          alt="Profile"
-          className="img-fluid rounded-circle"
-          style={{ width: '50PX', height: '50px' }}
-        />
-            <div className="user-details">
-              <p className="user-name">{profile.name}</p>
-              <p className="user-role">Student</p>
-            </div>
-          </div>
-        </div>
-
+        <Header userName={userName} />
         {/* Main Content Area */}
 {/* Main Content Area */}
 <main className="main-content">
@@ -181,7 +128,7 @@ const Profile = () => {
         <h3 className="fs-4 mt-3">{profile.name}</h3>
         <p className="text-muted fs-6">{profile.email}</p>
         <button
-          className="btn btn-primary mt-3"
+          className="btn btn-success mt-3"
           onClick={handleEditToggle}
           style={{ width: '120px', height: '40px', fontSize: '14px' }}
         >

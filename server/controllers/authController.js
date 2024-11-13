@@ -31,4 +31,4 @@ const adminLogin = (req, res) => {
   }
 };
 
-module.exports = { googleLogin, adminLogin };
+export default { googleLogin, adminLogin };

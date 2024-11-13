@@ -24,7 +24,7 @@ const Login = () => {
             return;
         }
         console.log('Login attempted with:', email, password);
-
+    
         try {
             const response = await fetch('http://localhost:8000/api/admin-login', {
                 method: 'POST',
@@ -33,25 +33,31 @@ const Login = () => {
                 },
                 body: JSON.stringify({ email, password }),
             });
-
+    
             const data = await response.json();
             console.log('User response:', data);
-
+    
             if (response.ok) {
-                console.log('User authenticated successfully:', data);
+                if (data.archived) {
+                    console.log('Account is archived');  // Debugging message
+                    alert('Your account is archived. Please contact the admin to restore your account.');
+                    return;
+                }
+                const { token } = data;
                 const userRole = data.role;
-                localStorage.setItem('userName', data.name); 
-
+                localStorage.setItem('userName', data.name);
+                localStorage.setItem('token', token); 
+    
                 if (userRole === 'student') {
                     navigate('/student/dashboard');
-                    console.log(userRole)
+                    console.log(userRole);
                 } else if (userRole === 'instructor') {
                     navigate('/instructor/dashboard');
-                    console.log(userRole)
-                } else if (userRole === 'admin'){
+                    console.log(userRole);
+                } else if (userRole === 'admin') {
                     navigate('/admin/admin_dashboard');
                 } else {
-                    alert('Unknown user role'); 
+                    alert('Unknown user role');
                 }
             } else {
                 console.error('Authentication failed:', data.error || 'Unknown error');
@@ -59,10 +65,10 @@ const Login = () => {
             }
         } catch (error) {
             console.error('Error during login:', error);
-            alert('An error occurred during login. Please try again.'); 
+            alert('An error occurred during login. Please try again.');
         }
     };
-
+    
     // Firebase Google login function
     const handleGoogle = async () => {
         const provider = new GoogleAuthProvider();
@@ -119,6 +125,7 @@ const Login = () => {
     const handleRecaptchaChange = (token) => {
         setRecaptchaToken(token);
     };
+    
     return (
         <div className="login-container">
             <div className="col-md-6 d-none d-md-block login-image-container login-image">
