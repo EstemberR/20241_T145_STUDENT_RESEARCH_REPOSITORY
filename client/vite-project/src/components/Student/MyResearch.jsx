@@ -53,7 +53,7 @@ const MyResearch = () => {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+
         if (response.ok) {
           const files = await response.json();
           // Transform the files data to match your research entries format
@@ -112,71 +112,86 @@ const MyResearch = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-     
-  try {
-    if (!file) {
-      alert('Please select a file to upload.');
-      return;
+
+    try {
+        if (!file) {
+            alert('Please select a file to upload.');
+            return;
+        }
+
+        // 1. First upload file to Google Drive
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const fileUploadResponse = await fetch('http://localhost:8000/api/auth/google-drive', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!fileUploadResponse.ok) {
+            throw new Error(`HTTP error! status: ${fileUploadResponse.status}`);
+        }
+
+        const fileResult = await fileUploadResponse.json();
+        
+        // 2. Then save research data to MongoDB
+        const token = getToken();
+        const researchSubmitResponse = await fetch('http://localhost:8000/student/submit-research', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                title: researchData.title,
+                abstract: researchData.abstract,
+                authors: researchData.authors,
+                keywords: researchData.keywords,
+                status: 'Pending',
+                fileUrl: `https://drive.google.com/file/d/${fileResult.fileId}/view`,
+                driveFileId: fileResult.fileId,
+                uploadDate: researchData.uploadDate
+            })
+        });
+
+        if (!researchSubmitResponse.ok) {
+            throw new Error(`Failed to save research data: ${researchSubmitResponse.status}`);
+        }
+
+        const savedResearch = await researchSubmitResponse.json();
+        console.log('Research saved:', savedResearch);
+
+        // Update local state
+        const newResearch = {
+            ...researchData,
+            driveLink: fileResult.fileId,
+            fileName: file.name,
+            submissionDate: new Date().toLocaleDateString()
+        };
+
+        setResearchEntries([...researchEntries, newResearch]);
+        
+        // Reset form
+        setResearchData({
+            title: '',
+            abstract: '',
+            authors: '',
+            keywords: '',
+            driveLink: '',
+            status: 'pending',
+            uploadDate: new Date().toISOString().split('T')[0]
+        });
+        setFile(null);
+        setShowForm(false);
+        
+        alert('Research submitted successfully!');
+    } catch (error) {
+        console.error('Error during submission:', error);
+        alert(`Error submitting research: ${error.message}`);
     }
-
-    console.log('Preparing to upload file:', file.name); // Debug log
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    console.log('Sending request to server...'); // Debug log
-
-    const response = await fetch('http://localhost:8000/api/auth/google-drive', {
-      method: 'POST',
-      body: formData,
-    });
-
-    console.log('Response status:', response.status); // Debug log
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log('Server response:', result); // Debug log
-
-     // Create new research entry with all data
-     const newResearch = {
-      ...researchData,
-      driveLink: result.fileId,
-      fileName: file.name,
-      submissionDate: new Date().toLocaleDateString()
-    };
-
-     // Add to research entries
-     setResearchEntries([...researchEntries, newResearch]);
-      
-     // Reset form
-     setResearchData({
-       title: '',
-       abstract: '',
-       authors: '',
-       keywords: '',
-       driveLink: '',
-       status: 'pending',
-       uploadDate: new Date().toISOString().split('T')[0]
-     });
-     setFile(null);
-     setShowForm(false);
-
-    setResearchData(prevData => ({
-      ...prevData,
-      driveLink: result.fileId
-    }));
-    
-    alert('File uploaded successfully!');
-  } catch (error) {
-    console.error('Error during file upload:', error);
-    alert(`Error uploading file: ${error.message}`);
-  }
   };
 
-  
+
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />

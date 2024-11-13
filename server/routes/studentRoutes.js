@@ -2,6 +2,7 @@ import express from 'express';
 import Student from '../model/Student.js'; 
 import authenticateToken from '../middleware/authenticateToken.js';
 import FAQ from '../model/FAQ.js';
+import Research from '../model/Research.js';
 
 const studentRoutes = express.Router();
 
@@ -60,5 +61,67 @@ studentRoutes.get('/faqs', async (req, res) => {
     }
 });
 
+studentRoutes.post('/submit-research', authenticateToken, async (req, res) => {
+    try {
+        const studentId = req.user.userId; // Get from auth token
+        const {
+            title,
+            abstract,
+            authors,
+            keywords,
+            fileUrl,
+            driveFileId,
+            uploadDate
+        } = req.body;
+        const newResearch = new Research({
+            studentId,
+            title,
+            abstract,
+            authors,
+            keywords,
+            fileUrl,
+            driveFileId,
+            status: 'Pending',
+            uploadDate
+        });
+        const savedResearch = await newResearch.save();
+        console.log('Saved research:', savedResearch);
+        res.status(201).json(savedResearch);
+    } catch (error) {
+        console.error('Error saving research:', error);
+        res.status(500).json({ message: 'Error saving research', error: error.message });
+    }
+});
+// Submit new research
+studentRoutes.post('/research', authenticateToken, async (req, res) => {
+    try {
+        const studentId = req.user.userId;
+        const researchData = {
+            ...req.body,
+            studentId,
+            status: 'Pending'
+        };
+        const newResearch = new Research(researchData);
+        const savedResearch = await newResearch.save();
+        
+        res.status(201).json(savedResearch);
+    } catch (error) {
+        console.error('Error saving research:', error);
+        res.status(500).json({ message: 'Error saving research' });
+    }
+});
+// Get student's research entries
+studentRoutes.get('/research', authenticateToken, async (req, res) => {
+    try {
+        const studentId = req.user.userId;
+        const research = await Research.find({ studentId })
+            .sort({ createdAt: -1 });
+        
+        res.json(research);
+    } catch (error) {
+        console.error('Error fetching research:', error);
+        res.status(500).json({ message: 'Error fetching research' });
+    }
+});
 
 export default studentRoutes;
