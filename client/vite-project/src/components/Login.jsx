@@ -97,6 +97,8 @@ const Login = () => {
             if (response.ok) {
                 console.log('User authenticated successfully:', data);
                 const { token, role, name } = data;
+
+              
     
                 localStorage.setItem('token', token); 
                 setUserName(name);
