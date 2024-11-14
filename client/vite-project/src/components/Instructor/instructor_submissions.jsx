@@ -17,13 +17,12 @@ const InstructorSubmissions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch submissions using fetch
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
         setLoading(true);
         const token = getToken();
-        console.log('Fetching with token:', token); // Debug token
+        console.log('Fetching with token:', token); 
         const response = await fetch('http://localhost:8000/instructor/submissions', {
           method: 'GET',
           headers: {
@@ -31,12 +30,12 @@ const InstructorSubmissions = () => {
             'Content-Type': 'application/json'
           }
         });
-        console.log('Response status:', response.status); // Debug response
+        console.log('Response status:', response.status);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log('Received data:', data); // Debug received data
+        console.log('Received data:', data); 
         
         setSubmissions(data);
         setLoading(false);
@@ -47,8 +46,7 @@ const InstructorSubmissions = () => {
       }
     };
     fetchSubmissions();
-  }, []);
-  // Handle status update using fetch
+  }, [navigate]);
   const handleStatusUpdate = async (submissionId, newStatus, note = '') => {
     try {
       const token = getToken();
@@ -66,7 +64,6 @@ const InstructorSubmissions = () => {
       if (!response.ok) {
         throw new Error('Failed to update status');
       }
-      // Update local state
       setSubmissions(submissions.map(sub => 
         sub._id === submissionId ? { ...sub, status: newStatus } : sub
       ));
@@ -76,9 +73,7 @@ const InstructorSubmissions = () => {
       alert('Failed to update status');
     }
   };
-  // Filter data based on the active tab
   const filteredData = submissions.filter((submission) => submission.status === activeTab);
-  console.log('Filtered data:', filteredData); // Debug filtered data
   const handleViewClick = (research) => {
     setSelectedResearch(research);
     const viewModal = new window.bootstrap.Modal(document.getElementById('viewResearchModal'));
@@ -101,6 +96,9 @@ const InstructorSubmissions = () => {
                   onClick={() => setActiveTab('Pending')}
                 >
                   Pending
+                  <span className="badge bg-warning ms-2">
+                    {submissions.filter(submission => submission.status === 'Pending').length}
+                  </span>
                 </button>
               </li>
               <li className="nav-item accepted">
@@ -109,6 +107,9 @@ const InstructorSubmissions = () => {
                   onClick={() => setActiveTab('Accepted')}
                 >
                   Accepted
+                  <span className="badge bg-success ms-2">
+                    {submissions.filter(submission => submission.status === 'Accepted').length}
+                  </span>
                 </button>
               </li>
               <li className="nav-item revision">
@@ -117,6 +118,9 @@ const InstructorSubmissions = () => {
                   onClick={() => setActiveTab('Revision')}
                 >
                   Revision
+                  <span className="badge bg-info ms-2">
+                    {submissions.filter(submission => submission.status === 'Revision').length}
+                  </span>
                 </button>
               </li>
               <li className="nav-item rejected">
@@ -125,6 +129,9 @@ const InstructorSubmissions = () => {
                   onClick={() => setActiveTab('Rejected')}
                 >
                   Rejected
+                  <span className="badge bg-danger ms-2">
+                    {submissions.filter(submission => submission.status === 'Rejected').length}
+                  </span>
                 </button>
               </li>
             </ul>
@@ -152,7 +159,7 @@ const InstructorSubmissions = () => {
                       <td className="centering">{submission.title}</td>
                       <td className="centering">{submission.authors}</td>
                       <td className="centering">
-                        {new Date(submission.createdAt).toLocaleDateString()}
+                        {new Date(submission.uploadDate).toLocaleDateString()}
                       </td>
                       <td className="centering">
                         <span className={`badge bg-${

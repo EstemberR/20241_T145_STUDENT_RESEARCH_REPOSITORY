@@ -159,3 +159,16 @@ body, .dashboard-container {
   max-height: 70vh;
   overflow-y: auto;
 }
+.nav-tabs .nav-link {
+  cursor: pointer;
+  color: #666;
+}
+
+.nav-tabs .nav-link.active {
+  font-weight: bold;
+  color: #333;
+}
+
+.badge {
+  font-size: 0.8em;
+}
