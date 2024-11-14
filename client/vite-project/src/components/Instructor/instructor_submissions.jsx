@@ -87,7 +87,6 @@ const InstructorSubmissions = () => {
         <Header userName={userName} />
 
         <main className="main-content">
-          <div className="container">
             <h4 className="my-3">STUDENT SUBMISSIONS</h4>
             <ul className="nav nav-tabs">
               <li className="nav-item pending">
@@ -215,7 +214,6 @@ const InstructorSubmissions = () => {
                 </tbody>
               </table>
             )}
-          </div>
         </main>
       </div>
       <div className="modal fade" id="viewResearchModal" tabIndex="-1" aria-hidden="true">

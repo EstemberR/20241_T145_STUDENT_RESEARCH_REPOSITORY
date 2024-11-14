@@ -8,6 +8,17 @@ import { useUser } from '../Instructor/resources/userContext'; // Import useUser
 import '../css/Dashboard.css';
 import '../css/UserProfile.css';
 
+const COURSES = [
+  'BS-MATH',
+  'BS-ES',
+  'BSDC',
+  'BSCD',
+  'BS-BIO',
+  'AB-SOCSCI',
+  'AB-SOCIO',
+  'AB-PHILO'
+];
+
 const Profile = () => {
   const { userName, updateUserName } = useUser(); // Get userName and updateUserName
   const [profile, setProfile] = useState(null);
@@ -150,13 +161,19 @@ const Profile = () => {
             </div>
             <div className="mb-3">
               <label className="form-label fs-6">Course</label>
-              <input
-                type="text"
-                className="form-control"
+              <select
+                className="form-select"
                 name="course"
-                value={user.course}
+                value={user.course || ''}
                 onChange={handleChange}
-              />
+              >
+                <option value="">Select a course</option>
+                {COURSES.map((course) => (
+                  <option key={course} value={course}>
+                    {course}
+                  </option>
+                ))}
+              </select>
             </div>
             <button type="submit" className="btn btn-success fs-6">
               Save Changes
