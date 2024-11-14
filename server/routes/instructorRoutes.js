@@ -3,6 +3,7 @@ import Instructor from '../model/Instructor.js';
 import authenticateToken from '../middleware/authenticateToken.js';
 import Research from '../model/Research.js';
 import Student from '../model/Student.js';
+import AdviserRequest from '../model/AdviserRequest.js';
 
 const instructorRoutes = express.Router();
 
@@ -176,6 +177,104 @@ instructorRoutes.get('/students/:studentId/details', authenticateToken, async (r
     } catch (error) {
         console.error('Error fetching student details:', error);
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get available research projects (those without advisers)
+instructorRoutes.get('/available-research', authenticateToken, async (req, res) => {
+    try {
+        const availableResearch = await Research.find({
+            adviser: null  // Change this line from { $exists: false } to null
+        }).select('title _id studentId');
+
+        console.log('Available research:', availableResearch); // Add this debug log
+        res.status(200).json(availableResearch);
+    } catch (error) {
+        console.error('Error fetching available research:', error);
+        res.status(500).json({ message: 'Error fetching research projects' });
+    }
+});
+
+// Submit adviser request
+instructorRoutes.post('/adviser-request', authenticateToken, async (req, res) => {
+    try {
+        const { researchId, message } = req.body;
+        const instructorId = req.user.userId;
+
+        // Get instructor details
+        const instructor = await Instructor.findById(instructorId);
+        if (!instructor) {
+            return res.status(404).json({ 
+                message: 'Instructor not found' 
+            });
+        }
+
+        // Check if research exists and has no adviser
+        const research = await Research.findOne({
+            _id: researchId,
+            adviser: null  // Changed from { $exists: false } to null
+        });
+
+        console.log('Found research:', research); // Debug log
+
+        if (!research) {
+            return res.status(400).json({ 
+                message: 'Research not found or already has an adviser' 
+            });
+        }
+
+        // Check if instructor already has a pending request for this research
+        const existingRequest = await AdviserRequest.findOne({
+            research: researchId,
+            instructor: instructorId,
+            status: 'pending'
+        });
+
+        if (existingRequest) {
+            return res.status(400).json({ 
+                message: 'You already have a pending request for this research' 
+            });
+        }
+
+        // Create adviser request with instructor details and research title
+        const adviserRequest = new AdviserRequest({
+            research: researchId,
+            researchTitle: research.title,
+            instructor: instructorId,
+            instructorName: instructor.name,
+            instructorEmail: instructor.email,
+            message: message,
+            status: 'pending'
+        });
+
+        await adviserRequest.save();
+
+        res.status(201).json({ 
+            message: 'Adviser request submitted successfully' 
+        });
+
+    } catch (error) {
+        console.error('Error submitting adviser request:', error);
+        res.status(500).json({ 
+            message: 'Error submitting request' 
+        });
+    }
+});
+
+// Update the GET route to include researchTitle
+instructorRoutes.get('/adviser-requests', authenticateToken, async (req, res) => {
+    try {
+        const instructorId = req.user.userId;
+        
+        const requests = await AdviserRequest.find({ instructor: instructorId })
+            .populate('research', 'title')
+            .select('research researchTitle instructorName instructorEmail message status createdAt')
+            .sort({ createdAt: -1 });
+            
+        res.status(200).json(requests);
+    } catch (error) {
+        console.error('Error fetching adviser requests:', error);
+        res.status(500).json({ message: 'Error fetching requests' });
     }
 });
 

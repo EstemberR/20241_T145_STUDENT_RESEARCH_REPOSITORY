@@ -36,7 +36,7 @@ studentRoutes.put('/profile', authenticateToken, async (req, res) => {
 
         const updatedUser = await Student.findByIdAndUpdate(
             userId,
-            { name, email, role, course },
+            { name, email, role, course, section },
             { new: true, runValidators: true } 
         );
 
