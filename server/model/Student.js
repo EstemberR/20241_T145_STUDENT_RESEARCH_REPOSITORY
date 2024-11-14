@@ -12,7 +12,8 @@ const studentSchema = new mongoose.Schema({
     },
     role: { type: String, enum: ['student'], required: true },
     studentId: { type: String, required: true, unique: true },
-    archived: { type: Boolean, default: false }
+    archived: { type: Boolean, default: false },
+    section: { type: String, required: false }
 });
 
 const Student = mongoose.model('Student', studentSchema);

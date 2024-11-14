@@ -124,74 +124,130 @@ const Profile = () => {
       <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
         <Header userName={userName} />
-        {/* Main Content Area */}
-{/* Main Content Area */}
-<main className="main-content">
-  <div className="container mt-5">
-    <div className="row">
-      <div className="col-md-4 text-center">
-        <img
-          src={'https://via.placeholder.com/150'} //STATIC NALANG
-          alt="Profile"
-          className="img-fluid rounded-circle"
-          style={{ width: '150px', height: '150px' }}
-        />
-        <h3 className="fs-4 mt-3">{profile.name}</h3>
-        <p className="text-muted fs-6">{profile.email}</p>
-        <button
-          className="btn btn-success mt-3"
-          onClick={handleEditToggle}
-          style={{ width: '120px', height: '40px', fontSize: '14px' }}
-        >
-          {isEditing ? 'Cancel Edit' : 'Edit Profile'}
-        </button>
-      </div>
-      <div className="col-md-8">
-        {isEditing ? (
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label fs-6">Name</label>
-              <input
-                type="text"
-                className="form-control"
-                name="name"
-                value={user.name}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label fs-6">Course</label>
-              <select
-                className="form-select"
-                name="course"
-                value={user.course || ''}
-                onChange={handleChange}
-              >
-                <option value="">Select a course</option>
-                {COURSES.map((course) => (
-                  <option key={course} value={course}>
-                    {course}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button type="submit" className="btn btn-success fs-6">
-              Save Changes
-            </button>
-          </form>
-        ) : (
-          <div>
-            <p className="profile-name"><strong>NAME:</strong> {profile.name}</p>
-            <p className="profile-name"><strong>EMAIL:</strong> {profile.email}</p>
-            <p className="profile-name"><strong>ROLE:</strong> {profile.role}</p>
-            <p className="profile-name"><strong>COURSE:</strong> {profile.course}</p>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-</main>
+        <main className="main-content">
+            <div className="card shadow-sm">
+              <div className="card-body p-4">
+                <div className="row">
+                  {/* Left Column - Profile Image and Basic Info */}
+                  <div className="col-md-4 border-end text-center">
+                    <div className="position-relative mb-4">
+                      <img
+                        src={'https://via.placeholder.com/150'}
+                        alt="Profile"
+                        className="rounded-circle shadow"
+                        style={{ 
+                          width: '150px', 
+                          height: '150px',
+                          border: '4px solid #fff'
+                        }}
+                      />
+                      <div className="mt-3">
+                        <h3 className="fw-bold mb-1">{profile.name}</h3>
+                        <p className="text-muted mb-3">
+                          <i className="fas fa-envelope me-2"></i>
+                          {profile.email}
+                        </p>
+                        <button
+                          className="btn btn-success rounded-pill px-4"
+                          onClick={handleEditToggle}
+                        >
+                          <i className={`fas ${isEditing ? 'fa-times' : 'fa-edit'} me-2`}></i>
+                          {isEditing ? 'Cancel' : 'Edit Profile'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
+                  {/* Right Column - Profile Details */}
+                  <div className="col-md-8">
+                    <div className="ps-md-4">
+                      {isEditing ? (
+                        <form onSubmit={handleSubmit} className="profile-edit-form">
+                          <h4 className="mb-4 text-success">Edit Profile</h4>
+                          <div className="mb-4">
+                            <label className="form-label text-muted">Full Name</label>
+                            <input
+                              type="text"
+                              className="form-control form-control-lg"
+                              name="name"
+                              value={user.name}
+                              onChange={handleChange}
+                            />
+                          </div>
+                          <div className="mb-4">
+                            <label className="form-label text-muted">Course</label>
+                            <select
+                              className="form-select form-select-lg"
+                              name="course"
+                              value={user.course || ''}
+                              onChange={handleChange}
+                            >
+                              <option value="">Select a course</option>
+                              {COURSES.map((course) => (
+                                <option key={course} value={course}>
+                                  {course}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <button type="submit" className="btn btn-success btn-lg rounded-pill mb-3">
+                            <i className="fas fa-save me-2"></i>
+                            Save Changes
+                          </button>
+                        </form>
+                      ) : (
+                        <div className="profile-info">
+                          <h4 className="mb-4 text-success">Profile Information</h4>
+                          <div className="profile-detail mb-3 p-3 border rounded bg-light">
+                            <div className="row mb-3">
+                              <div className="col-4">
+                                <span className="text-success">Full Name</span>
+                              </div>
+                              <div className="col-8">
+                                <strong>{profile.name}</strong>
+                              </div>
+                            </div>
+                            <div className="row mb-3">
+                              <div className="col-4">
+                                <span className="text-success">Email</span>
+                              </div>
+                              <div className="col-8">
+                                <strong>{profile.email}</strong>
+                              </div>
+                            </div>
+                            <div className="row mb-3">
+                              <div className="col-4">
+                                <span className="text-success">Role</span>
+                              </div>
+                              <div className="col-8">
+                                <strong>{profile.role}</strong>
+                              </div>
+                            </div>
+                            <div className="row mb-3">
+                              <div className="col-4">
+                                <span className="text-success">Section</span>
+                              </div>
+                              <div className="col-8">
+                                <strong>{profile.section || 'Not Assigned'}</strong>
+                              </div>
+                            </div>
+                            <div className="row">
+                              <div className="col-4">
+                                <span className="text-success">Course</span>
+                              </div>
+                              <div className="col-8">
+                                <strong>{profile.course || 'Not Selected'}</strong>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </main>
       </div>
     </div>
   );

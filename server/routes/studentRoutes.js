@@ -10,7 +10,7 @@ const studentRoutes = express.Router();
 studentRoutes.get('/profile', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId; 
-        const user = await Student.findById(userId).select('name email role course');
+        const user = await Student.findById(userId).select('name email role course section');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -28,7 +28,7 @@ studentRoutes.put('/profile', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
 
-        const { name, email, role, course } = req.body;
+        const { name, email, role, course, section } = req.body;
 
         if (!name || !email) {
             return res.status(400).json({ message: 'Name and Email are required fields' });

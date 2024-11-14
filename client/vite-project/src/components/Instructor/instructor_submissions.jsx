@@ -225,56 +225,65 @@ const InstructorSubmissions = () => {
             </div>
             <div className="modal-body">
               {selectedResearch && (
-                <div className="research-details">
+                <div className="container">
                   <div className="row mb-3">
-                    <div className="col-4 fw-bold">Title:</div>
-                    <div className="col-8">{selectedResearch.title}</div>
-                  </div>
-                  
-                  <div className="row mb-3">
-                    <div className="col-4 fw-bold">Authors:</div>
-                    <div className="col-8">{selectedResearch.authors}</div>
-                  </div>
-                  <div className="row mb-3">
-                    <div className="col-4 fw-bold">Abstract:</div>
-                    <div className="col-8">{selectedResearch.abstract}</div>
-                  </div>
-                  <div className="row mb-3">
-                    <div className="col-4 fw-bold">Keywords:</div>
-                    <div className="col-8">{selectedResearch.keywords}</div>
-                  </div>
-                  <div className="row mb-3">
-                    <div className="col-4 fw-bold">Status:</div>
-                    <div className="col-8">
+                    <div className="col-12">
+                      <h4>{selectedResearch.title}</h4>
                       <span className={`badge bg-${
                         selectedResearch.status === 'Accepted' ? 'success' :
                         selectedResearch.status === 'Pending' ? 'warning' :
-                        selectedResearch.status === 'Rejected' ? 'danger' : 'info'
-                      }`}>
+                        selectedResearch.status === 'Revision' ? 'info' : 'danger'
+                      } mb-2`}>
                         {selectedResearch.status}
                       </span>
                     </div>
                   </div>
+
                   <div className="row mb-3">
-                    <div className="col-4 fw-bold">Submission Date:</div>
-                    <div className="col-8">
-                      {new Date(selectedResearch.createdAt).toLocaleDateString()}
+                    <div className="col-md-6">
+                      <p><strong>Authors:</strong></p>
+                      <p>{selectedResearch.authors}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <p><strong>Keywords:</strong></p>
+                      <p>{selectedResearch.keywords}</p>
                     </div>
                   </div>
+
                   <div className="row mb-3">
-                    <div className="col-4 fw-bold">Research File:</div>
-                    <div className="col-8">
-                      <a 
-                        href={selectedResearch.fileUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="btn btn-sm btn-primary"
-                      >
-                        <i className="fas fa-file-pdf me-2"></i>
-                        View Document
-                      </a>
+                    <div className="col-12">
+                      <p><strong>Abstract:</strong></p>
+                      <p className="text-justify">{selectedResearch.abstract}</p>
                     </div>
                   </div>
+
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <p><strong>Submission Date:</strong></p>
+                      <p>{new Date(selectedResearch.uploadDate).toLocaleDateString('en-US', {
+                        month: '2-digit',
+                        day: '2-digit',
+                        year: 'numeric'
+                      })}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <p><strong>File:</strong></p>
+                      <div className="d-flex align-items-center">
+                        <i className="fas fa-file-pdf text-danger me-2"></i>
+                        <span className="me-2">research.pdf</span>
+                        <a 
+                          href={`https://drive.google.com/file/d/${selectedResearch.driveFileId}/view`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm btn-primary"
+                        >
+                          <i className="fas fa-external-link-alt me-1"></i>
+                          Open File
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
                   {selectedResearch.status === 'Pending' && (
                     <div className="mt-4 border-top pt-3">
                       <h6 className="mb-3">Update Status</h6>
