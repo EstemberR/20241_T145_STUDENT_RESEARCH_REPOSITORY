@@ -54,4 +54,84 @@ adminRoutes.get('/accounts/instructors/:id', authenticateToken, async (req, res)
   }
 });
 
+// Archive student
+adminRoutes.put('/accounts/students/:id/archive', authenticateToken, async (req, res) => {
+  try {
+    const student = await Student.findByIdAndUpdate(
+      req.params.id,
+      { archived: true },
+      { new: true }
+    );
+    
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    
+    res.status(200).json(student);
+  } catch (error) {
+    console.error('Error archiving student:', error);
+    res.status(500).json({ message: 'Error archiving student' });
+  }
+});
+
+// Archive instructor
+adminRoutes.put('/accounts/instructors/:id/archive', authenticateToken, async (req, res) => {
+  try {
+    const instructor = await Instructor.findByIdAndUpdate(
+      req.params.id,
+      { archived: true },
+      { new: true }
+    );
+    
+    if (!instructor) {
+      return res.status(404).json({ message: 'Instructor not found' });
+    }
+    
+    res.status(200).json(instructor);
+  } catch (error) {
+    console.error('Error archiving instructor:', error);
+    res.status(500).json({ message: 'Error archiving instructor' });
+  }
+});
+
+// Restore student
+adminRoutes.put('/accounts/students/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const student = await Student.findByIdAndUpdate(
+      req.params.id,
+      { archived: false },
+      { new: true }
+    );
+    
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    
+    res.status(200).json(student);
+  } catch (error) {
+    console.error('Error restoring student:', error);
+    res.status(500).json({ message: 'Error restoring student' });
+  }
+});
+
+// Restore instructor
+adminRoutes.put('/accounts/instructors/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const instructor = await Instructor.findByIdAndUpdate(
+      req.params.id,
+      { archived: false },
+      { new: true }
+    );
+    
+    if (!instructor) {
+      return res.status(404).json({ message: 'Instructor not found' });
+    }
+    
+    res.status(200).json(instructor);
+  } catch (error) {
+    console.error('Error restoring instructor:', error);
+    res.status(500).json({ message: 'Error restoring instructor' });
+  }
+});
+
 export default adminRoutes;
