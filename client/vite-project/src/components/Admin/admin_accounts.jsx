@@ -168,7 +168,6 @@ const AdminAccounts = () => {
       <div className="main-section col-10 d-flex flex-column">
         <Header userName={userName} />
         <main className="main-content">
-          <div className="container">
             <h4 className="my-3">User Accounts Management</h4>
             <ul className="nav nav-tabs">
               <li className="nav-item">
@@ -363,7 +362,6 @@ const AdminAccounts = () => {
                 </tbody>
               </table>
             )}
-          </div>
 
           {/* Modal for viewing selected user details */}
           {selectedUser && (

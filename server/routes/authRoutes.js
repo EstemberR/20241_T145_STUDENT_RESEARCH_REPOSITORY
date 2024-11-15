@@ -87,61 +87,40 @@ router.post('/google', async (req, res) => {
         // Check if the user already exists (student or instructor)
         let user = await Student.findOne({ uid }) || await Instructor.findOne({ uid });
         
-        // If user exists and is archived, prevent login
-        if (user && user.archived) {
-            return res.status(403).json({ 
-                message: 'Your account has been archived. Please contact the administrator.' 
-            });
-        }
 
         // If no existing user is found, create a new one
         if (!user) {
             let role;
             if (email.endsWith('@student.buksu.edu.ph')) {
-                user = new Student({ 
-                    name, 
-                    email, 
-                    uid, 
-                    role: 'student',
-                    archived: false  // explicitly set archived status
-                });
-                const studentId = email.slice(0, 10);
-                user.studentId = studentId;
-            } else if (email.endsWith('@gmail.com')) {
-                user = new Instructor({ 
-                    name, 
-                    email, 
-                    uid, 
-                    role: 'instructor',
-                    archived: false  // explicitly set archived status
-                });
+                user = new Student({ name, email, uid, role: 'student' });
+                const studentId = email.slice(0, 10);  // Extract the student ID from the email
+                user.studentId = studentId;  // Assign the studentId field
+            } else if (email.endsWith('@gmail.com')) { // Example for instructors, adjust accordingly
+                user = new Instructor({ name, email, uid, role: 'instructor' });
             } else {
                 return res.status(400).json({ message: 'Invalid email domain' });
             }
-            
+             // User authenticated successfully
             await sendPrivacyPolicyEmail(user.email);
+
             await user.save();
+        } else {
+            if (!user.studentId) {
+                const studentId = email.slice(0, 10);  // Extract the student ID from the email
+                user.studentId = studentId;  // Assign the studentId field
+                await user.save();
+            }
         }
 
-        // Double-check archived status (in case it was set after user creation)
+        // Check if the user is archived
         if (user.archived) {
-            return res.status(403).json({ 
-                message: 'Your account has been archived. Please contact the administrator.' 
-            });
+            return res.status(403).json({ message: 'Your account is archived. Please contact the admin to restore your account.' });
         }
 
         // Generate a JWT token for the user
-        const token = jwt.sign(
-            { 
-                userId: user._id, 
-                role: user.role,
-                archived: user.archived  // Include archived status in token
-            }, 
-            'your_jwt_secret', 
-            { expiresIn: '1h' }
-        );
+        const token = jwt.sign({ userId: user._id, role: user.role }, 'your_jwt_secret', { expiresIn: '1h' });
 
-        // Respond with the token and user details
+        // Respond with the token and user details, including the new 'id' field
         res.status(200).json({
             message: 'Login successful',
             token,
@@ -149,8 +128,7 @@ router.post('/google', async (req, res) => {
             role: user.role,
             name: user.name,
             email: user.email,
-            user_id: user.id,
-            archived: user.archived  // Include archived status in response
+            user_id: user.id
         });
     } catch (error) {
         console.error('Error saving or verifying user:', error);
@@ -168,18 +146,14 @@ router.post('/admin-login', async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
+        // Check if the credentials are correct
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // Admin accounts cannot be archived, but including the field for consistency
         const token = jwt.sign(
-            { 
-                userId: user._id, 
-                role: user.role,
-                archived: false 
-            },
+            { userId: user._id, role: user.role },
             process.env.JWT_SECRET || 'your_jwt_secret',
             { expiresIn: '1h' }
         );
@@ -187,11 +161,10 @@ router.post('/admin-login', async (req, res) => {
         res.json({
             message: 'Login successful',
             token,
-            role: user.role,
-            archived: false
+            role: user.role
         });
     } catch (error) {
-        console.error('Detailed error during admin login:', error);
+        console.error('Detailed error during admin login:', error); //DEBUGGER
         res.status(500).json({ message: 'Server error' });
     }
 });

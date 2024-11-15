@@ -3,6 +3,8 @@ import express from 'express';
 import Student from '../model/Student.js';
 import Instructor from '../model/Instructor.js';
 import authenticateToken from '../middleware/authenticateToken.js';
+import AdviserRequest from '../model/AdviserRequest.js';
+import Research from '../model/Research.js';
 
 const adminRoutes = express.Router();
 
@@ -131,6 +133,77 @@ adminRoutes.put('/accounts/instructors/:id/restore', authenticateToken, async (r
   } catch (error) {
     console.error('Error restoring instructor:', error);
     res.status(500).json({ message: 'Error restoring instructor' });
+  }
+});
+
+// Get all adviser requests with stats
+adminRoutes.get('/adviser-requests', authenticateToken, async (req, res) => {
+  try {
+    const requests = await AdviserRequest.find()
+      .sort({ createdAt: -1 });
+    
+    // Get counts for the chart
+    const totalInstructors = await Instructor.countDocuments();
+    const totalAdvisers = await Instructor.countDocuments({ role: 'adviser' });
+    const pendingRequests = await AdviserRequest.countDocuments({ status: 'pending' });
+
+    res.status(200).json({
+      requests,
+      stats: {
+        totalInstructors,
+        totalAdvisers,
+        pendingRequests
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching adviser requests:', error);
+    res.status(500).json({ message: 'Error fetching requests' });
+  }
+});
+
+// Handle adviser request (approve/reject)
+adminRoutes.put('/adviser-requests/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const request = await AdviserRequest.findById(id);
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    // Update the request status
+    request.status = status;
+    await request.save();
+
+    // If approved, add adviser role to the instructor's existing roles
+    if (status === 'approved') {
+      const instructor = await Instructor.findById(request.instructor);
+      if (!instructor) {
+        return res.status(404).json({ message: 'Instructor not found' });
+      }
+
+      // Check if instructor already has adviser role
+      if (!instructor.role.includes('adviser')) {
+        // Add 'adviser' role while keeping existing roles
+        instructor.role = Array.isArray(instructor.role) 
+          ? [...instructor.role, 'adviser']  // If role is already an array
+          : [instructor.role, 'adviser'];    // If role is a single string
+        
+        await instructor.save();
+      }
+
+      // Update research with the new adviser
+      await Research.findByIdAndUpdate(
+        request.research,
+        { adviser: request.instructor }
+      );
+    }
+
+    res.status(200).json({ message: 'Request updated successfully' });
+  } catch (error) {
+    console.error('Error updating adviser request:', error);
+    res.status(500).json({ message: 'Error updating request' });
   }
 });
 
