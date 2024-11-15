@@ -155,16 +155,21 @@ const MyResearch = () => {
         const savedResearch = await researchSubmitResponse.json();
         console.log('Research saved:', savedResearch);
 
-        // Update local state
-        const newResearch = {
-            ...researchData,
-            driveLink: fileResult.fileId,
-            fileName: file.name,
-            submissionDate: new Date().toLocaleDateString()
-        };
-
-        setResearchEntries([...researchEntries, newResearch]);
+        // Instead of manually creating a new entry, fetch the updated list
+        const updatedResearchResponse = await fetch('http://localhost:8000/student/research', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         
+        if (!updatedResearchResponse.ok) {
+            throw new Error('Failed to fetch updated research list');
+        }
+        
+        const updatedResearch = await updatedResearchResponse.json();
+        setResearchEntries(updatedResearch);
+        
+        // Reset form
         setResearchData({
             title: '',
             abstract: '',
