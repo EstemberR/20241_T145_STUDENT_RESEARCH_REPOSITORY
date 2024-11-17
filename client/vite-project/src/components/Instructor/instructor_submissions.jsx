@@ -17,13 +17,12 @@ const InstructorSubmissions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch submissions using fetch
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
         setLoading(true);
         const token = getToken();
-        console.log('Fetching with token:', token); // Debug token
+        console.log('Fetching with token:', token); 
         const response = await fetch('http://localhost:8000/instructor/submissions', {
           method: 'GET',
           headers: {
@@ -31,12 +30,12 @@ const InstructorSubmissions = () => {
             'Content-Type': 'application/json'
           }
         });
-        console.log('Response status:', response.status); // Debug response
+        console.log('Response status:', response.status);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log('Received data:', data); // Debug received data
+        console.log('Received data:', data); 
         
         setSubmissions(data);
         setLoading(false);
@@ -47,8 +46,7 @@ const InstructorSubmissions = () => {
       }
     };
     fetchSubmissions();
-  }, []);
-  // Handle status update using fetch
+  }, [navigate]);
   const handleStatusUpdate = async (submissionId, newStatus, note = '') => {
     try {
       const token = getToken();
@@ -66,7 +64,6 @@ const InstructorSubmissions = () => {
       if (!response.ok) {
         throw new Error('Failed to update status');
       }
-      // Update local state
       setSubmissions(submissions.map(sub => 
         sub._id === submissionId ? { ...sub, status: newStatus } : sub
       ));
@@ -76,9 +73,7 @@ const InstructorSubmissions = () => {
       alert('Failed to update status');
     }
   };
-  // Filter data based on the active tab
   const filteredData = submissions.filter((submission) => submission.status === activeTab);
-  console.log('Filtered data:', filteredData); // Debug filtered data
   const handleViewClick = (research) => {
     setSelectedResearch(research);
     const viewModal = new window.bootstrap.Modal(document.getElementById('viewResearchModal'));
@@ -92,7 +87,6 @@ const InstructorSubmissions = () => {
         <Header userName={userName} />
 
         <main className="main-content">
-          <div className="container">
             <h4 className="my-3">STUDENT SUBMISSIONS</h4>
             <ul className="nav nav-tabs">
               <li className="nav-item pending">
@@ -101,6 +95,9 @@ const InstructorSubmissions = () => {
                   onClick={() => setActiveTab('Pending')}
                 >
                   Pending
+                  <span className="badge bg-warning ms-2">
+                    {submissions.filter(submission => submission.status === 'Pending').length}
+                  </span>
                 </button>
               </li>
               <li className="nav-item accepted">
@@ -109,6 +106,9 @@ const InstructorSubmissions = () => {
                   onClick={() => setActiveTab('Accepted')}
                 >
                   Accepted
+                  <span className="badge bg-success ms-2">
+                    {submissions.filter(submission => submission.status === 'Accepted').length}
+                  </span>
                 </button>
               </li>
               <li className="nav-item revision">
@@ -117,6 +117,9 @@ const InstructorSubmissions = () => {
                   onClick={() => setActiveTab('Revision')}
                 >
                   Revision
+                  <span className="badge bg-info ms-2">
+                    {submissions.filter(submission => submission.status === 'Revision').length}
+                  </span>
                 </button>
               </li>
               <li className="nav-item rejected">
@@ -125,6 +128,9 @@ const InstructorSubmissions = () => {
                   onClick={() => setActiveTab('Rejected')}
                 >
                   Rejected
+                  <span className="badge bg-danger ms-2">
+                    {submissions.filter(submission => submission.status === 'Rejected').length}
+                  </span>
                 </button>
               </li>
             </ul>
@@ -152,7 +158,7 @@ const InstructorSubmissions = () => {
                       <td className="centering">{submission.title}</td>
                       <td className="centering">{submission.authors}</td>
                       <td className="centering">
-                        {new Date(submission.createdAt).toLocaleDateString()}
+                        {new Date(submission.uploadDate).toLocaleDateString()}
                       </td>
                       <td className="centering">
                         <span className={`badge bg-${
@@ -208,7 +214,6 @@ const InstructorSubmissions = () => {
                 </tbody>
               </table>
             )}
-          </div>
         </main>
       </div>
       <div className="modal fade" id="viewResearchModal" tabIndex="-1" aria-hidden="true">
@@ -220,56 +225,65 @@ const InstructorSubmissions = () => {
             </div>
             <div className="modal-body">
               {selectedResearch && (
-                <div className="research-details">
+                <div className="container">
                   <div className="row mb-3">
-                    <div className="col-4 fw-bold">Title:</div>
-                    <div className="col-8">{selectedResearch.title}</div>
-                  </div>
-                  
-                  <div className="row mb-3">
-                    <div className="col-4 fw-bold">Authors:</div>
-                    <div className="col-8">{selectedResearch.authors}</div>
-                  </div>
-                  <div className="row mb-3">
-                    <div className="col-4 fw-bold">Abstract:</div>
-                    <div className="col-8">{selectedResearch.abstract}</div>
-                  </div>
-                  <div className="row mb-3">
-                    <div className="col-4 fw-bold">Keywords:</div>
-                    <div className="col-8">{selectedResearch.keywords}</div>
-                  </div>
-                  <div className="row mb-3">
-                    <div className="col-4 fw-bold">Status:</div>
-                    <div className="col-8">
+                    <div className="col-12">
+                      <h4>{selectedResearch.title}</h4>
                       <span className={`badge bg-${
                         selectedResearch.status === 'Accepted' ? 'success' :
                         selectedResearch.status === 'Pending' ? 'warning' :
-                        selectedResearch.status === 'Rejected' ? 'danger' : 'info'
-                      }`}>
+                        selectedResearch.status === 'Revision' ? 'info' : 'danger'
+                      } mb-2`}>
                         {selectedResearch.status}
                       </span>
                     </div>
                   </div>
+
                   <div className="row mb-3">
-                    <div className="col-4 fw-bold">Submission Date:</div>
-                    <div className="col-8">
-                      {new Date(selectedResearch.createdAt).toLocaleDateString()}
+                    <div className="col-md-6">
+                      <p><strong>Authors:</strong></p>
+                      <p>{selectedResearch.authors}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <p><strong>Keywords:</strong></p>
+                      <p>{selectedResearch.keywords}</p>
                     </div>
                   </div>
+
                   <div className="row mb-3">
-                    <div className="col-4 fw-bold">Research File:</div>
-                    <div className="col-8">
-                      <a 
-                        href={selectedResearch.fileUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="btn btn-sm btn-primary"
-                      >
-                        <i className="fas fa-file-pdf me-2"></i>
-                        View Document
-                      </a>
+                    <div className="col-12">
+                      <p><strong>Abstract:</strong></p>
+                      <p className="text-justify">{selectedResearch.abstract}</p>
                     </div>
                   </div>
+
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <p><strong>Submission Date:</strong></p>
+                      <p>{new Date(selectedResearch.uploadDate).toLocaleDateString('en-US', {
+                        month: '2-digit',
+                        day: '2-digit',
+                        year: 'numeric'
+                      })}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <p><strong>File:</strong></p>
+                      <div className="d-flex align-items-center">
+                        <i className="fas fa-file-pdf text-danger me-2"></i>
+                        <span className="me-2">research.pdf</span>
+                        <a 
+                          href={`https://drive.google.com/file/d/${selectedResearch.driveFileId}/view`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm btn-primary"
+                        >
+                          <i className="fas fa-external-link-alt me-1"></i>
+                          Open File
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
                   {selectedResearch.status === 'Pending' && (
                     <div className="mt-4 border-top pt-3">
                       <h6 className="mb-3">Update Status</h6>

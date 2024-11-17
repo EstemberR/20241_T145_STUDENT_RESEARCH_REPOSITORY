@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 const researchSchema = new mongoose.Schema({
   studentId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: 'Student',
       required: true
   },
@@ -37,6 +37,11 @@ const researchSchema = new mongoose.Schema({
   uploadDate: {
       type: Date,
       default: Date.now
+  },
+  adviser: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Instructor',
+    default: null
   }
 }, { timestamps: true });
 export default mongoose.model('Research', researchSchema); 

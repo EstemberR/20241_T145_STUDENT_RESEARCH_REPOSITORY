@@ -7,13 +7,19 @@ import { getUserName, getToken } from './resources/Utils';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 
+const RESEARCH_STATUS = {
+  PENDING: 'Pending',
+  APPROVED: 'Accepted',
+  REVISE: 'Revision',
+  REJECTED: 'Rejected'
+};
+
 const MyResearch = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
   const [file, setFile] = useState(null);
 
 
-  // Add new state for research entries
   const [researchEntries, setResearchEntries] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [researchData, setResearchData] = useState({
@@ -22,9 +28,12 @@ const MyResearch = () => {
     authors: '',
     keywords: '',
     driveLink: '',
-    status: 'pending',
+    status: RESEARCH_STATUS.PENDING,
     uploadDate: new Date().toISOString().split('T')[0]
   });
+
+  const [activeTab, setActiveTab] = useState(RESEARCH_STATUS.PENDING);
+  const [selectedResearch, setSelectedResearch] = useState(null);
 
   useEffect(() => {
     const token = getToken();
@@ -44,7 +53,6 @@ const MyResearch = () => {
       localStorage.removeItem('token');
       navigate('/');
     } else {
-      // Fetch research entries from MongoDB
       const fetchResearchEntries = async () => {
         try {
           const response = await fetch('http://localhost:8000/student/research', {
@@ -107,7 +115,6 @@ const MyResearch = () => {
             return;
         }
 
-        // 1. First upload file to Google Drive
         const formData = new FormData();
         formData.append('file', file);
 
@@ -122,7 +129,6 @@ const MyResearch = () => {
 
         const fileResult = await fileUploadResponse.json();
         
-        // 2. Then save research data to MongoDB
         const token = getToken();
         const researchSubmitResponse = await fetch('http://localhost:8000/student/submit-research', {
             method: 'POST',
@@ -135,7 +141,7 @@ const MyResearch = () => {
                 abstract: researchData.abstract,
                 authors: researchData.authors,
                 keywords: researchData.keywords,
-                status: 'Pending',
+                status: RESEARCH_STATUS.PENDING,
                 fileUrl: `https://drive.google.com/file/d/${fileResult.fileId}/view`,
                 driveFileId: fileResult.fileId,
                 uploadDate: researchData.uploadDate
@@ -149,15 +155,19 @@ const MyResearch = () => {
         const savedResearch = await researchSubmitResponse.json();
         console.log('Research saved:', savedResearch);
 
-        // Update local state
-        const newResearch = {
-            ...researchData,
-            driveLink: fileResult.fileId,
-            fileName: file.name,
-            submissionDate: new Date().toLocaleDateString()
-        };
-
-        setResearchEntries([...researchEntries, newResearch]);
+        // Instead of manually creating a new entry, fetch the updated list
+        const updatedResearchResponse = await fetch('http://localhost:8000/student/research', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!updatedResearchResponse.ok) {
+            throw new Error('Failed to fetch updated research list');
+        }
+        
+        const updatedResearch = await updatedResearchResponse.json();
+        setResearchEntries(updatedResearch);
         
         // Reset form
         setResearchData({
@@ -166,7 +176,7 @@ const MyResearch = () => {
             authors: '',
             keywords: '',
             driveLink: '',
-            status: 'pending',
+            status: RESEARCH_STATUS.PENDING,
             uploadDate: new Date().toISOString().split('T')[0]
         });
         setFile(null);
@@ -179,6 +189,9 @@ const MyResearch = () => {
     }
   };
 
+  const handleViewResearch = (research) => {
+    setSelectedResearch(research);
+  };
 
   return (
     <div className="dashboard-container d-flex">
@@ -189,8 +202,8 @@ const MyResearch = () => {
         <main className="main-content p-4">
           {/* Research Table Section */}
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="page-title">List of Research</h2>
-            <button 
+          <h4 className="my-3">STUDENT SUBMISSIONS</h4>
+          <button 
               className="btn btn-success" 
               data-bs-toggle="modal" 
               data-bs-target="#submitResearchModal"
@@ -198,84 +211,152 @@ const MyResearch = () => {
               <i className="fas fa-plus me-2"></i>Add New Research
             </button>
           </div>
+          <div>
+            {/* Tab Navigation */}
+            <ul className="nav nav-tabs mb-4">
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === RESEARCH_STATUS.PENDING ? 'active' : ''}`}
+                  onClick={() => setActiveTab(RESEARCH_STATUS.PENDING)}
+                >
+                  Pending
+                  <span className="badge bg-warning ms-2">
+                    {researchEntries.filter(r => r.status === RESEARCH_STATUS.PENDING).length}
+                  </span>
+                </button>
+              </li>
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === RESEARCH_STATUS.APPROVED ? 'active' : ''}`}
+                  onClick={() => setActiveTab(RESEARCH_STATUS.APPROVED)}
+                >
+                  Accepted
+                  <span className="badge bg-success ms-2">
+                    {researchEntries.filter(r => r.status === RESEARCH_STATUS.APPROVED).length}
+                  </span>
+                </button>
+              </li>
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === RESEARCH_STATUS.REVISE ? 'active' : ''}`}
+                  onClick={() => setActiveTab(RESEARCH_STATUS.REVISE)}
+                >
+                  Revision
+                  <span className="badge bg-info ms-2">
+                    {researchEntries.filter(r => r.status === RESEARCH_STATUS.REVISE).length}
+                  </span>
+                </button>
+              </li>
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === RESEARCH_STATUS.REJECTED ? 'active' : ''}`}
+                  onClick={() => setActiveTab(RESEARCH_STATUS.REJECTED)}
+                >
+                  Rejected
+                  <span className="badge bg-secondary ms-2">
+                    {researchEntries.filter(r => r.status === RESEARCH_STATUS.REJECTED).length}
+                  </span>
+                </button>
+              </li>
+            </ul>
 
-          <nav aria-label="breadcrumb">
-            <ol className="breadcrumb">
-              <li className="breadcrumb-item"><Link to="/student/dashboard">Dashboard</Link></li>
-              <li className="breadcrumb-item active">Research List</li>
-            </ol>
-          </nav>
-
-          {/* Your existing table code */}
-          <div className="table-responsive">
-            <table className="table table-striped table-hover">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Authors</th>
-                  <th>Keywords</th>
-                  <th>File</th> {/* Added File column */}
-                  <th>Status</th>
-                  <th>Submission Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {researchEntries.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="text-center py-4">
-                      No research entries found. Click "Add New Research" to submit your first entry.
-                    </td>
-                  </tr>
-                ) : (
-                  researchEntries.map((research, index) => (
-                    <tr key={index}>
-                      <td>{research.title}</td>
-                      <td>{research.authors}</td>
-                      <td>{research.keywords}</td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <i className="fas fa-file-pdf text-danger me-2"></i>
-                          {research.fileName || 'research.pdf'}
-                          <a 
-                            href={`https://drive.google.com/file/d/${research.driveLink}/view`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="ms-2"
-                          >
-                            <i className="fas fa-download text-primary"></i>
-                          </a>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`badge bg-${
-                          research.status === 'approved' ? 'success' :
-                          research.status === 'pending' ? 'warning' :
-                          research.status === 'revise' ? 'danger' : 'info'
-                        }`}>
-                          {research.status}
-                        </span>
-                      </td>
-                      <td>{research.submissionDate}</td>
-                      <td>
-                        <button 
-                          className="btn btn-sm btn-info me-2"
-                          onClick={() => window.open(`https://drive.google.com/file/d/${research.driveLink}/view`, '_blank')}
-                        >
-                          <i className="fas fa-eye"></i> View
-                        </button>
-                        <button 
-                          className="btn btn-sm btn-secondary"
-                          onClick={() => {/* Add edit functionality */}}
-                        >
-                          <i className="fas fa-edit"></i> Edit
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+            {/* Tables for each status */}
+            <div className="tab-content">
+              {Object.values(RESEARCH_STATUS).map((status) => (
+                <div 
+                  key={status}
+                  className={`tab-pane fade ${activeTab === status ? 'show active' : ''}`}
+                >
+                  <div className="card">
+                    <div className="card-body">
+                      <div className="table-responsive">
+                        <table className="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>Title</th>
+                              <th>Authors</th>
+                              <th>Keywords</th>
+                              <th>File</th>
+                              <th>Status</th>
+                              <th>Submission Date</th>
+                              <th>View</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {researchEntries.filter(research => research.status === status).length === 0 ? (
+                              <tr>
+                                <td colSpan="6" className="text-center py-4">
+                                  No research entries found in this category.
+                                </td>
+                              </tr>
+                            ) : (
+                              researchEntries
+                                .filter(research => research.status === status)
+                                .map((research, index) => (
+                                  <tr key={index}>
+                                    <td>{research.title}</td>
+                                    <td>{research.authors}</td>
+                                    <td>{research.keywords}</td>
+                                    <td>
+                                      <div className="d-flex align-items-center">
+                                        <i className="fas fa-file-pdf text-danger me-2"></i>
+                                        {research.fileName || 'research.pdf'}
+                                        <a 
+                                          href={`https://drive.google.com/file/d/${research.driveFileId}/view`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="ms-2"
+                                        >
+                                          <i className="fas fa-download text-primary"></i>
+                                        </a>
+                                      </div>
+                                    </td>
+                                    <td>
+                                      <span className={`badge bg-${
+                                      research.status === RESEARCH_STATUS.APPROVED ? 'success' :
+                                      research.status === RESEARCH_STATUS.PENDING ? 'warning' :
+                                      research.status === RESEARCH_STATUS.REVISE ? 'info' : 'danger'
+                                    } mb-2`}>
+                                      {research.status}
+                                    </span>
+                                    </td>
+                                    <td>
+                                      {new Date(research.uploadDate).toLocaleDateString('en-US', {
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        year: 'numeric'
+                                      })}
+                                    </td>
+                                    <td>
+                                      <button 
+                                          className="btn btn-sm btn-info me-2"
+                                          onClick={() => handleViewResearch(research)}
+                                          data-bs-toggle="modal"
+                                          data-bs-target="#viewResearchModal"
+                                        >
+                                          <i className="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                    <td>
+                                      <button 
+                                        className="btn btn-sm btn-secondary"
+                                        onClick={() => {/* Add edit functionality */}}
+                                      >
+                                        <i className="fas fa-edit"></i> Edit
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Submit Research Modal */}
@@ -358,10 +439,10 @@ const MyResearch = () => {
                             onChange={handleInputChange}
                             required
                           >
-                            <option value="pending">Pending</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="revise">Revise</option>
-                            <option value="approved">Approved</option>
+                            <option value={RESEARCH_STATUS.PENDING}>{RESEARCH_STATUS.PENDING}</option>
+                            <option value={RESEARCH_STATUS.APPROVED}>{RESEARCH_STATUS.APPROVED}</option>
+                            <option value={RESEARCH_STATUS.REVISE}>{RESEARCH_STATUS.REVISE}</option>
+                            <option value={RESEARCH_STATUS.REJECTED}>{RESEARCH_STATUS.REJECTED}</option>
                           </select>
                         </div>
 
@@ -462,6 +543,93 @@ const MyResearch = () => {
                   >
                     Save changes
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* View Research Modal */}
+          <div className="modal fade" id="viewResearchModal" tabIndex="-1" aria-labelledby="viewResearchModalLabel" aria-hidden="true">
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="viewResearchModalLabel">Research Details</h5>
+                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div className="modal-body">
+                  {selectedResearch && (
+                    <div className="container">
+                      <div className="row mb-3">
+                        <div className="col-12">
+                          <h4>{selectedResearch.title}</h4>
+                          <span className={`badge bg-${
+                            selectedResearch.status === RESEARCH_STATUS.APPROVED ? 'success' :
+                            selectedResearch.status === RESEARCH_STATUS.PENDING ? 'warning' :
+                            selectedResearch.status === RESEARCH_STATUS.REVISE ? 'info' : 'danger'
+                          } mb-2`}>
+                            {selectedResearch.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="row mb-3">
+                        <div className="col-md-6">
+                          <p><strong>Authors:</strong></p>
+                          <p>{selectedResearch.authors}</p>
+                        </div>
+                        <div className="col-md-6">
+                          <p><strong>Keywords:</strong></p>
+                          <p>{selectedResearch.keywords}</p>
+                        </div>
+                      </div>
+
+                      <div className="row mb-3">
+                        <div className="col-12">
+                          <p><strong>Abstract:</strong></p>
+                          <p className="text-justify">{selectedResearch.abstract}</p>
+                        </div>
+                      </div>
+
+                      <div className="row mb-3">
+                        <div className="col-md-6">
+                          <p><strong>Submission Date:</strong></p>
+                          <p>{new Date(selectedResearch.uploadDate).toLocaleDateString('en-US', {
+                            month: '2-digit',
+                            day: '2-digit',
+                            year: 'numeric'
+                          })}</p>
+                        </div>
+                        <div className="col-md-6">
+                          <p><strong>File:</strong></p>
+                          <div className="d-flex align-items-center">
+                            <i className="fas fa-file-pdf text-danger me-2"></i>
+                            <span className="me-2">{selectedResearch.fileName || 'research.pdf'}</span>
+                            <a 
+                              href={`https://drive.google.com/file/d/${selectedResearch.driveFileId}/view`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-sm btn-primary"
+                            >
+                              <i className="fas fa-external-link-alt me-1"></i>
+                              Open File
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+
+                      {selectedResearch.comments && (
+                        <div className="row mb-3">
+                          <div className="col-12">
+                            <p><strong>Comments:</strong></p>
+                            <p>{selectedResearch.comments}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
               </div>
             </div>
