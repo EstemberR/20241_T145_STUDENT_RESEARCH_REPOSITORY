@@ -283,7 +283,7 @@ const MyResearch = () => {
                 </button>
               </li>
             </ul>
-x
+
             {/* Tables for each status */}
             <div className="tab-content">
               {Object.values(RESEARCH_STATUS).map((status) => (
