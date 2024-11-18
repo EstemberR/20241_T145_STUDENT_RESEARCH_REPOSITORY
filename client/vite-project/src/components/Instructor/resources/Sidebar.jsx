@@ -16,7 +16,7 @@ const Sidebar = () => {
   
   return (
     <nav className="col-2 sidebar">
-    <h3 className="text-center x">INSTRUCTOR VIEW RESEARCH REPOSITORY</h3>
+    <h3 className="text-center x">STUDENT RESEARCH REPOSITORY</h3>
     <ul className="nav flex-column">
     <li className="nav-item">
     <Link className={`nav-link ${location.pathname === '/instructor/instructor_dashboard' ? 'active' : ''}`} to="/instructor/instructor_dashboard">
