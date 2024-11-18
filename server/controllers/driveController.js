@@ -27,22 +27,22 @@ const uploadToDrive = async (req, res) => {
     if (privateKey) {
       privateKey = privateKey
         .replace(/\\n/g, '\n')
-        .replace(/^["']|["']$/g, '');
+    
     }
 
     // Create credentials object
     const credentials = {
-      type: process.env.MY_DRIVE_TYPE,
-      project_id: process.env.MY_DRIVE_PROJECT_ID,
-      private_key_id: process.env.MY_DRIVE_PRIVATE_KEY_ID,
-      private_key: privateKey,
-      client_email: process.env.MY_DRIVE_CLIENT_EMAIL,
-      client_id: process.env.MY_DRIVE_CLIENT_ID,
-      auth_uri: process.env.MY_DRIVE_AUTH_URI,
-      token_uri: process.env.MY_DRIVE_TOKEN_URI,
-      auth_provider_x509_cert_url: process.env.MY_DRIVE_AUTH_PROVIDER_X509_CERT_URL,
-      client_x509_cert_url: process.env.MY_DRIVE_CLIENT_X509_CERT_URL,
-      universe_domain: process.env.MY_DRIVE_UNIVERSE_DOMAIN
+      type: 'service_account',
+      project_id: 'gdrive-project-441200',
+      private_key_id: '452019265bc70273d28ec434e71d6a55720296a1',
+      private_key: process.env.MY_DRIVE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      client_email: 'student-reseach-repository@gdrive-project-441200.iam.gserviceaccount.com',
+      client_id: '115495286781539719246',
+      auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+      token_uri: 'https://oauth2.googleapis.com/token',
+      auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
+      client_x509_cert_url: 'https://www.googleapis.com/robot/v1/metadata/x509/student-reseach-repository%40gdrive-project-441200.iam.gserviceaccount.com',
+      universe_domain: 'googleapis.com'
     };
 
     // Log credentials for debugging (excluding private key)
@@ -63,12 +63,13 @@ const uploadToDrive = async (req, res) => {
     // Initialize auth with credentials object
     const auth = new google.auth.GoogleAuth({
       credentials: credentials,
-      scopes: ['https://www.googleapis.com/auth/drive.file']
+      scopes: ['https://www.googleapis.com/auth/drive.file',
+            'https://www.googleapis.com/auth/drive', 
+          'https://www.googleapis.com/auth/drive.metadata']
     });
 
     // Get the client and create drive instance
-    const client = await auth.getClient();
-    const drive = google.drive({ version: 'v3', auth: client });
+    const drive = google.drive({ version: 'v3', auth: auth });
 
     // GET THE FILE DATA
     const fileData = req.file;
