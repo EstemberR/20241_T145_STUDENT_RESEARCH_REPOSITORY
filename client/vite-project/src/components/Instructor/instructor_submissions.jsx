@@ -169,9 +169,9 @@ const InstructorSubmissions = () => {
                 <tbody>
                   {filteredData.map((submission) => (
                     <tr key={submission._id}>
-                      <td className="centering">{submission._id}</td>
+                      <td className="centering">{submission.studentId}</td>
                       <td className="centering">{submission.title}</td>
-                      <td className="centering">{submission.authors}</td>
+                      <td className="centering">{submission.studentName}</td>
                       <td className="centering">
                         {new Date(submission.uploadDate).toLocaleDateString()}
                       </td>
@@ -296,6 +296,17 @@ const InstructorSubmissions = () => {
                           Open File
                         </a>
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <p><strong>Student:</strong> {selectedResearch.studentName}</p>
+                      <p><strong>Student ID:</strong> {selectedResearch.studentId}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <p><strong>Section:</strong> {selectedResearch.section}</p>
+                      <p><strong>Email:</strong> {selectedResearch.studentEmail}</p>
                     </div>
                   </div>
 

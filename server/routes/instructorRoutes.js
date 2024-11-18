@@ -52,26 +52,58 @@ instructorRoutes.put('/profile', authenticateToken, async (req, res) => {
     }
 });
 
-// Get all submissions
+// Get all submissions from managed students only
 instructorRoutes.get('/submissions', authenticateToken, async (req, res) => {
     try {
-        // Log to see if route is being hit
         console.log('Fetching submissions...');
-        
-        const submissions = await Research.find()
-            .populate('studentId', 'name email')
-            .sort({ createdAt: -1 });
+        const instructorId = req.user.userId;
+
+        // First, get all students managed by this specific instructor
+        const managedStudents = await Student.find({ 
+            managedBy: instructorId,  // Only get students managed by this instructor
+            archived: false
+        });
+
+        // Get the student IDs managed by this instructor
+        const managedStudentIds = managedStudents.map(student => student.studentId);
+        console.log('Managed student IDs:', managedStudentIds);
+
+        // Only get submissions from these managed students
+        const submissions = await Research.find({
+            studentId: { $in: managedStudentIds }
+        }).populate({
+            path: 'mongoId',
+            model: 'Student',
+            select: 'name email studentId section'
+        }).sort({ createdAt: -1 });
             
-        console.log('Found submissions:', submissions); // Log the found submissions
-        if (!submissions.length) {
-            console.log('No submissions found');
-        }
-        res.json(submissions);
+        const transformedSubmissions = submissions.map(submission => ({
+            _id: submission._id,
+            title: submission.title,
+            authors: submission.authors,
+            abstract: submission.abstract,
+            keywords: submission.keywords,
+            status: submission.status,
+            uploadDate: submission.uploadDate,
+            driveFileId: submission.driveFileId,
+            studentName: submission.mongoId?.name || 'Unknown',
+            studentEmail: submission.mongoId?.email || 'Unknown',
+            studentId: submission.studentId,
+            section: submission.mongoId?.section || 'Unknown'
+        }));
+
+        console.log('Found submissions for instructor:', transformedSubmissions);
+        
+        res.json(transformedSubmissions);
     } catch (error) {
         console.error('Error in /submissions route:', error);
-        res.status(500).json({ message: 'Error fetching submissions' });
+        res.status(500).json({ 
+            message: 'Error fetching submissions',
+            error: error.message 
+        });
     }
 });
+
 // Update submission status
 instructorRoutes.put('/submissions/:id/status', authenticateToken, async (req, res) => {
   try {
@@ -91,14 +123,16 @@ instructorRoutes.put('/submissions/:id/status', authenticateToken, async (req, r
   }
 });
 
-// Get all students managed by instructor
+// Get students managed by this instructor only
 instructorRoutes.get('/students', authenticateToken, async (req, res) => {
     try {
-        // Only fetch students that have a section assigned
+        const instructorId = req.user.userId;
+        
         const students = await Student.find({ 
-            archived: false,
-            section: { $exists: true, $ne: '' } // Only get students with non-empty sections
+            managedBy: instructorId,  // Only get students managed by this instructor
+            archived: false
         });
+        
         res.status(200).json(students);
     } catch (error) {
         console.error('Error fetching students:', error);
@@ -106,25 +140,27 @@ instructorRoutes.get('/students', authenticateToken, async (req, res) => {
     }
 });
 
-// Add new student
+// Add student to instructor's managed list
 instructorRoutes.post('/students/add', authenticateToken, async (req, res) => {
     try {
         const { studentId, section } = req.body;
-        
-        // Check if student exists and doesn't already have a section
+        const instructorId = req.user.userId;
+
+        // Check if student exists and isn't already managed by another instructor
         const existingStudent = await Student.findOne({ 
             studentId,
-            section: { $exists: false }  // Only allow adding students without sections
+            managedBy: { $exists: false }  // Only allow adding students not managed by any instructor
         });
 
         if (!existingStudent) {
             return res.status(404).json({ 
-                message: 'Student ID not found or student already assigned to a section'
+                message: 'Student ID not found or student already assigned to an instructor'
             });
         }
 
-        // Update student's section
+        // Update student with section and instructor
         existingStudent.section = section;
+        existingStudent.managedBy = instructorId;
         await existingStudent.save();
 
         res.status(200).json(existingStudent);
@@ -134,19 +170,24 @@ instructorRoutes.post('/students/add', authenticateToken, async (req, res) => {
     }
 });
 
-// Delete student from instructor's management
+// When deleting a student, remove instructor management
 instructorRoutes.delete('/students/:studentId', authenticateToken, async (req, res) => {
     try {
         const { studentId } = req.params;
-        
-        // Find the student and remove their section
-        const student = await Student.findOne({ studentId });
-        
+        const instructorId = req.user.userId;
+
+        // Only allow removing students managed by this instructor
+        const student = await Student.findOne({
+            studentId,
+            managedBy: instructorId
+        });
+
         if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
+            return res.status(404).json({ message: 'Student not found or not managed by you' });
         }
 
-        // Remove the section
+        // Remove instructor management and section
+        student.managedBy = undefined;
         student.section = undefined;
         await student.save();
 

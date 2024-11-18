@@ -18,11 +18,10 @@ const MyResearch = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
   const [file, setFile] = useState(null);
-
-
+  const [studentInfo, setStudentInfo] = useState(null);
   const [researchEntries, setResearchEntries] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [researchData, setResearchData] = useState({
+  const [formData, setFormData] = useState({
     title: '',
     abstract: '',
     authors: '',
@@ -35,15 +34,35 @@ const MyResearch = () => {
   const [activeTab, setActiveTab] = useState(RESEARCH_STATUS.PENDING);
   const [selectedResearch, setSelectedResearch] = useState(null);
 
-  useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      alert('Please log in first.');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('token');
-      navigate('/');
+  const fetchResearchEntries = async () => {
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('Please log in first.');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('token');
+        navigate('/');
+        return;
+      }
+
+      const response = await fetch('http://localhost:8000/student/research', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch research entries: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setResearchEntries(data);
+    } catch (error) {
+      console.error('Error fetching research entries:', error);
+      alert(`Error fetching research entries: ${error.message}`);
     }
-  }, [navigate]);
+  };
 
   useEffect(() => {
     const token = getToken();
@@ -53,35 +72,37 @@ const MyResearch = () => {
       localStorage.removeItem('token');
       navigate('/');
     } else {
-      const fetchResearchEntries = async () => {
-        try {
-          const response = await fetch('http://localhost:8000/student/research', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          if (!response.ok) {
-            throw new Error(`Failed to fetch research entries: ${response.status}`);
-          }
-
-          const data = await response.json();
-          setResearchEntries(data);
-        } catch (error) {
-          console.error('Error fetching research entries:', error);
-          alert(`Error fetching research entries: ${error.message}`);
-        }
-      };
-
       fetchResearchEntries();
     }
   }, [navigate]);
 
+  useEffect(() => {
+    const fetchStudentInfo = async () => {
+      try {
+        const token = getToken();
+        const response = await fetch('http://localhost:8000/student/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch student info');
+        
+        const data = await response.json();
+        console.log('Student info loaded:', data);
+        setStudentInfo(data);
+      } catch (error) {
+        console.error('Error fetching student info:', error);
+      }
+    };
+
+    fetchStudentInfo();
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setResearchData(prevData => ({
-      ...prevData,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
     }));
   };
@@ -108,84 +129,87 @@ const MyResearch = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     try {
-        if (!file) {
-            alert('Please select a file to upload.');
-            return;
+      if (!file) {
+        alert('Please select a file to upload.');
+        return;
+      }
+
+      if (!studentInfo) {
+        alert('Student information not loaded yet. Please try again.');
+        return;
+      }
+
+      // First upload file
+      const fileFormData = new FormData();
+      fileFormData.append('file', file);
+
+      const fileUploadResponse = await fetch('http://localhost:8000/api/auth/google-drive', {
+        method: 'POST',
+        body: fileFormData,
+      });
+
+      if (!fileUploadResponse.ok) {
+        throw new Error('File upload failed');
+      }
+
+      const fileResult = await fileUploadResponse.json();
+      
+      // Then submit research data
+      const token = getToken();
+      const researchSubmitResponse = await fetch('http://localhost:8000/student/submit-research', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          abstract: formData.abstract,
+          authors: formData.authors,
+          keywords: formData.keywords,
+          fileUrl: `https://drive.google.com/file/d/${fileResult.fileId}/view`,
+          driveFileId: fileResult.fileId,
+          uploadDate: formData.uploadDate
+        })
+      });
+
+      if (!researchSubmitResponse.ok) {
+        throw new Error('Failed to submit research');
+      }
+
+      const savedResearch = await researchSubmitResponse.json();
+      console.log('Research saved:', savedResearch);
+
+      // Reset form
+      setFormData({
+        title: '',
+        abstract: '',
+        authors: '',
+        keywords: '',
+        driveLink: '',
+        status: RESEARCH_STATUS.PENDING,
+        uploadDate: new Date().toISOString().split('T')[0]
+      });
+      setFile(null);
+
+      // Close modal
+      const modal = document.getElementById('submitResearchModal');
+      if (modal) {
+        const bootstrapModal = bootstrap.Modal.getInstance(modal);
+        if (bootstrapModal) {
+          bootstrapModal.hide();
         }
+      }
 
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const fileUploadResponse = await fetch('http://localhost:8000/api/auth/google-drive', {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (!fileUploadResponse.ok) {
-            throw new Error(`HTTP error! status: ${fileUploadResponse.status}`);
-        }
-
-        const fileResult = await fileUploadResponse.json();
-        
-        const token = getToken();
-        const researchSubmitResponse = await fetch('http://localhost:8000/student/submit-research', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                title: researchData.title,
-                abstract: researchData.abstract,
-                authors: researchData.authors,
-                keywords: researchData.keywords,
-                status: RESEARCH_STATUS.PENDING,
-                fileUrl: `https://drive.google.com/file/d/${fileResult.fileId}/view`,
-                driveFileId: fileResult.fileId,
-                uploadDate: researchData.uploadDate
-            })
-        });
-
-        if (!researchSubmitResponse.ok) {
-            throw new Error(`Failed to save research data: ${researchSubmitResponse.status}`);
-        }
-
-        const savedResearch = await researchSubmitResponse.json();
-        console.log('Research saved:', savedResearch);
-
-        // Instead of manually creating a new entry, fetch the updated list
-        const updatedResearchResponse = await fetch('http://localhost:8000/student/research', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        if (!updatedResearchResponse.ok) {
-            throw new Error('Failed to fetch updated research list');
-        }
-        
-        const updatedResearch = await updatedResearchResponse.json();
-        setResearchEntries(updatedResearch);
-        
-        // Reset form
-        setResearchData({
-            title: '',
-            abstract: '',
-            authors: '',
-            keywords: '',
-            driveLink: '',
-            status: RESEARCH_STATUS.PENDING,
-            uploadDate: new Date().toISOString().split('T')[0]
-        });
-        setFile(null);
-        setShowForm(false);
-        
-        alert('Research submitted successfully!');
+      // Refresh research entries
+      await fetchResearchEntries();
+      
+      alert('Research submitted successfully!');
     } catch (error) {
-        console.error('Error during submission:', error);
-        alert(`Error submitting research: ${error.message}`);
+      console.error('Error submitting research:', error);
+      alert(`Error submitting research: ${error.message}`);
     }
   };
 
@@ -259,7 +283,7 @@ const MyResearch = () => {
                 </button>
               </li>
             </ul>
-
+x
             {/* Tables for each status */}
             <div className="tab-content">
               {Object.values(RESEARCH_STATUS).map((status) => (
@@ -376,7 +400,7 @@ const MyResearch = () => {
                         className="form-control"
                         id="title"
                         name="title"
-                        value={researchData.title}
+                        value={formData.title}
                         onChange={handleInputChange}
                         required
                         style={{width: '90%', marginLeft: '5%'}}
@@ -390,7 +414,7 @@ const MyResearch = () => {
                         className="form-control"
                         id="authors"
                         name="authors"
-                        value={researchData.authors}
+                        value={formData.authors}
                         onChange={handleInputChange}
                         placeholder="Separate multiple authors with commas"
                         required
@@ -407,7 +431,7 @@ const MyResearch = () => {
                             id="abstract"
                             name="abstract"
                             rows="8"
-                            value={researchData.abstract}
+                            value={formData.abstract}
                             onChange={handleInputChange}
                             required
                           ></textarea>
@@ -422,7 +446,7 @@ const MyResearch = () => {
                             className="form-control"
                             id="keywords"
                             name="keywords"
-                            value={researchData.keywords}
+                            value={formData.keywords}
                             onChange={handleInputChange}
                             placeholder="Separate keywords with commas"
                             required
@@ -435,7 +459,7 @@ const MyResearch = () => {
                             className="form-select"
                             id="status"
                             name="status"
-                            value={researchData.status}
+                            value={formData.status}
                             onChange={handleInputChange}
                             required
                           >
@@ -453,7 +477,7 @@ const MyResearch = () => {
                             className="form-control"
                             id="uploadDate"
                             name="uploadDate"
-                            value={researchData.uploadDate}
+                            value={formData.uploadDate}
                             onChange={handleInputChange}
                             required
                           />

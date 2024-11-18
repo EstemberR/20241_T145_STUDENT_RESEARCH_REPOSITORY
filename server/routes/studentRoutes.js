@@ -63,60 +63,59 @@ studentRoutes.get('/faqs', async (req, res) => {
 
 studentRoutes.post('/submit-research', authenticateToken, async (req, res) => {
     try {
-        const studentId = req.user.userId; // Get from auth token
-        const {
-            title,
-            abstract,
-            authors,
-            keywords,
-            fileUrl,
-            driveFileId,
-            uploadDate
-        } = req.body;
+        const mongoId = req.user.userId;
+        const student = await Student.findById(mongoId);
+        
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+
+        console.log('Student found:', student); // Debug log
+
         const newResearch = new Research({
-            studentId,
-            title,
-            abstract,
-            authors,
-            keywords,
-            fileUrl,
-            driveFileId,
+            studentId: student.studentId, // Use the school ID (2201102944)
+            mongoId: student._id,  // Store MongoDB ID as reference
+            title: req.body.title,
+            abstract: req.body.abstract,
+            authors: req.body.authors,
+            keywords: req.body.keywords,
+            fileUrl: req.body.fileUrl,
+            driveFileId: req.body.driveFileId,
             status: 'Pending',
-            uploadDate
+            uploadDate: req.body.uploadDate || new Date()
         });
+
+        console.log('Attempting to save research:', newResearch); // Debug log
+
         const savedResearch = await newResearch.save();
         console.log('Saved research:', savedResearch);
         res.status(201).json(savedResearch);
     } catch (error) {
         console.error('Error saving research:', error);
-        res.status(500).json({ message: 'Error saving research', error: error.message });
+        res.status(500).json({ 
+            message: 'Error saving research', 
+            error: error.message 
+        });
     }
 });
-// Submit new research
-studentRoutes.post('/research', authenticateToken, async (req, res) => {
-    try {
-        const studentId = req.user.userId;
-        const researchData = {
-            ...req.body,
-            studentId,
-            status: 'Pending'
-        };
-        const newResearch = new Research(researchData);
-        const savedResearch = await newResearch.save();
-        
-        res.status(201).json(savedResearch);
-    } catch (error) {
-        console.error('Error saving research:', error);
-        res.status(500).json({ message: 'Error saving research' });
-    }
-});
-// Get student's research entries
+
+// Get research entries route
 studentRoutes.get('/research', authenticateToken, async (req, res) => {
     try {
-        const studentId = req.user.userId;
-        const research = await Research.find({ studentId })
-            .sort({ createdAt: -1 });
+        const mongoId = req.user.userId;
+        const student = await Student.findById(mongoId);
         
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+
+        console.log('Fetching research for student:', student.studentId); // Debug log
+
+        const research = await Research.find({ 
+            studentId: student.studentId // Use school ID for querying
+        }).sort({ createdAt: -1 });
+        
+        console.log('Found research entries:', research.length); // Debug log
         res.json(research);
     } catch (error) {
         console.error('Error fetching research:', error);
