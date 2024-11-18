@@ -1,0 +1,58 @@
+.calendar-section {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.fc {
+  max-width: 100%;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.fc-event {
+  cursor: pointer;
+  padding: 2px 4px;
+  margin: 2px 0;
+  border-radius: 4px;
+}
+
+.fc-event-title {
+  font-size: 0.85em;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fc-event-time {
+  font-size: 0.75em;
+  opacity: 0.8;
+}
+
+.fc-header-toolbar {
+  margin-bottom: 1.5em !important;
+}
+
+.fc-toolbar-title {
+  font-size: 1.2em !important;
+  font-weight: 600;
+}
+
+.fc-button-primary {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+}
+
+.fc-button-primary:hover {
+  background-color: #0b5ed7 !important;
+  border-color: #0a58ca !important;
+}
+
+@media (max-width: 768px) {
+  .fc-header-toolbar {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
