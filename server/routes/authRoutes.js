@@ -84,55 +84,67 @@ router.post('/google', async (req, res) => {
     }
 
     try {
-        // Check if the user already exists (student or instructor)
+        // Check if the user already exists
         let user = await Student.findOne({ uid }) || await Instructor.findOne({ uid });
-        
 
         // If no existing user is found, create a new one
         if (!user) {
-            let role;
             if (email.endsWith('@student.buksu.edu.ph')) {
-                user = new Student({ name, email, uid, role: 'student' });
-                const studentId = email.slice(0, 10);  // Extract the student ID from the email
-                user.studentId = studentId;  // Assign the studentId field
-            } else if (email.endsWith('@gmail.com')) { // Example for instructors, adjust accordingly
-                user = new Instructor({ name, email, uid, role: 'instructor' });
+                user = new Student({ 
+                    name, 
+                    email, 
+                    uid, 
+                    role: 'student',
+                    studentId: email.slice(0, 10)
+                });
+            } else if (email.endsWith('@gmail.com')) {
+                user = new Instructor({ 
+                    name, 
+                    email, 
+                    uid, 
+                    role: ['instructor'] // Make sure role is an array
+                });
             } else {
                 return res.status(400).json({ message: 'Invalid email domain' });
             }
-             // User authenticated successfully
-            await sendPrivacyPolicyEmail(user.email);
 
+            await sendPrivacyPolicyEmail(user.email);
             await user.save();
-        } else {
-            if (!user.studentId) {
-                const studentId = email.slice(0, 10);  // Extract the student ID from the email
-                user.studentId = studentId;  // Assign the studentId field
-                await user.save();
-            }
         }
 
         // Check if the user is archived
         if (user.archived) {
-            return res.status(403).json({ message: 'Your account is archived. Please contact the admin to restore your account.' });
+            return res.status(403).json({ 
+                message: 'Your account is archived. Please contact the admin to restore your account.' 
+            });
         }
 
-        // Generate a JWT token for the user
-        const token = jwt.sign({ userId: user._id, role: user.role }, 'your_jwt_secret', { expiresIn: '1h' });
+        // Generate JWT token
+        const token = jwt.sign(
+            { 
+                userId: user._id, 
+                role: Array.isArray(user.role) ? user.role[0] : user.role 
+            }, 
+            'your_jwt_secret', 
+            { expiresIn: '1h' }
+        );
 
-        // Respond with the token and user details, including the new 'id' field
+        // Send response
         res.status(200).json({
             message: 'Login successful',
             token,
             userId: user._id,
             role: user.role,
             name: user.name,
-            email: user.email,
-            user_id: user.id
+            email: user.email
         });
+
     } catch (error) {
-        console.error('Error saving or verifying user:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error in /google route:', error);
+        res.status(500).json({ 
+            error: 'Internal server error',
+            details: error.message 
+        });
     }
 });
 

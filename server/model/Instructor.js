@@ -5,7 +5,16 @@ const instructorSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     uid: { type: String, required: true, unique: true },
-    role: { type: String, enum: ['instructor'], required: true },
+    role: {
+        type: [String],
+        default: ['instructor'],
+        validate: {
+            validator: function(v) {
+                return Array.isArray(v) && v.length > 0;
+            },
+            message: 'Role must be a non-empty array'
+        }
+    },
     archived: { type: Boolean, default: false }
 
 });

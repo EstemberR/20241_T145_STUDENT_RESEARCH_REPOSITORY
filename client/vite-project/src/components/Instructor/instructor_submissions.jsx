@@ -11,6 +11,7 @@ import '../css/admin_dashboard.css';
 const InstructorSubmissions = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
+  const [userRole, setUserRole] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [selectedResearch, setSelectedResearch] = useState(null);
   const [activeTab, setActiveTab] = useState('Pending');
@@ -18,34 +19,48 @@ const InstructorSubmissions = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchSubmissions = async () => {
+    const fetchUserAndSubmissions = async () => {
       try {
         setLoading(true);
         const token = getToken();
-        console.log('Fetching with token:', token); 
-        const response = await fetch('http://localhost:8000/instructor/submissions', {
-          method: 'GET',
+        if (!token) {
+          navigate('/');
+          return;
+        }
+
+        // Fetch user role
+        const profileResponse = await fetch('http://localhost:8000/instructor/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const profileData = await profileResponse.json();
+        if (profileResponse.ok) {
+          setUserRole(profileData.role);
+        }
+
+        // Fetch submissions
+        const submissionsResponse = await fetch('http://localhost:8000/instructor/submissions', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
-        console.log('Response status:', response.status);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+
+        if (!submissionsResponse.ok) {
+          throw new Error(`HTTP error! status: ${submissionsResponse.status}`);
         }
-        const data = await response.json();
-        console.log('Received data:', data); 
-        
-        setSubmissions(data);
+        const submissionsData = await submissionsResponse.json();
+        setSubmissions(submissionsData);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching submissions:', error);
-        setError('Failed to fetch submissions');
+        console.error('Error fetching data:', error);
+        setError('Failed to fetch data');
         setLoading(false);
       }
     };
-    fetchSubmissions();
+
+    fetchUserAndSubmissions();
   }, [navigate]);
   const handleStatusUpdate = async (submissionId, newStatus, note = '') => {
     try {
@@ -84,7 +99,7 @@ const InstructorSubmissions = () => {
     <div className="dashboard-container d-flex">
       <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
-        <Header userName={userName} />
+      <Header userName={userName} userRole={userRole} />
 
         <main className="main-content">
             <h4 className="my-3">STUDENT SUBMISSIONS</h4>

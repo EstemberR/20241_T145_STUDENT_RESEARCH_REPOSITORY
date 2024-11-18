@@ -11,23 +11,42 @@ import '../css/admin_dashboard.css';
 const InstructorDashboard = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
+  const [userRole, setUserRole] = useState([]);
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      alert('Please log in first.');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('token');
-      navigate('/');
-    }
+    const fetchUserRole = async () => {
+      try {
+        const token = getToken();
+        if (!token) {
+          alert('Please log in first.');
+          localStorage.removeItem('userName');
+          localStorage.removeItem('token');
+          navigate('/');
+          return;
+        }
+
+        const response = await fetch('http://localhost:8000/instructor/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setUserRole(data.role);
+        }
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+      }
+    };
+
+    fetchUserRole();
   }, [navigate]);
 
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
-        <Header userName={userName} />
-
+        <Header userName={userName} userRole={userRole} />
         <main className="main-content">
           <div className="contentRow d-flex align-items-start">
             <div className="notificationDashboard">

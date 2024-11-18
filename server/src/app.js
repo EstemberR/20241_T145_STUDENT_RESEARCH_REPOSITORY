@@ -56,8 +56,6 @@ app.use('/api/auth/google-drive', driveRoutes);
 app.use('/instructor', instructorRoutes);
 app.use('/admin', adminRoutes);
 
-
-
 app.listen(PORT, () => {
     connect(); 
     console.log(`Listening on PORT ${PORT}`);

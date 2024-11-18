@@ -21,6 +21,11 @@ const AdminRequest = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
   const [activeTab, setActiveTab] = useState('pending');
+  const [alert, setAlert] = useState({
+    show: false,
+    message: '',
+    type: ''
+  });
 
   useEffect(() => {
     const token = getToken();
@@ -68,13 +73,28 @@ const AdminRequest = () => {
         body: JSON.stringify({ status })
       });
 
-      if (!response.ok) throw new Error('Failed to update request');
+      const data = await response.json();
 
-      alert(`Request ${status} successfully`);
-      fetchRequests(); // Refresh the data
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update request');
+      }
+
+      // Show success message
+      setAlert({
+        show: true,
+        message: `Request ${status} successfully`,
+        type: 'success'
+      });
+
+      // Refresh the data
+      await fetchRequests();
     } catch (error) {
       console.error('Error:', error);
-      alert('Failed to update request');
+      setAlert({
+        show: true,
+        message: error.message || 'Failed to update request',
+        type: 'danger'
+      });
     }
   };
 

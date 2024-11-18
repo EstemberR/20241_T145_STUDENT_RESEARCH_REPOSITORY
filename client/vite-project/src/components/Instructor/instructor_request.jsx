@@ -56,6 +56,7 @@ const RequestTable = ({ requests }) => (
 const InstructorRequest = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
+  const [userRole, setUserRole] = useState([]);
   const [researchList, setResearchList] = useState([]);
   const [requests, setRequests] = useState([]);
   const [selectedResearch, setSelectedResearch] = useState("");
@@ -66,15 +67,33 @@ const InstructorRequest = () => {
   const [activeTab, setActiveTab] = useState('pending');
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      localStorage.removeItem('userName');
-      localStorage.removeItem('token');
-      alert('Please log in first.');
-      navigate('/');
-      return;
-    }
+    const fetchUserRole = async () => {
+      try {
+        const token = getToken();
+        if (!token) {
+          localStorage.removeItem('userName');
+          localStorage.removeItem('token');
+          alert('Please log in first.');
+          navigate('/');
+          return;
+        }
+        const response = await fetch('http://localhost:8000/instructor/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setUserRole(data.role || 'Instructor');
+        }
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+        setUserRole('Instructor');
+      }
+    };
 
+    const token = getToken();
+    fetchUserRole();
     fetchData(token);
   }, [navigate]);
 
@@ -170,7 +189,7 @@ const InstructorRequest = () => {
     <div className="dashboard-container d-flex">
       <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
-        <Header userName={userName} />
+      <Header userName={userName} userRole={userRole} />
         
         <main className="main-content p-4">
           <div className="d-flex justify-content-between align-items-center mb-4">

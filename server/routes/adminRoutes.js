@@ -8,7 +8,6 @@ import Research from '../model/Research.js';
 
 const adminRoutes = express.Router();
 
-// Route to get all students
 adminRoutes.get('/accounts/students', authenticateToken, async (req, res) => {
   try {
     const students = await Student.find();
@@ -19,7 +18,6 @@ adminRoutes.get('/accounts/students', authenticateToken, async (req, res) => {
   }
 });
 
-// Route to get a specific student by ID
 adminRoutes.get('/accounts/students/:id', authenticateToken, async (req, res) => {
   try {
     const student = await Student.findById(req.params.id);
@@ -32,7 +30,6 @@ adminRoutes.get('/accounts/students/:id', authenticateToken, async (req, res) =>
   }
 });
 
-// Route to get all instructors
 adminRoutes.get('/accounts/instructors', authenticateToken, async (req, res) => {
   try {
     const instructors = await Instructor.find();
@@ -43,7 +40,6 @@ adminRoutes.get('/accounts/instructors', authenticateToken, async (req, res) => 
   }
 });
 
-// Route to get a specific instructor by ID
 adminRoutes.get('/accounts/instructors/:id', authenticateToken, async (req, res) => {
   try {
     const instructor = await Instructor.findById(req.params.id);
@@ -56,7 +52,6 @@ adminRoutes.get('/accounts/instructors/:id', authenticateToken, async (req, res)
   }
 });
 
-// Archive student
 adminRoutes.put('/accounts/students/:id/archive', authenticateToken, async (req, res) => {
   try {
     const student = await Student.findByIdAndUpdate(
@@ -76,7 +71,6 @@ adminRoutes.put('/accounts/students/:id/archive', authenticateToken, async (req,
   }
 });
 
-// Archive instructor
 adminRoutes.put('/accounts/instructors/:id/archive', authenticateToken, async (req, res) => {
   try {
     const instructor = await Instructor.findByIdAndUpdate(
@@ -96,7 +90,6 @@ adminRoutes.put('/accounts/instructors/:id/archive', authenticateToken, async (r
   }
 });
 
-// Restore student
 adminRoutes.put('/accounts/students/:id/restore', authenticateToken, async (req, res) => {
   try {
     const student = await Student.findByIdAndUpdate(
@@ -116,7 +109,6 @@ adminRoutes.put('/accounts/students/:id/restore', authenticateToken, async (req,
   }
 });
 
-// Restore instructor
 adminRoutes.put('/accounts/instructors/:id/restore', authenticateToken, async (req, res) => {
   try {
     const instructor = await Instructor.findByIdAndUpdate(
@@ -136,13 +128,11 @@ adminRoutes.put('/accounts/instructors/:id/restore', authenticateToken, async (r
   }
 });
 
-// Get all adviser requests with stats
 adminRoutes.get('/adviser-requests', authenticateToken, async (req, res) => {
   try {
     const requests = await AdviserRequest.find()
       .sort({ createdAt: -1 });
     
-    // Get counts for the chart
     const totalInstructors = await Instructor.countDocuments();
     const totalAdvisers = await Instructor.countDocuments({ role: 'adviser' });
     const pendingRequests = await AdviserRequest.countDocuments({ status: 'pending' });
@@ -161,49 +151,81 @@ adminRoutes.get('/adviser-requests', authenticateToken, async (req, res) => {
   }
 });
 
-// Handle adviser request (approve/reject)
 adminRoutes.put('/adviser-requests/:id/status', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+
+    // Validate status
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
 
     const request = await AdviserRequest.findById(id);
     if (!request) {
       return res.status(404).json({ message: 'Request not found' });
     }
 
-    // Update the request status
-    request.status = status;
-    await request.save();
-
-    // If approved, add adviser role to the instructor's existing roles
     if (status === 'approved') {
+      // Find the instructor first
       const instructor = await Instructor.findById(request.instructor);
       if (!instructor) {
         return res.status(404).json({ message: 'Instructor not found' });
       }
 
-      // Check if instructor already has adviser role
-      if (!instructor.role.includes('adviser')) {
-        // Add 'adviser' role while keeping existing roles
-        instructor.role = Array.isArray(instructor.role) 
-          ? [...instructor.role, 'adviser']  // If role is already an array
-          : [instructor.role, 'adviser'];    // If role is a single string
-        
-        await instructor.save();
+      // Update instructor role - Fix for role update
+      if (typeof instructor.role === 'string') {
+        // If role is a string, convert to array
+        instructor.role = ['instructor', 'adviser'];
+      } else if (Array.isArray(instructor.role)) {
+        // If role is already an array, add 'adviser' if not present
+        if (!instructor.role.includes('adviser')) {
+          instructor.role.push('adviser');
+        }
       }
 
+      // Save instructor with new role
+      await instructor.save();
+      console.log('Updated instructor roles:', instructor.role); // Debug log
+
       // Update research with the new adviser
-      await Research.findByIdAndUpdate(
+      const research = await Research.findByIdAndUpdate(
         request.research,
-        { adviser: request.instructor }
+        { adviser: request.instructor },
+        { new: true }
+      );
+
+      if (!research) {
+        return res.status(404).json({ message: 'Research not found' });
+      }
+
+      // Reject other pending requests for this research
+      await AdviserRequest.updateMany(
+        { 
+          research: request.research, 
+          _id: { $ne: id },
+          status: 'pending'
+        },
+        { status: 'rejected' }
       );
     }
 
-    res.status(200).json({ message: 'Request updated successfully' });
+    // Update the request status
+    request.status = status;
+    await request.save();
+
+    // Send success response with updated data
+    res.status(200).json({ 
+      message: `Request ${status} successfully`,
+      request: await AdviserRequest.findById(id).populate('instructor')
+    });
+
   } catch (error) {
     console.error('Error updating adviser request:', error);
-    res.status(500).json({ message: 'Error updating request' });
+    res.status(500).json({ 
+      message: 'Error updating request',
+      error: error.message 
+    });
   }
 });
 

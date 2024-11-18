@@ -20,6 +20,7 @@ const InstructorProfile = () => {
     role: ''
   });
   const navigate = useNavigate();
+  const [alert, setAlert] = useState({ show: false, message: '', type: '' });
 
   // Fetch profile data
   useEffect(() => {
@@ -27,7 +28,11 @@ const InstructorProfile = () => {
       try {
         const token = getToken();
         if (!token) {
-          alert('Please log in first.');
+          setAlert({
+            show: true,
+            message: 'Please log in first.',
+            type: 'danger'
+          });
           localStorage.removeItem('userName');
           localStorage.removeItem('token');
           navigate('/');
@@ -48,7 +53,11 @@ const InstructorProfile = () => {
           setUser(data);
           updateUserName(data.name);
         } else {
-          alert(data.message || 'Error fetching profile');
+          setAlert({
+            show: true,
+            message: data.message || 'Error fetching profile',
+            type: 'danger'
+          });
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -78,7 +87,11 @@ const InstructorProfile = () => {
     try {
       const token = localStorage.getItem('token'); // Get the token from local storage
       if (!token) {
-        alert('Please log in first.');
+        setAlert({
+          show: true,
+          message: 'Please log in first.',
+          type: 'danger'
+        });
         navigate('/');
         return;
       }
@@ -95,15 +108,50 @@ const InstructorProfile = () => {
       const data = await response.json();
       if (response.ok) {
         setProfile(data); // Update profile state with new data
-        alert('Profile updated successfully');
+        setAlert({
+          show: true,
+          message: 'Profile updated successfully',
+          type: 'success'
+        });
         setIsEditing(false); // Exit edit mode
         updateUserName(data.name);
       } else {
-        alert(data.message || 'Error updating profile');
+        setAlert({
+          show: true,
+          message: data.message || 'Error updating profile',
+          type: 'danger'
+        });
       }
     } catch (error) {
       console.error('Error updating profile:', error);
     }
+  };
+
+  // Helper function to format roles
+  const formatRoles = (roles) => {
+    if (!roles) return '';
+    if (Array.isArray(roles)) {
+      return roles.map(role => 
+        role.charAt(0).toUpperCase() + role.slice(1)
+      ).join(' • ');
+    }
+    return roles;
+  };
+
+  // Helper function to get role badges
+  const getRoleBadges = (roles) => {
+    if (!roles) return null;
+    const roleArray = Array.isArray(roles) ? roles : [roles];
+    
+    return roleArray.map((role, index) => (
+      <span 
+        key={index} 
+        className={`badge ${role === 'adviser' ? 'bg-primary' : 'bg-success'} me-2`}
+        style={{ fontSize: '0.9em' }}
+      >
+        {role.charAt(0).toUpperCase() + role.slice(1)}
+      </span>
+    ));
   };
 
   if (!profile) {
@@ -111,14 +159,32 @@ const InstructorProfile = () => {
   }
   return (
     <div className="dashboard-container d-flex">
+      {alert.show && (
+        <div 
+          className={`alert alert-${alert.type} alert-dismissible fade show position-fixed start-50 translate-middle-x mt-3`} 
+          role="alert" 
+          style={{ 
+            maxWidth: '500px', 
+            zIndex: 1000,
+            top: '20px'
+          }}
+        >
+          {alert.message}
+          <button 
+            type="button" 
+            className="btn-close" 
+            onClick={() => setAlert({ ...alert, show: false })}
+          ></button>
+        </div>
+      )}
       <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
-        <Header userName={userName} />
+        <Header userName={userName} userRole={profile.role} />
         <main className="main-content">
           <div className="card shadow-sm">
             <div className="card-body p-4">
               <div className="row">
-                {/* Left Column - Profile Image and Basic Info */}
+                {/* Left Column */}
                 <div className="col-md-4 border-end text-center">
                   <div className="position-relative mb-4">
                     <img
@@ -133,6 +199,9 @@ const InstructorProfile = () => {
                     />
                     <div className="mt-3">
                       <h3 className="fw-bold mb-1">{profile.name}</h3>
+                      <div className="mb-3">
+                        {getRoleBadges(profile.role)}
+                      </div>
                       <p className="text-muted mb-3">
                         <i className="fas fa-envelope me-2"></i>
                         {profile.email}
@@ -148,7 +217,7 @@ const InstructorProfile = () => {
                   </div>
                 </div>
 
-                {/* Right Column - Profile Details */}
+                {/* Right Column */}
                 <div className="col-md-8">
                   <div className="ps-md-4">
                     {isEditing ? (
@@ -191,10 +260,10 @@ const InstructorProfile = () => {
                           </div>
                           <div className="row">
                             <div className="col-4">
-                              <span className="text-success">Role</span>
+                              <span className="text-success">Roles</span>
                             </div>
                             <div className="col-8">
-                              <strong>{profile.role}</strong>
+                              {getRoleBadges(profile.role)}
                             </div>
                           </div>
                         </div>

@@ -18,6 +18,7 @@ const RESEARCH_STATUS = {
 const InstructorStudents = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
+  const [userRole, setUserRole] = useState([]);
   const [students, setStudents] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newStudent, setNewStudent] = useState({
@@ -30,7 +31,7 @@ const InstructorStudents = () => {
 
   // Fetch students
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchUserAndStudents = async () => {
       try {
         const token = getToken();
         if (!token) {
@@ -41,21 +42,33 @@ const InstructorStudents = () => {
           return;
         }
 
-        const response = await fetch('http://localhost:8000/instructor/students', {
+        // Fetch user role
+        const profileResponse = await fetch('http://localhost:8000/instructor/profile', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        const data = await response.json();
-        if (response.ok) {
-          setStudents(data);
+        const profileData = await profileResponse.json();
+        if (profileResponse.ok) {
+          setUserRole(profileData.role);
+        }
+
+        // Fetch students
+        const studentsResponse = await fetch('http://localhost:8000/instructor/students', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const studentsData = await studentsResponse.json();
+        if (studentsResponse.ok) {
+          setStudents(studentsData);
         }
       } catch (error) {
-        console.error('Error fetching students:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchStudents();
+    fetchUserAndStudents();
   }, [navigate]);
 
   const handleAddStudent = async (e) => {
@@ -137,7 +150,7 @@ const InstructorStudents = () => {
     <div className="dashboard-container d-flex">
       <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
-        <Header userName={userName} />
+      <Header userName={userName} userRole={userRole} />
         <main className="main-content">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h4>STUDENT PROFILES</h4>

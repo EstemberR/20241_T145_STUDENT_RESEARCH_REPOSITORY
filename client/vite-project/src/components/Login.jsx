@@ -16,11 +16,14 @@ const Login = () => {
     const recaptchaVerified = useState(false); 
     const [recaptchaToken, setRecaptchaToken] = useState(null);
     const navigate = useNavigate();
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState(''); // 'success' or 'danger'
+    const [showAlert, setShowAlert] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!recaptchaToken) {
-            alert("Please complete the ReCAPTCHA verification.");
+            showAlertMessage("Please complete the ReCAPTCHA verification.", "danger");
             return;
         }
         console.log('Login attempted with:', email, password);
@@ -40,7 +43,7 @@ const Login = () => {
             if (response.ok) {
                 if (data.archived) {
                     console.log('Account is archived');  // Debugging message
-                    alert('Your account is archived. Please contact the admin to restore your account.');
+                    showAlertMessage('Your account is archived. Please contact the admin to restore your account.', 'warning');
                     return;
                 }
                 const { token } = data;
@@ -57,15 +60,15 @@ const Login = () => {
                 } else if (userRole === 'admin') {
                     navigate('/admin/admin_dashboard');
                 } else {
-                    alert('Unknown user role');
+                    showAlertMessage('Unknown user role', 'danger');
                 }
             } else {
                 console.error('Authentication failed:', data.error || 'Unknown error');
-                alert(data.error || 'Authentication failed');
+                showAlertMessage(data.error || 'Authentication failed', 'danger');
             }
         } catch (error) {
             console.error('Error during login:', error);
-            alert('An error occurred during login. Please try again.');
+            showAlertMessage('An error occurred during login. Please try again.', 'danger');
         }
     };
     
@@ -104,21 +107,24 @@ const Login = () => {
                 setUserName(name);
                 localStorage.setItem('userName', name);
     
+                // Check if role is an array
+                const userRole = Array.isArray(role) ? role[0] : role;
+
                 // Navigate based on user role
-                if (role === 'student') {
+                if (userRole === 'student') {
                     navigate('/student/dashboard');
-                } else if (role === 'instructor') {
+                } else if (userRole === 'instructor') {
                     navigate('/instructor/instructor_dashboard');
                 } else {
-                    alert('Unknown user role'); 
+                    showAlertMessage(`Invalid user role: ${userRole}`, 'danger');
                 }
             } else {
                 console.error('Authentication failed:', data.error || 'Unknown error');
-                alert(data.error || 'Authentication failed');
+                showAlertMessage(data.error || 'Authentication failed', 'danger');
             }
         } catch (error) {
             console.error('Error during Google sign-in:', error);
-            alert('Error during Google sign-in. Please try again.');
+            showAlertMessage('Error during Google sign-in. Please try again.', 'danger');
         }
     };
     
@@ -128,8 +134,37 @@ const Login = () => {
         setRecaptchaToken(token);
     };
     
+    // Helper function to show alerts
+    const showAlertMessage = (message, type) => {
+        setAlertMessage(message);
+        setAlertType(type);
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 5000);
+    };
+    
     return (
         <div className="login-container">
+            {showAlert && (
+                <div className={`alert alert-${alertType} alert-dismissible fade show position-absolute top-0 start-50 translate-middle-x mt-3`} 
+                     role="alert" 
+                     style={{ 
+                         maxWidth: '300px', 
+                         zIndex: 1000 
+                     }}>
+                    {alertMessage}
+                    <button 
+                        type="button" 
+                        className="btn-close" 
+                        onClick={() => setShowAlert(false)} 
+                        style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)'
+                        }}
+                    ></button>
+                </div>
+            )}
             <div className="col-md-6 d-none d-md-block login-image-container login-image">
                 <div className="background"></div>
                 <div className="overlay-image"></div>
