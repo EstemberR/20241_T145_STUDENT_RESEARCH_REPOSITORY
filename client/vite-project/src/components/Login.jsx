@@ -46,18 +46,23 @@ const Login = () => {
                     showAlertMessage('Your account is archived. Please contact the admin to restore your account.', 'warning');
                     return;
                 }
-                const { token } = data;
-                const userRole = data.role;
+                // Store both token and role
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userRole', data.role);
                 localStorage.setItem('userName', data.name);
-                localStorage.setItem('token', token); 
-    
-                if (userRole === 'student') {
+
+                // Debug log
+                console.log('Stored credentials:', {
+                    token: !!data.token,
+                    role: data.role,
+                    name: data.name
+                });
+
+                if (data.role === 'student') {
                     navigate('/student/dashboard');
-                    console.log(userRole);
-                } else if (userRole === 'instructor') {
-                    navigate('/instructor/dashboard');
-                    console.log(userRole);
-                } else if (userRole === 'admin') {
+                } else if (data.role === 'instructor') {
+                    navigate('/instructor/instructor_dashboard');
+                } else if (data.role === 'admin') {
                     navigate('/admin/admin_dashboard');
                 } else {
                     showAlertMessage('Unknown user role', 'danger');
@@ -101,16 +106,21 @@ const Login = () => {
                 console.log('User authenticated successfully:', data);
                 const { token, role, name } = data;
 
-              
-    
-                localStorage.setItem('token', token); 
-                setUserName(name);
+                // Store both token and role
+                localStorage.setItem('token', token);
+                localStorage.setItem('userRole', Array.isArray(role) ? role[0] : role);
                 localStorage.setItem('userName', name);
-    
-                // Check if role is an array
+                setUserName(name);
+
+                // Debug log
+                console.log('Stored credentials:', {
+                    token: !!token,
+                    role: Array.isArray(role) ? role[0] : role,
+                    name: name
+                });
+
                 const userRole = Array.isArray(role) ? role[0] : role;
 
-                // Navigate based on user role
                 if (userRole === 'student') {
                     navigate('/student/dashboard');
                 } else if (userRole === 'instructor') {

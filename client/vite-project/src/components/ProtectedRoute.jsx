@@ -1,27 +1,38 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const ProtectedRoute = ({ allowedRole }) => {
-  // Get token and user role from localStorage
   const token = localStorage.getItem('token');
   const userRole = localStorage.getItem('userRole');
 
-  // Check if user is authenticated and has correct role
+  // Debug logging
+  console.log('Protected Route Check:', {
+    token: !!token,
+    userRole,
+    allowedRole,
+    isMatching: userRole === allowedRole
+  });
+
+  // If no token, redirect to login
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
+  // If role doesn't match, redirect to appropriate dashboard
   if (userRole !== allowedRole) {
-    // Redirect to appropriate dashboard based on role
-    switch (userRole) {
-      case 'student':
-        return <Navigate to="/student/dashboard" replace />;
-      case 'instructor':
-        return <Navigate to="/instructor/instructor_dashboard" replace />;
-      case 'admin':
-        return <Navigate to="/admin/admin_dashboard" replace />;
-      default:
-        return <Navigate to="/login" replace />;
+    const dashboardPaths = {
+      student: '/student/dashboard',
+      instructor: '/instructor/instructor_dashboard',
+      admin: '/admin/admin_dashboard'
+    };
+
+    // Only redirect if user has a valid role
+    if (userRole && dashboardPaths[userRole]) {
+      return <Navigate to={dashboardPaths[userRole]} replace />;
     }
+
+    // If role is invalid, redirect to login
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;

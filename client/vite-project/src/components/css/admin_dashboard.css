@@ -166,3 +166,63 @@
   font-size: 30px;
   font-weight: 750;
 }
+
+.stat-card {
+  background: white;
+  transition: transform 0.2s ease-in-out;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.icon-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-gradient {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.dashboard-header h2 {
+  font-weight: 600;
+}
+
+/* Custom subtle background colors */
+.bg-primary-subtle {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.bg-info-subtle {
+  background-color: rgba(13, 202, 240, 0.1);
+}
+
+.bg-success-subtle {
+  background-color: rgba(25, 135, 84, 0.1);
+}
+
+/* Text colors for badges */
+.text-primary {
+  color: #0d6efd;
+}
+
+.text-info {
+  color: #0dcaf0;
+}
+
+.text-success {
+  color: #198754;
+}
+
+/* Responsive font sizes */
+@media (max-width: 768px) {
+  .display-5 {
+    font-size: 2rem;
+  }
+}
