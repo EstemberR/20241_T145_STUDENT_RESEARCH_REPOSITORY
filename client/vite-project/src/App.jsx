@@ -15,7 +15,7 @@ import InstructorProfile from './components/Instructor/instructor_profile';
 import InstructorRequest from './components/Instructor/instructor_request';
 import InstructorStudents from './components/Instructor/instructor_students';
 import InstructorSubmissions from './components/Instructor/instructor_submissions';
-
+import AdviserResearches from './components/Instructor/adviser_researches';
 import AdminDashboard from './components/Admin/admin_dashboard';
 import AdminAccounts from './components/Admin/admin_accounts';
 import AdminActivity from './components/Admin/admin_acitivty';
@@ -49,6 +49,7 @@ function App() {
           <Route path="/instructor/students" element={<InstructorStudents />} />
           <Route path="/instructor/requesting" element={<InstructorRequest />} />
           <Route path="/instructor/notifications" element={<InstructorNotification />} />
+          <Route path="/instructor/adviser-researches" element={<AdviserResearches />} />
           <Route path="/instructor/logout" element={<Navigate to="/" replace />} />
 
 

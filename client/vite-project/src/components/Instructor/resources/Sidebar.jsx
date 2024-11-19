@@ -1,5 +1,5 @@
 // src/components/Sidebar.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { handleLogout } from './Utils.jsx';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -9,6 +9,26 @@ import '../../css/admin_dashboard.css';
 const Sidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const [userRoles, setUserRoles] = useState([]);
+  
+    useEffect(() => {
+        // Fetch user profile to get roles
+        const fetchUserProfile = async () => {
+            try {
+                const response = await fetch('http://localhost:8000/instructor/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const data = await response.json();
+                setUserRoles(data.role || []);
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+            }
+        };
+  
+        fetchUserProfile();
+    }, []);
   
     const handleLogoutClick = () => {
       handleLogout(navigate);
@@ -47,7 +67,17 @@ const Sidebar = () => {
     <Link className={`nav-link ${location.pathname === '/instructor/notifications' ? 'active' : ''}`} to="/instructor/notifications">
     <i className="fas fa-bell notification zx"></i> Notifications
         </Link>
-    </li>       
+    </li>
+    {userRoles.includes('instructor') && userRoles.includes('adviser') && (
+        <li className="nav-item">
+            <Link 
+                className={`nav-link ${location.pathname === '/instructor/adviser-researches' ? 'active' : ''}`} 
+                to="/instructor/adviser-researches"
+            >
+                <i className="fas fa-microscope zx"></i> Adviser Researches
+            </Link>
+        </li>
+    )}
     <li className="nav-item">
           <span className="nav-link" onClick={handleLogoutClick} to="/">
             <i className="fas fa-sign-out-alt logout zx"></i> Logout

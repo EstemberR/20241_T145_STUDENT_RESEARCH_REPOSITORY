@@ -319,4 +319,70 @@ instructorRoutes.get('/adviser-requests', authenticateToken, async (req, res) =>
     }
 });
 
+// Get researches where the instructor is the adviser
+instructorRoutes.get('/advised-researches', authenticateToken, async (req, res) => {
+    try {
+        const instructorId = req.user.userId;
+        
+        const researches = await Research.find({ 
+            adviser: instructorId 
+        }).populate({
+            path: 'mongoId',
+            model: 'Student',
+            select: 'name email studentId'
+        }).sort({ uploadDate: -1 });
+
+        const transformedResearches = researches.map(research => ({
+            _id: research._id,
+            title: research.title,
+            abstract: research.abstract,
+            authors: research.authors,
+            keywords: research.keywords,
+            status: research.status,
+            comments: research.comments,
+            uploadDate: research.uploadDate,
+            driveFileId: research.driveFileId,
+            studentName: research.mongoId?.name || 'Unknown',
+            studentEmail: research.mongoId?.email || 'Unknown',
+            studentId: research.studentId
+        }));
+
+        res.status(200).json(transformedResearches);
+    } catch (error) {
+        console.error('Error fetching advised researches:', error);
+        res.status(500).json({ message: 'Error fetching advised researches' });
+    }
+});
+
+// Add feedback to research
+instructorRoutes.post('/research/:id/feedback', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { comments } = req.body;
+        const instructorId = req.user.userId;
+
+        const research = await Research.findOne({
+            _id: id,
+            adviser: instructorId
+        });
+
+        if (!research) {
+            return res.status(404).json({ 
+                message: 'Research not found or you are not the adviser' 
+            });
+        }
+
+        research.comments = comments;
+        await research.save();
+
+        res.status(200).json({ 
+            message: 'Feedback submitted successfully',
+            research 
+        });
+    } catch (error) {
+        console.error('Error submitting feedback:', error);
+        res.status(500).json({ message: 'Error submitting feedback' });
+    }
+});
+
 export default instructorRoutes;
