@@ -22,6 +22,7 @@ import AdminActivity from './components/Admin/admin_acitivty';
 import AdminRepo from './components/Admin/admin_repositoryTable';
 import AdminReports from './components/Admin/admin_reports';
 import AdminRequest from './components/Admin/admin_request';
+import ProtectedRoute from './components/ProtectedRoute';
 
 
 {/*LANDING PAGE*/ }
@@ -33,7 +34,8 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
-        {/* STUDENT */}
+        {/* Student Protected Routes */}
+        <Route element={<ProtectedRoute allowedRole="student" />}>
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/student/repository" element={<Repository />} />
           <Route path="/student/profile" element={<Profile />} />
@@ -41,8 +43,10 @@ function App() {
           <Route path="/student/FAQ" element={<FAQ />} />
           <Route path="/student/notifications" element={<Notification />} />
           <Route path="/student/logout" element={<Navigate to="/" replace />} />
+        </Route>
 
-        {/* INSTRUCTOR */}
+        {/* Instructor Protected Routes */}
+        <Route element={<ProtectedRoute allowedRole="instructor" />}>
           <Route path="/instructor/instructor_dashboard" element={<InstructorDashboard />} />
           <Route path="/instructor/submissions" element={<InstructorSubmissions />} />
           <Route path="/instructor/profile" element={<InstructorProfile />} />
@@ -51,9 +55,10 @@ function App() {
           <Route path="/instructor/notifications" element={<InstructorNotification />} />
           <Route path="/instructor/adviser-researches" element={<AdviserResearches />} />
           <Route path="/instructor/logout" element={<Navigate to="/" replace />} />
+        </Route>
 
-
-          {/*ADMIN*/}
+          {/* Admin Protected Routes */}
+        <Route element={<ProtectedRoute allowedRole="admin" />}>
           <Route path="/admin/admin_dashboard" element={<AdminDashboard />} />
           <Route path="/admin/accounts" element={<AdminAccounts />} />
           <Route path="/admin/activity" element={<AdminActivity />} />
@@ -61,8 +66,9 @@ function App() {
           <Route path="/admin/report" element={<AdminReports />} />
           <Route path="/admin/request" element={<AdminRequest />} />
           <Route path="/admin/logout" element={<Navigate to="/" replace />} />
+        </Route>
 
-
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
