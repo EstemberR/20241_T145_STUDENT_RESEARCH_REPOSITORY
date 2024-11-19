@@ -9,6 +9,7 @@ import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 import '../css/UserProfile.css';
+import ProfileCalendar from '../ProfileCalendar';
 
 const InstructorProfile = () => {
   const { userName, updateUserName } = useUser(); // Get userName and updateUserName
@@ -21,6 +22,7 @@ const InstructorProfile = () => {
   });
   const navigate = useNavigate();
   const [alert, setAlert] = useState({ show: false, message: '', type: '' });
+  const [profilePic, setProfilePic] = useState(null);
 
   // Fetch profile data
   useEffect(() => {
@@ -66,6 +68,13 @@ const InstructorProfile = () => {
 
     fetchProfile();
   }, [navigate, updateUserName]);
+
+  useEffect(() => {
+    const photoURL = localStorage.getItem('userPhoto');
+    if (photoURL) {
+      setProfilePic(photoURL);
+    }
+  }, []);
 
   // Toggle Edit Mode
   const handleEditToggle = () => {
@@ -181,27 +190,25 @@ const InstructorProfile = () => {
       <div className="main-section col-10 d-flex flex-column">
         <Header userName={userName} userRole={profile.role} />
         <main className="main-content">
-          <div className="card shadow-sm">
+          <div className="card shadow-sm mb-4">
             <div className="card-body p-4">
               <div className="row">
-                {/* Left Column */}
+                {/* Left Column - Profile Image and Basic Info */}
                 <div className="col-md-4 border-end text-center">
                   <div className="position-relative mb-4">
                     <img
-                      src={'https://via.placeholder.com/150'}
+                      src={profilePic || 'https://via.placeholder.com/150'}
                       alt="Profile"
                       className="rounded-circle shadow"
                       style={{ 
                         width: '150px', 
                         height: '150px',
-                        border: '4px solid #fff'
+                        border: '4px solid #fff',
+                        objectFit: 'cover'
                       }}
                     />
                     <div className="mt-3">
                       <h3 className="fw-bold mb-1">{profile.name}</h3>
-                      <div className="mb-3">
-                        {getRoleBadges(profile.role)}
-                      </div>
                       <p className="text-muted mb-3">
                         <i className="fas fa-envelope me-2"></i>
                         {profile.email}
@@ -271,6 +278,15 @@ const InstructorProfile = () => {
                     )}
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+            {/* Calendar Card */}
+            <div className="card shadow-sm">
+            <div className="card-body p-4">
+              <h4 className="mb-4 text-success">My Calendar</h4>
+              <div className="calendar-wrapper">
+                <ProfileCalendar />
               </div>
             </div>
           </div>

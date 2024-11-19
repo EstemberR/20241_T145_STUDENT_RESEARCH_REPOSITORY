@@ -90,11 +90,14 @@ const Login = () => {
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
-    
+
+            // Get the profile picture URL
+            const photoURL = user.photoURL;
+
             if (!user.uid) {
                 throw new Error('User UID is null');
             }
-    
+
             const response = await fetch('http://localhost:8000/api/auth/google', {
                 method: 'POST',
                 headers: {
@@ -103,22 +106,24 @@ const Login = () => {
                 body: JSON.stringify({ 
                     name: user.displayName,
                     email: user.email,
-                    uid: user.uid 
+                    uid: user.uid,
+                    photoURL: photoURL  // Add this to send to backend
                 }),
             });
-    
+
             const data = await response.json(); 
-    
+
             if (response.ok) {
                 console.log('User authenticated successfully:', data);
                 const { token, role, name } = data;
 
-                // Store all necessary data in localStorage
+                // Store all necessary data including profile picture
                 localStorage.setItem('token', token); 
                 localStorage.setItem('userName', name);
-                localStorage.setItem('isGoogleUser', 'true'); // Add this flag
-                localStorage.setItem('userEmail', user.email); // Store email for verification
-    
+                localStorage.setItem('isGoogleUser', 'true');
+                localStorage.setItem('userEmail', user.email);
+                localStorage.setItem('userPhoto', photoURL);  // Store photo URL
+
                 // Check if role is an array
                 const userRole = Array.isArray(role) ? role[0] : role;
                 localStorage.setItem('userRole', userRole);
