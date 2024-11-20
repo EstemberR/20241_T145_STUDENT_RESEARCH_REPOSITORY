@@ -258,35 +258,46 @@ const Repository = () => {
           ) : (
             <div className="row g-4">
               {filteredResearches.map((research) => (
-                <div key={research._id} className="col-md-6 col-lg-4">
+                <div key={research._id} className="col-12">
                   <div 
-                    className="card h-100 research-card shadow-sm" 
+                    className="card research-card shadow-sm" 
                     onClick={() => handleCardClick(research._id)}
                     style={{ cursor: 'pointer' }}
                   >
                     <div className="card-body">
-                      <h5 className="card-title text-truncate mb-3">{research.title}</h5>
-                      <p className="card-text text-muted mb-2">
-                        <small><i className="fas fa-users me-2"></i>{research.authors}</small>
-                      </p>
-                      <p className="card-text text-muted mb-2">
-                        <small><i className="fas fa-graduation-cap me-2"></i>{research.course || research.student?.course}</small>
-                      </p>
-                      <p className="card-text text-muted mb-2">
-                        <small><i className="fas fa-tags me-2"></i>{research.keywords}</small>
-                      </p>
-                      <p className="card-text abstract-preview">
-                        {research.abstract.substring(0, 150)}...
-                      </p>
-                      <div className="mt-3">
-                        <small className="text-muted">
-                          <i className="fas fa-calendar me-2"></i>
-                          {new Date(research.uploadDate).toLocaleDateString('en-US', {
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                        </small>
+                      <div className="row">
+                        <div className="col-lg-9">
+                          <h5 className="card-title">{research.title}</h5>
+                          <div className="meta-info">
+                            <p className="card-text text-muted mb-2">
+                              <i className="fas fa-users me-2"></i>
+                              <span>{research.authors}</span>
+                            </p>
+                            <p className="card-text text-muted mb-2">
+                              <i className="fas fa-graduation-cap me-2"></i>
+                              <span>{research.course || research.student?.course}</span>
+                            </p>
+                            <p className="card-text text-muted mb-2">
+                              <i className="fas fa-tags me-2"></i>
+                              <span>{research.keywords}</span>
+                            </p>
+                          </div>
+                          <p className="abstract-preview">
+                            {research.abstract.substring(0, 150)}...
+                          </p>
+                        </div>
+                        <div className="col-lg-3 d-flex flex-column justify-content-center align-items-end">
+                          <div className="text-muted">
+                            <i className="fas fa-calendar me-2"></i>
+                            <small>
+                              {new Date(research.uploadDate).toLocaleDateString('en-US', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </small>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

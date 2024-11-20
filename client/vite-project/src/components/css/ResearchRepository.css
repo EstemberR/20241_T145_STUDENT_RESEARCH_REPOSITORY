@@ -1,79 +1,137 @@
-.search-filter-container {
-    background-color: #f8f9fa;  
-    padding: 10px;
-    border-radius: 5px; 
-  }
-  
-  input[type="text"] {
-    width: 60%; 
-  }
-  .modal-content {
-    border-radius: 10px;
-  }
+:root {
+  --primary-green: #2E7D32;
+  --light-green: #4CAF50;
+  --lighter-green: #E8F5E9;
+  --hover-green: #1B5E20;
+  --white: #ffffff;
+  --gray-100: #f8f9fa;
+  --gray-200: #e9ecef;
+}
 
-  .search2 {
-    margin-right: 150px;
-    padding-left: 5px;
-  }
-  
-  .search-filter-container {
-    background-color: #f8f9fa; 
-    padding: 10px; 
-    border-radius: 5px;
-  }
-  
-  .results-container {
-    max-height: 300px; 
-    overflow-y: auto; 
-  }
-  
-  .result-item {
-    background-color: white;
-    border: 1px solid #ccc; 
-    border-radius: 5px;
-  }
-  
-  .search1 {
-    border-radius: 8px;
-    border-color: white;
-    background-color: #4CAF50;
-    color: white;
-  }
-  
-  .search1:hover {
-    background-color: #4CAF50;
-    color: white;
-  }
-  
-  input[type="text"] {
-    width: 60%; /* Adjust width as needed */
-  }
-  .research-card {
-    transition: transform 0.2s ease-in-out;
-    border: none;
-    border-radius: 10px;
-  }
-  
-  .research-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
-  }
-  
-  .abstract-preview {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    font-size: 0.9rem;
-    color: #666;
-  }
-  
-  .search-filter-container {
-    max-width: 800px;
-    margin: 0 auto 2rem;
-  }
-  
-  .card-title {
-    color: #2c3e50;
-    font-weight: 600;
-  } 
+/* Main container styling */
+.main-section {
+  background-color: var(--gray-100);
+}
+
+/* Search and filter container */
+.search-filter-container {
+  background-color: var(--white);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.search-filter-container input[type="text"] {
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+}
+
+.search-filter-container .btn-success {
+  background-color: var(--primary-green);
+  border: none;
+}
+
+.search-filter-container .btn-success:hover {
+  background-color: var(--hover-green);
+}
+
+/* Research cards */
+.research-card {
+  background-color: var(--white);
+  border: none;
+  border-left: 4px solid var(--primary-green);
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.research-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-title {
+  color: var(--primary-green);
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.abstract-preview {
+  color: #666;
+  line-height: 1.6;
+  margin-top: 1rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Icons styling */
+.fas {
+  color: var(--light-green);
+}
+
+/* Filter modal styling */
+.modal-content {
+  border: none;
+  border-radius: 8px;
+}
+
+.modal-header {
+  background-color: var(--lighter-green);
+  border-bottom: 2px solid var(--light-green);
+}
+
+.modal-title {
+  color: var(--primary-green);
+  font-weight: 600;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--light-green);
+  box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+}
+
+/* Button styling */
+.btn-success {
+  background-color: var(--primary-green);
+  border: none;
+}
+
+.btn-success:hover {
+  background-color: var(--hover-green);
+}
+
+/* Loading spinner */
+.spinner-border {
+  color: var(--primary-green) !important;
+}
+
+/* Meta information styling */
+.text-muted {
+  color: #6c757d !important;
+}
+
+.meta-info {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--light-green);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-green);
+}

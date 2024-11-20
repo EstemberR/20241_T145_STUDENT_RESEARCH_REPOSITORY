@@ -141,6 +141,7 @@ body, .dashboard-container {
 }
 .zx {
   margin-right: 8px;
+  color: white;
 }
 
 .research-details .row {
@@ -273,3 +274,22 @@ body, .dashboard-container {
 .dropdown-item:hover {
   background-color: #f8f9fa;
 }
+  /* Default state - icons are white */
+  .nav-link .fas {
+    color: white !important; /* Override any other color settings */
+    margin-right: 8px;
+    transition: color 0.3s ease;
+  }
+
+  .nav-link.active .fas {
+    color: #4CAF50 !important;
+  }
+
+  .nav-link:hover .fas {
+    color: #000000 !important;
+  }
+
+  .zx {
+    margin-right: 8px;
+  }
+  
