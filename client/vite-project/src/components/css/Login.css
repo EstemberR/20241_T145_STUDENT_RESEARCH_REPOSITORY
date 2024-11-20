@@ -130,4 +130,14 @@ html, body {
     align-content: center;
     justify-content: center;
   }
+  .form-check {
+    text-align: left;
+    margin-left: 25%;  /* Aligns with the Google button */
+    width: 50%;        /* Matches the Google button width */
+}
+
+.user-section .form-check-label {
+    font-size: 0.9rem;
+    color: #666;
+}
   

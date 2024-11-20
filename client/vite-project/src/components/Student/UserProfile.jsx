@@ -29,6 +29,7 @@ const Profile = () => {
     email: '',
     role: ''
   });
+  const [profilePic, setProfilePic] = useState(null);
   const navigate = useNavigate();
 
   // Fetch profile data
@@ -67,6 +68,14 @@ const Profile = () => {
 
     fetchProfile();
   }, [navigate, updateUserName]);
+
+  useEffect(() => {
+    // Get profile picture from localStorage
+    const photoURL = localStorage.getItem('userPhoto');
+    if (photoURL) {
+      setProfilePic(photoURL);
+    }
+  }, []);
 
   // Toggle Edit Mode
   const handleEditToggle = () => {
@@ -134,13 +143,14 @@ const Profile = () => {
                 <div className="col-md-4 border-end text-center">
                   <div className="position-relative mb-4">
                     <img
-                      src={'https://via.placeholder.com/150'}
+                      src={profilePic || 'https://via.placeholder.com/150'}
                       alt="Profile"
                       className="rounded-circle shadow"
                       style={{ 
                         width: '150px', 
                         height: '150px',
-                        border: '4px solid #fff'
+                        border: '4px solid #fff',
+                        objectFit: 'cover'
                       }}
                     />
                     <div className="mt-3">

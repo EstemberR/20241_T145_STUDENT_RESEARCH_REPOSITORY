@@ -5,6 +5,7 @@ import { handleLogout } from './Utils.jsx';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../css/Dashboard.css';
 import '../../css/Dashboard2.css';
+import { logout } from './UtilCal.jsx';
 const Sidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "./css/Login.css";
@@ -9,8 +9,11 @@ import auth from './firebaseConfig';
 import ReCAPTCHA from "react-google-recaptcha";
 
 const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [credentials, setCredentials] = useState({
+        email: '',
+        password: '',
+        rememberMe: false
+    });
     const [userName, setUserName] = useState(null); 
     //Capcha
     const recaptchaVerified = useState(false); 
@@ -20,21 +23,35 @@ const Login = () => {
     const [alertType, setAlertType] = useState(''); // 'success' or 'danger'
     const [showAlert, setShowAlert] = useState(false);
 
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        const isGoogleUser = localStorage.getItem('isGoogleUser');
+
+        if (token && userRole) {
+            if (userRole === 'student') {
+                navigate('/student/dashboard');
+            } else if (userRole === 'instructor') {
+                navigate('/instructor/instructor_dashboard');
+            }
+        }
+    }, [navigate]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!recaptchaToken) {
             showAlertMessage("Please complete the ReCAPTCHA verification.", "danger");
             return;
         }
-        console.log('Login attempted with:', email, password);
+        console.log('Login attempted with:', credentials.email, credentials.password);
     
         try {
-            const response = await fetch('http://localhost:8000/api/admin-login', {
+            const response = await fetch('http://localhost:8000/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify(credentials),
             });
     
             const data = await response.json();
@@ -46,26 +63,16 @@ const Login = () => {
                     showAlertMessage('Your account is archived. Please contact the admin to restore your account.', 'warning');
                     return;
                 }
-                // Store both token and role
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('userRole', data.role);
-                localStorage.setItem('userName', data.name);
+                const storage = credentials.rememberMe ? localStorage : sessionStorage;
+                
+                storage.setItem('token', data.token);
+                storage.setItem('userName', data.name);
+                storage.setItem('userRole', data.role);
 
-                // Debug log
-                console.log('Stored credentials:', {
-                    token: !!data.token,
-                    role: data.role,
-                    name: data.name
-                });
-
-                if (data.role === 'student') {
-                    navigate('/student/dashboard');
-                } else if (data.role === 'instructor') {
-                    navigate('/instructor/instructor_dashboard');
-                } else if (data.role === 'admin') {
-                    navigate('/admin/admin_dashboard');
+                if (data.role === 'admin') {
+                    navigate('/admin/dashboard');
                 } else {
-                    showAlertMessage('Unknown user role', 'danger');
+                    navigate('/student/dashboard');
                 }
             } else {
                 console.error('Authentication failed:', data.error || 'Unknown error');
@@ -83,11 +90,14 @@ const Login = () => {
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
-    
+
+            // Get the profile picture URL
+            const photoURL = user.photoURL;
+
             if (!user.uid) {
                 throw new Error('User UID is null');
             }
-    
+
             const response = await fetch('http://localhost:8000/api/auth/google', {
                 method: 'POST',
                 headers: {
@@ -96,30 +106,27 @@ const Login = () => {
                 body: JSON.stringify({ 
                     name: user.displayName,
                     email: user.email,
-                    uid: user.uid 
+                    uid: user.uid,
+                    photoURL: photoURL  // Add this to send to backend
                 }),
             });
-    
+
             const data = await response.json(); 
-    
+
             if (response.ok) {
                 console.log('User authenticated successfully:', data);
                 const { token, role, name } = data;
 
-                // Store both token and role
-                localStorage.setItem('token', token);
-                localStorage.setItem('userRole', Array.isArray(role) ? role[0] : role);
+                // Store all necessary data including profile picture
+                localStorage.setItem('token', token); 
                 localStorage.setItem('userName', name);
-                setUserName(name);
+                localStorage.setItem('isGoogleUser', 'true');
+                localStorage.setItem('userEmail', user.email);
+                localStorage.setItem('userPhoto', photoURL);  // Store photo URL
 
-                // Debug log
-                console.log('Stored credentials:', {
-                    token: !!token,
-                    role: Array.isArray(role) ? role[0] : role,
-                    name: name
-                });
-
+                // Check if role is an array
                 const userRole = Array.isArray(role) ? role[0] : role;
+                localStorage.setItem('userRole', userRole);
 
                 if (userRole === 'student') {
                     navigate('/student/dashboard');
@@ -185,46 +192,69 @@ const Login = () => {
                     <h1 className="login-title">Student Research Repository System</h1>
                 </div>
 
-                <div className="user-section text-center">
-                    <h2 className="login-label">User Login</h2>
-                    <button onClick={handleGoogle} className="btn btn-google w-50 mb-3">
-                        <i className="fab fa-google me-2"></i>Login with Google
-                    </button>
-                </div>
-
-                <hr />
-
                 <div className="admin-section text-center">
-                    <h2 className="login-label">Admin Login</h2>
-                    <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm bg-white">
-                        <div className="form-group">
-                            <input
-                                type="email"
-                                className="form-control mb-3"
-                                placeholder="Email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                            />
+                        <div className="user-section text-center">
+                            <h2 className="login-label">User Login</h2>
+                            <div className="d-flex flex-column align-items-center">
+                                <button onClick={handleGoogle} className="btn btn-google w-50 mb-2">
+                                    <i className="fab fa-google me-2"></i>Login with Google
+                                </button>
+                                <div className="form-check mb-3">
+                                    <input
+                                        type="checkbox"
+                                        className="form-check-input"
+                                        id="rememberMe"
+                                        checked={credentials.rememberMe}
+                                        onChange={(e) => setCredentials(prev => ({
+                                            ...prev,
+                                            rememberMe: e.target.checked
+                                        }))}
+                                    />
+                                    <label className="form-check-label" htmlFor="rememberMe">
+                                        Keep me logged in
+                                    </label>
+                                </div>
+                            </div>
                         </div>
+
+                        <hr />
+                <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm bg-white">
+            
+                    <h2 className="login-label">Admin Login</h2>
+                    <div className="form-group">
+                        <input
+                            type="email"
+                            className="form-control mb-3"
+                            placeholder="Email"
+                            value={credentials.email}
+                            onChange={(e) => setCredentials(prev => ({
+                                ...prev,
+                                email: e.target.value
+                            }))}
+                            required
+                        />
+                    </div>
 
                         <div className="form-group">
                             <input
                                 type="password"
                                 className="form-control mb-3"
                                 placeholder="Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                value={credentials.password}
+                                onChange={(e) => setCredentials(prev => ({
+                                    ...prev,
+                                    password: e.target.value
+                                }))}
                                 required
                             />
                         </div>
 
-                        {/*ReCAPTCHA*/}
                         <ReCAPTCHA
                             className="ReCapcha"
                             sitekey="6LfhrXEqAAAAAGnZSuJmLvDYlaNiBtWojYht08wy"
                             onChange={handleRecaptchaChange}
                         />
+
                         <button type="submit" className="btn btn-submit w-50 mb-3">
                             Submit
                         </button>
