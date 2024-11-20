@@ -168,7 +168,7 @@ const AdminAccounts = () => {
       <div className="main-section col-10 d-flex flex-column">
         <Header userName={userName} />
         <main className="main-content">
-            <h4 className="my-3">User Accounts Management</h4>
+            <h4 className="my-3">USER ACCOUNTS MANAGEMENT</h4>
             <ul className="nav nav-tabs">
               <li className="nav-item">
                 <button

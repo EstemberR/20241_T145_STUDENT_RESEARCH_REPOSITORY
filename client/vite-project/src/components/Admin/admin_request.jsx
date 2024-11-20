@@ -147,7 +147,7 @@ const AdminRequest = () => {
       <div className="main-section col-10 d-flex flex-column">
         <Header userName={userName} />
         <main className="main-content">
-          <h4 className="my-3">Role Requests Data</h4>
+          <h4 className="my-3">ADVISER ROLE REQUESTS</h4>
           <div className="row">
             <div className="col-md-12">
               <div className="card p-3 chartBox">
