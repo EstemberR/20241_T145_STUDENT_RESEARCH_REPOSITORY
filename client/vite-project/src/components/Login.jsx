@@ -9,10 +9,11 @@ import auth from './firebaseConfig';
 import ReCAPTCHA from "react-google-recaptcha";
 
 const Login = () => {
+
     const [credentials, setCredentials] = useState({
         email: '',
         password: '',
-        rememberMe: false
+        rememberMe: true
     });
     const [userName, setUserName] = useState(null); 
     //Capcha
@@ -45,6 +46,7 @@ const Login = () => {
         }
         console.log('Login attempted with:', credentials.email, credentials.password);
 
+        setIsLoading(true); // START LOADING SCREEN
         try {
             const response = await fetch('http://localhost:8000/api/auth/admin-login', {
                 method: 'POST',
@@ -68,11 +70,14 @@ const Login = () => {
                     return;
                 }
 
-                // Store user data
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('userName', data.name);
-                localStorage.setItem('userRole', data.role);
-                localStorage.setItem('isAdminUser', 'true'); // Flag for admin users
+                // Use appropriate storage based on rememberMe
+                const storage = credentials.rememberMe ? localStorage : sessionStorage;
+                
+                // Store the data in the appropriate storage
+                storage.setItem('token', data.token);
+                storage.setItem('userName', data.name);
+                storage.setItem('userRole', data.role);
+                storage.setItem('isAdminUser', 'true');
 
                 // Navigate based on role
                 if (data.role === 'admin') {
@@ -94,6 +99,7 @@ const Login = () => {
     // Firebase Google login function
     const handleGoogle = async () => {
         const provider = new GoogleAuthProvider();
+
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
@@ -221,6 +227,7 @@ const Login = () => {
                                         Keep me logged in
                                     </label>
                                 </div>
+
                             </div>
                         </div>
 

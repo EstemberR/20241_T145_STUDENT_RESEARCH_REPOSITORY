@@ -8,6 +8,7 @@ import { useUser } from '../Instructor/resources/userContext';
 import '../css/Dashboard.css';
 import '../css/UserProfile.css';
 import ProfileCalendar from '../ProfileCalendar';
+import { alignPropType } from 'react-bootstrap/esm/types';
 
 const COURSES = [
   'BS-MATH',
@@ -126,7 +127,7 @@ const Profile = () => {
   };
 
   if (!profile) {
-    return <div>Loading...</div>; // Wait until profile data is loaded
+    return ; //White screen loading // Wait until profile data is loaded
   }
 
   return (

@@ -16,6 +16,8 @@ import Instructor from '../model/Instructor.js';
 import Student from '../model/Student.js'
 import driveRoutes from '../routes/driveRoutes.js';
 
+
+//MIDDLEWARE
 dotenv.config(); 
 const app = express();
 const PORT = process.env.PORT || 6000; 
