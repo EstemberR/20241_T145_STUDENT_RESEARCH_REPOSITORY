@@ -106,6 +106,15 @@ body, .dashboard-container {
   text-align: center; 
   padding: 10px; 
 }
+.user-role {
+  margin: 0;
+  font-size: 0.9em;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
 
 .researchBox1, .researchBox2, .researchBox3 {
   background-color: #b3ecc4; 

@@ -44,39 +44,46 @@ const Login = () => {
             return;
         }
         console.log('Login attempted with:', credentials.email, credentials.password);
-    
+
         try {
-            const response = await fetch('http://localhost:8000/auth/login', {
+            const response = await fetch('http://localhost:8000/api/auth/admin-login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(credentials),
+                body: JSON.stringify({ 
+                    email: credentials.email, 
+                    password: credentials.password,
+                    recaptchaToken: recaptchaToken
+                }),
             });
-    
+
             const data = await response.json();
             console.log('User response:', data);
-    
+
             if (response.ok) {
                 if (data.archived) {
-                    console.log('Account is archived');  // Debugging message
+                    console.log('Account is archived');
                     showAlertMessage('Your account is archived. Please contact the admin to restore your account.', 'warning');
                     return;
                 }
-                const storage = credentials.rememberMe ? localStorage : sessionStorage;
-                
-                storage.setItem('token', data.token);
-                storage.setItem('userName', data.name);
-                storage.setItem('userRole', data.role);
 
+                // Store user data
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userName', data.name);
+                localStorage.setItem('userRole', data.role);
+                localStorage.setItem('isAdminUser', 'true'); // Flag for admin users
+
+                // Navigate based on role
                 if (data.role === 'admin') {
-                    navigate('/admin/dashboard');
+                    navigate('/admin/admin_dashboard');
+                    showAlertMessage('Admin login successful', 'success');
                 } else {
-                    navigate('/student/dashboard');
+                    showAlertMessage('Invalid admin credentials', 'danger');
                 }
             } else {
-                console.error('Authentication failed:', data.error || 'Unknown error');
-                showAlertMessage(data.error || 'Authentication failed', 'danger');
+                console.error('Authentication failed:', data.message || 'Unknown error');
+                showAlertMessage(data.message || 'Authentication failed', 'danger');
             }
         } catch (error) {
             console.error('Error during login:', error);

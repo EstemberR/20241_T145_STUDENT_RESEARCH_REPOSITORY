@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../css/Dashboard.css';
 import '../../css/Dashboard2.css';
 
-const Header = ({ userName }) => {
+const Header = ({ userName, userRole }) => {
     const [profilePic, setProfilePic] = useState(null);
 
     useEffect(() => {
@@ -13,6 +13,17 @@ const Header = ({ userName }) => {
             setProfilePic(photoURL);
         }
     }, []);
+
+    // Helper function to format roles
+    const formatRoles = (roles) => {
+        if (!roles) return '';
+        if (Array.isArray(roles)) {
+            return roles.map(role => 
+                role.charAt(0).toUpperCase() + role.slice(1)
+            ).join(' & ');
+        }
+        return roles.charAt(0).toUpperCase() + roles.slice(1);
+    };
 
     return (
         <div className="top-row d-flex align-items-center">
@@ -32,7 +43,9 @@ const Header = ({ userName }) => {
                 )}
                 <div className="user-details">
                     <p className="user-name">{userName}</p>
-                    <p className="user-role">Instructor</p>
+                    <p className="user-role" style={{ color: '#666' }}>
+                        {formatRoles(userRole)}
+                    </p>
                 </div>
             </div>
         </div>

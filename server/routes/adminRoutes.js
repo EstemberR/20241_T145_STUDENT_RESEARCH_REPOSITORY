@@ -229,4 +229,27 @@ adminRoutes.put('/adviser-requests/:id/status', authenticateToken, async (req, r
   }
 });
 
+adminRoutes.get('/user-counts', authenticateToken, async (req, res) => {
+  try {
+    const studentCount = await Student.countDocuments({ archived: false });
+    const instructorCount = await Instructor.countDocuments({ 
+      archived: false,
+      role: 'instructor'
+    });
+    const adviserCount = await Instructor.countDocuments({
+      archived: false,
+      role: { $in: ['adviser'] }
+    });
+
+    res.status(200).json({
+      students: studentCount,
+      instructors: instructorCount,
+      advisers: adviserCount
+    });
+  } catch (error) {
+    console.error('Error fetching user counts:', error);
+    res.status(500).json({ message: 'Error fetching user counts' });
+  }
+});
+
 export default adminRoutes;

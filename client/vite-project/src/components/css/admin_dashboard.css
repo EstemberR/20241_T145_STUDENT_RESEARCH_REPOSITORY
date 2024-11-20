@@ -181,6 +181,18 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
+}
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.rounded-circle {
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -194,7 +206,6 @@
   font-weight: 600;
 }
 
-/* Custom subtle background colors */
 .bg-primary-subtle {
   background-color: rgba(13, 110, 253, 0.1);
 }
@@ -207,7 +218,6 @@
   background-color: rgba(25, 135, 84, 0.1);
 }
 
-/* Text colors for badges */
 .text-primary {
   color: #0d6efd;
 }
@@ -220,9 +230,16 @@
   color: #198754;
 }
 
-/* Responsive font sizes */
 @media (max-width: 768px) {
   .display-5 {
     font-size: 2rem;
   }
+.main-content {
+  padding: 20px;
+  background-color: #f8f9fa;
+}
+
+.shadow-sm {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
 }

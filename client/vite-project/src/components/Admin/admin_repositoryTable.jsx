@@ -48,7 +48,7 @@ useEffect(() => {
 {/*------------------------------------------sTATIC DATA----------------------------------------------------*/}
        {/* Research Repository Table */}
        <div className="container">
-          <h4 className="my-3">Research Repository Table</h4>
+          <h4 className="my-3">RESEARCH REPOSITORY TABLE</h4>
           <ul className="nav nav-tabs">
             <li className="nav-item pending">
               <button
