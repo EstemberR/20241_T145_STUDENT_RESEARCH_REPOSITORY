@@ -69,6 +69,9 @@ studentRoutes.post('/submit-research', authenticateToken, async (req, res) => {
         if (!student) {
             return res.status(404).json({ message: 'Student not found' });
         }
+        if (!student.course) {
+            return res.status(400).json({ message: 'Please set your course in your profile before submitting research' });
+        }
 
         console.log('Student found:', student); // Debug log
 
@@ -79,6 +82,7 @@ studentRoutes.post('/submit-research', authenticateToken, async (req, res) => {
             abstract: req.body.abstract,
             authors: req.body.authors,
             keywords: req.body.keywords,
+            course: student.course, // Add course from student profile
             fileUrl: req.body.fileUrl,
             driveFileId: req.body.driveFileId,
             status: 'Pending',
@@ -120,6 +124,54 @@ studentRoutes.get('/research', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Error fetching research:', error);
         res.status(500).json({ message: 'Error fetching research' });
+    }
+});
+
+// Add this new route to get all research papers
+studentRoutes.get('/all-research', authenticateToken, async (req, res) => {
+    try {
+        const research = await Research.find({ 
+            status: 'Accepted' 
+        })
+        .populate('student', 'name')
+        .sort({ uploadDate: -1 });
+        
+        res.json(research);
+    } catch (error) {
+        console.error('Error fetching research:', error);
+        res.status(500).json({ message: 'Error fetching research' });
+    }
+});
+
+// Add this route to get a single research paper
+studentRoutes.get('/research/:id', authenticateToken, async (req, res) => {
+    try {
+        const research = await Research.findById(req.params.id)
+            .populate('student', 'name');
+        
+        if (!research) {
+            return res.status(404).json({ message: 'Research not found' });
+        }
+        
+        res.json(research);
+    } catch (error) {
+        console.error('Error fetching research:', error);
+        res.status(500).json({ message: 'Error fetching research' });
+    }
+});
+
+// Get all students for author selection
+studentRoutes.get('/all-students', authenticateToken, async (req, res) => {
+    try {
+        const students = await Student.find(
+            { archived: false }, 
+            'name studentId course' // Only send necessary fields
+        ).sort({ name: 1 });
+        
+        res.json(students);
+    } catch (error) {
+        console.error('Error fetching students:', error);
+        res.status(500).json({ message: 'Error fetching students' });
     }
 });
 

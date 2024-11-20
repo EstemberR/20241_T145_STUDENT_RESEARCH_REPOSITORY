@@ -33,6 +33,9 @@ const MyResearch = () => {
 
   const [activeTab, setActiveTab] = useState(RESEARCH_STATUS.PENDING);
   const [selectedResearch, setSelectedResearch] = useState(null);
+  const [availableAuthors, setAvailableAuthors] = useState([]);
+  const [selectedAuthors, setSelectedAuthors] = useState([]);
+  const [authorSearchTerm, setAuthorSearchTerm] = useState('');
 
   const fetchResearchEntries = async () => {
     try {
@@ -99,6 +102,28 @@ const MyResearch = () => {
     fetchStudentInfo();
   }, []);
 
+  useEffect(() => {
+    const fetchAuthors = async () => {
+      try {
+        const token = getToken();
+        const response = await fetch('http://localhost:8000/student/all-students', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch students');
+        
+        const data = await response.json();
+        setAvailableAuthors(data);
+      } catch (error) {
+        console.error('Error fetching authors:', error);
+      }
+    };
+
+    fetchAuthors();
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -127,6 +152,15 @@ const MyResearch = () => {
     e.stopPropagation();
   };
 
+  const handleAddNewClick = () => {
+    if (!studentInfo?.course) {
+      alert('Please set your course in your profile before submitting research.');
+      navigate('/profile');
+      return;
+    }
+    setShowForm(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -141,13 +175,26 @@ const MyResearch = () => {
         return;
       }
 
-      // First upload file
-      const fileFormData = new FormData();
-      fileFormData.append('file', file);
+      if (!studentInfo.course) {
+        alert('Please set your course in your profile before submitting research.');
+        navigate('/profile');
+        return;
+      }
+
+      // Create form data with course included
+      const formDataToSubmit = new FormData();
+      formDataToSubmit.append('file', file);
+      formDataToSubmit.append('title', formData.title);
+      formDataToSubmit.append('abstract', formData.abstract);
+      formDataToSubmit.append('authors', selectedAuthors.map(author => author.name).join(', '));
+      formDataToSubmit.append('keywords', formData.keywords);
+      formDataToSubmit.append('course', studentInfo.course);
+      formDataToSubmit.append('status', 'Pending');
+      formDataToSubmit.append('uploadDate', new Date().toISOString());
 
       const fileUploadResponse = await fetch('http://localhost:8000/api/auth/google-drive', {
         method: 'POST',
-        body: fileFormData,
+        body: formDataToSubmit,
       });
 
       if (!fileUploadResponse.ok) {
@@ -167,11 +214,11 @@ const MyResearch = () => {
         body: JSON.stringify({
           title: formData.title,
           abstract: formData.abstract,
-          authors: formData.authors,
+          authors: selectedAuthors.map(author => author.name).join(', '),
           keywords: formData.keywords,
           fileUrl: `https://drive.google.com/file/d/${fileResult.fileId}/view`,
           driveFileId: fileResult.fileId,
-          uploadDate: formData.uploadDate
+          uploadDate: new Date().toISOString()
         })
       });
 
@@ -229,6 +276,7 @@ const MyResearch = () => {
           <h4 className="my-3">STUDENT SUBMISSIONS</h4>
           <button 
               className="btn btn-success" 
+              onClick={handleAddNewClick}
               data-bs-toggle="modal" 
               data-bs-target="#submitResearchModal"
             >
@@ -354,7 +402,7 @@ const MyResearch = () => {
                                     </td>
                                     <td>
                                       <button 
-                                          className="btn btn-sm btn-info me-2"
+                                          className="btn btn-sm btn-success"
                                           onClick={() => handleViewResearch(research)}
                                           data-bs-toggle="modal"
                                           data-bs-target="#viewResearchModal"
@@ -409,17 +457,50 @@ const MyResearch = () => {
 
                     <div className="mb-3">
                       <label htmlFor="authors" className="form-label" style={{marginLeft: '5%'}}>Authors</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="authors"
-                        name="authors"
-                        value={formData.authors}
-                        onChange={handleInputChange}
-                        placeholder="Separate multiple authors with commas"
-                        required
-                        style={{width: '90%', marginLeft: '5%'}}
-                      />
+                      <div className="position-relative" style={{width: '90%', marginLeft: '5%'}}>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search authors..."
+                          value={authorSearchTerm}
+                          onChange={(e) => setAuthorSearchTerm(e.target.value)}
+                        />
+                        <div className="selected-authors mt-2">
+                          {selectedAuthors.map(author => (
+                            <span key={author._id} className="badge bg-primary me-2 mb-2">
+                              {author.name}
+                              <button 
+                                type="button"
+                                className="btn-close btn-close-white ms-2"
+                                style={{ fontSize: '0.5rem' }}
+                                onClick={() => setSelectedAuthors(prev => prev.filter(a => a._id !== author._id))}
+                              ></button>
+                            </span>
+                          ))}
+                        </div>
+                        {authorSearchTerm && (
+                          <div className="dropdown-menu show position-absolute w-100">
+                            {availableAuthors
+                              .filter(author => 
+                                author.name.toLowerCase().includes(authorSearchTerm.toLowerCase()) &&
+                                !selectedAuthors.find(selected => selected._id === author._id)
+                              )
+                              .map(author => (
+                                <button
+                                  key={author._id}
+                                  type="button"
+                                  className="dropdown-item"
+                                  onClick={() => {
+                                    setSelectedAuthors(prev => [...prev, author]);
+                                    setAuthorSearchTerm('');
+                                  }}
+                                >
+                                  {author.name} - {author.studentId}
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="row">
@@ -451,23 +532,6 @@ const MyResearch = () => {
                             placeholder="Separate keywords with commas"
                             required
                           />
-                        </div>
-
-                        <div className="mb-3">
-                          <label htmlFor="status" className="form-label">Research Status</label>
-                          <select
-                            className="form-select"
-                            id="status"
-                            name="status"
-                            value={formData.status}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value={RESEARCH_STATUS.PENDING}>{RESEARCH_STATUS.PENDING}</option>
-                            <option value={RESEARCH_STATUS.APPROVED}>{RESEARCH_STATUS.APPROVED}</option>
-                            <option value={RESEARCH_STATUS.REVISE}>{RESEARCH_STATUS.REVISE}</option>
-                            <option value={RESEARCH_STATUS.REJECTED}>{RESEARCH_STATUS.REJECTED}</option>
-                          </select>
                         </div>
 
                         <div className="mb-3">

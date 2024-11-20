@@ -14,8 +14,13 @@ const ResearchCard = ({ research, onViewDetails }) => (
       <div className="card-body">
         <h5 className="card-title">{research.title}</h5>
         <p className="card-text">
-          <strong>Student:</strong> {research.studentName}<br />
-          <strong>Status:</strong> <span className={`badge bg-${research.status === 'Pending' ? 'warning' : research.status === 'Accepted' ? 'success' : 'danger'}`}>
+          <strong>Student:</strong> {research.student?.name}<br />
+          <strong>Course:</strong> {research.student?.course}<br />
+          <strong>Status:</strong> <span className={`badge bg-${
+            research.status === 'Pending' ? 'warning' : 
+            research.status === 'Accepted' ? 'success' : 
+            research.status === 'Revision' ? 'info' : 'danger'
+          }`}>
             {research.status}
           </span>
         </p>
@@ -202,8 +207,23 @@ const AdviserResearches = () => {
                           <p>{selectedResearch.authors}</p>
                         </div>
                         <div className="col-md-6">
+                          <p><strong>Course:</strong></p>
+                          <p>{selectedResearch.student?.course}</p>
+                        </div>
+                      </div>
+
+                      <div className="row mb-3">
+                        <div className="col-md-6">
                           <p><strong>Keywords:</strong></p>
                           <p>{selectedResearch.keywords}</p>
+                        </div>
+                        <div className="col-md-6">
+                          <p><strong>Submission Date:</strong></p>
+                          <p>{new Date(selectedResearch.uploadDate).toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}</p>
                         </div>
                       </div>
 
@@ -215,15 +235,28 @@ const AdviserResearches = () => {
                       </div>
 
                       <div className="row mb-3">
-                        <div className="col-md-6">
-                          <p><strong>Submission Date:</strong></p>
-                          <p>{new Date(selectedResearch.uploadDate).toLocaleDateString('en-US', {
-                            month: '2-digit',
-                            day: '2-digit',
-                            year: 'numeric'
-                          })}</p>
+                        <div className="col-12">
+                          <p><strong>Student Information:</strong></p>
+                          <div className="row">
+                            <div className="col-md-6">
+                              <p>
+                                <strong>Name:</strong> {selectedResearch.student?.name || 'N/A'}<br />
+                                <strong>Student ID:</strong> {selectedResearch.student?.studentId || selectedResearch.studentId || 'N/A'}<br />
+                                <strong>Course:</strong> {selectedResearch.student?.course || selectedResearch.course || 'N/A'}
+                              </p>  
+                            </div>
+                            <div className="col-md-6">
+                              <p>
+                                <strong>Email:</strong> {selectedResearch.student?.email || 'N/A'}<br />
+                                <strong>Section:</strong> {selectedResearch.student?.section || 'N/A'}
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="col-md-6">
+                      </div>
+
+                      <div className="row mb-3">
+                        <div className="col-12">
                           <p><strong>File:</strong></p>
                           <div className="d-flex align-items-center">
                             <i className="fas fa-file-pdf text-danger me-2"></i>
@@ -238,17 +271,6 @@ const AdviserResearches = () => {
                               Open File
                             </a>
                           </div>
-                        </div>
-                      </div>
-
-                      <div className="row mb-3">
-                        <div className="col-12">
-                          <p><strong>Student Information:</strong></p>
-                          <p>
-                            Name: {selectedResearch.studentName}<br />
-                            Email: {selectedResearch.studentEmail}<br />
-                            Student ID: {selectedResearch.studentId}
-                          </p>
                         </div>
                       </div>
 

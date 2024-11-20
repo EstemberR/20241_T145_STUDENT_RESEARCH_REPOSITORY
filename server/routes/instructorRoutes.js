@@ -322,16 +322,15 @@ instructorRoutes.get('/adviser-requests', authenticateToken, async (req, res) =>
 // Get researches where the instructor is the adviser
 instructorRoutes.get('/advised-researches', authenticateToken, async (req, res) => {
     try {
-        const instructorId = req.user.userId;
-        
-        const researches = await Research.find({ 
-            adviser: instructorId 
-        }).populate({
-            path: 'mongoId',
-            model: 'Student',
-            select: 'name email studentId'
-        }).sort({ uploadDate: -1 });
+        const researches = await Research.find({ adviser: req.user.userId })
+            .populate({
+                path: 'student',
+                select: 'name email studentId course section'
+            })
+            .populate('mongoId', 'name email studentId course section')
+            .sort({ uploadDate: -1 });
 
+        // Transform the data to ensure all fields are present
         const transformedResearches = researches.map(research => ({
             _id: research._id,
             title: research.title,
@@ -339,18 +338,23 @@ instructorRoutes.get('/advised-researches', authenticateToken, async (req, res) 
             authors: research.authors,
             keywords: research.keywords,
             status: research.status,
-            comments: research.comments,
             uploadDate: research.uploadDate,
             driveFileId: research.driveFileId,
-            studentName: research.mongoId?.name || 'Unknown',
-            studentEmail: research.mongoId?.email || 'Unknown',
-            studentId: research.studentId
+            fileName: research.fileName,
+            comments: research.comments,
+            student: {
+                name: research.student?.name || research.mongoId?.name,
+                email: research.student?.email || research.mongoId?.email,
+                studentId: research.student?.studentId || research.mongoId?.studentId,
+                course: research.student?.course || research.mongoId?.course,
+                section: research.student?.section || research.mongoId?.section
+            }
         }));
 
-        res.status(200).json(transformedResearches);
+        res.json(transformedResearches);
     } catch (error) {
         console.error('Error fetching advised researches:', error);
-        res.status(500).json({ message: 'Error fetching advised researches' });
+        res.status(500).json({ message: 'Error fetching researches' });
     }
 });
 

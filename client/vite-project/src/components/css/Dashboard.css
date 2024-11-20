@@ -232,3 +232,44 @@ body, .dashboard-container {
       margin-bottom: 2rem;
   }
 }
+
+.research-card {
+  transition: transform 0.2s ease-in-out;
+  border: none;
+  border-radius: 10px;
+}
+
+.research-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.abstract-preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.card-title {
+  color: #2c3e50;
+  font-weight: 600;
+}
+.selected-authors {
+  min-height: 38px;
+}
+
+.dropdown-menu {
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1050;
+}
+
+.dropdown-item {
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}

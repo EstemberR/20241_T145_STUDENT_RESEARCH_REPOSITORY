@@ -8,6 +8,7 @@ import FAQ from './components/Student/FAQ';
 import Notification from './components/Student/Notification';
 import Repository from './components/Student/ResearchRepository';
 import Profile from './components/Student/UserProfile';
+import ResearchDetails from './components/Student/ResearchDetail';
 
 import InstructorDashboard from './components/Instructor/instructor_dashboard';
 import InstructorNotification from './components/Instructor/instructor_notification';
@@ -43,6 +44,7 @@ function App() {
           <Route path="/student/FAQ" element={<FAQ />} />
           <Route path="/student/notifications" element={<Notification />} />
           <Route path="/student/logout" element={<Navigate to="/" replace />} />
+          <Route path="/repository/:id" element={<ResearchDetails />} />
         </Route>
 
         {/* Instructor Protected Routes */}

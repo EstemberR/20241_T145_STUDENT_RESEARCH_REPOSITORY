@@ -62,6 +62,11 @@ const researchSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Instructor',
     default: null
+  },
+  course: {
+    type: String,
+    enum: ['BS-MATH', 'BS-ES', 'BSDC', 'BSCD', 'BS-BIO', 'AB-SOCSCI', 'AB-SOCIO', 'AB-PHILO'],
+    required: true
   }
 }, { 
     timestamps: true,
