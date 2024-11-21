@@ -39,8 +39,13 @@ const Sidebar = () => {
         </Link>
       </li>
       <li className="nav-item">
-      <Link className={`nav-link ${location.pathname === '/student/FAQ' ? 'active' : ''}`} to="/student/FAQ">
-      <i className="fas fa-robot search zx"></i> FAQ
+        <Link className={`nav-link ${location.pathname === '/student/project-members' ? 'active' : ''}`} to="/student/project-members">
+          <i className="fas fa-users search zx"></i> Project Members
+        </Link>
+      </li>
+      <li className="nav-item">
+        <Link className={`nav-link ${location.pathname === '/student/FAQ' ? 'active' : ''}`} to="/student/FAQ">
+          <i className="fas fa-robot search zx"></i> FAQ
         </Link>
       </li>
       <li className="nav-item">

@@ -9,6 +9,7 @@ import Notification from './components/Student/Notification';
 import Repository from './components/Student/ResearchRepository';
 import Profile from './components/Student/UserProfile';
 import ResearchDetails from './components/Student/ResearchDetail';
+import ManageMember from './components/Student/ManageMember';
 
 import InstructorDashboard from './components/Instructor/instructor_dashboard';
 import InstructorNotification from './components/Instructor/instructor_notification';
@@ -44,6 +45,7 @@ function App() {
           <Route path="/student/profile" element={<Profile />} />
           <Route path="/student/myResearch" element={<MyResearch />} />
           <Route path="/student/FAQ" element={<FAQ />} />
+          <Route path="/student/project-members" element={<ManageMember />} />
           <Route path="/student/notifications" element={<Notification />} />
           <Route path="/student/logout" element={<Navigate to="/" replace />} />
           <Route path="/repository/:id" element={<ResearchDetails />} />

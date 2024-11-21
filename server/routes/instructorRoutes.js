@@ -4,6 +4,7 @@ import authenticateToken from '../middleware/authenticateToken.js';
 import Research from '../model/Research.js';
 import Student from '../model/Student.js';
 import AdviserRequest from '../model/AdviserRequest.js';
+import Notification from '../model/Notification.js';
 
 const instructorRoutes = express.Router();
 
@@ -386,6 +387,154 @@ instructorRoutes.post('/research/:id/feedback', authenticateToken, async (req, r
     } catch (error) {
         console.error('Error submitting feedback:', error);
         res.status(500).json({ message: 'Error submitting feedback' });
+    }
+});
+
+// Get team requests
+instructorRoutes.get('/team-requests', authenticateToken, async (req, res) => {
+    try {
+        const instructorId = req.user.userId;
+        
+        // Get all requests including handled ones
+        const requests = await Notification.find({
+            recipient: instructorId,
+            recipientModel: 'Instructor',
+            type: 'TEAM_REQUEST'
+        }).sort({ timestamp: -1 });  // Sort by newest first
+
+        // Get all student IDs from the requests
+        const studentIds = requests.flatMap(req => [
+            ...(req.relatedData.teamMembers || []),
+            req.relatedData.studentId
+        ]).filter(id => id); // Filter out any null/undefined values
+
+        // Fetch all student details in one query
+        const students = await Student.find({
+            _id: { $in: studentIds }
+        }).select('name studentId email');
+
+        // Create a map for quick lookup
+        const studentMap = new Map(
+            students.map(s => [s._id.toString(), s])
+        );
+
+        // Transform the requests with actual student details
+        const transformedRequests = requests.map(request => {
+            const requestObj = request.toObject();
+            
+            // Transform the requesting student's details
+            if (requestObj.relatedData.studentId) {
+                const student = studentMap.get(requestObj.relatedData.studentId.toString());
+                if (student) {
+                    requestObj.relatedData.studentId = {
+                        _id: student._id,
+                        name: student.name,
+                        studentId: student.studentId,
+                        email: student.email
+                    };
+                }
+            }
+
+            // Transform team members' details
+            requestObj.relatedData.teamMembers = (requestObj.relatedData.teamMembers || [])
+                .map(memberId => {
+                    const student = studentMap.get(memberId.toString());
+                    return student ? {
+                        _id: student._id,
+                        name: student.name,
+                        studentId: student.studentId
+                    } : null;
+                })
+                .filter(member => member); // Remove any null values
+
+            return requestObj;
+        });
+
+        res.json(transformedRequests);
+    } catch (error) {
+        console.error('Error fetching team requests:', error);
+        res.status(500).json({ 
+            message: 'Error fetching requests',
+            error: error.message 
+        });
+    }
+});
+
+// Handle team request
+instructorRoutes.put('/team-requests/:requestId/handle', authenticateToken, async (req, res) => {
+    try {
+        const { requestId } = req.params;
+        const { status, message } = req.body;
+        const instructorId = req.user.userId;
+
+        const request = await Notification.findById(requestId)
+            .populate('relatedData.studentId')
+            .populate('relatedData.teamMembers');
+
+        if (!request) {
+            return res.status(404).json({ message: 'Request not found' });
+        }
+
+        // Update notification status
+        request.status = status;
+        if (message) request.relatedData.rejectMessage = message;
+        await request.save();
+
+        if (status === 'APPROVED') {
+            try {
+                // Fetch all team member details
+                const teamMembers = await Student.find({
+                    _id: { $in: request.relatedData.teamMembers }
+                });
+
+                // Format team members as strings with name and ID
+                const formattedTeamMembers = teamMembers.map(member => 
+                    `${member.name} (${member.studentId})`
+                );
+
+                // Create or update research entry
+                const research = await Research.findOneAndUpdate(
+                    { mongoId: request.relatedData.studentId._id },
+                    { 
+                        adviser: instructorId,
+                        mongoId: request.relatedData.studentId._id,
+                        studentId: request.relatedData.studentId.studentId,
+                        teamMembers: formattedTeamMembers
+                    },
+                    { 
+                        new: true,
+                        upsert: true
+                    }
+                );
+
+                // Update all students' managedBy field
+                await Student.updateMany(
+                    { _id: { $in: [...request.relatedData.teamMembers, request.relatedData.studentId._id] } },
+                    { 
+                        $set: { 
+                            managedBy: instructorId
+                        }
+                    }
+                );
+
+                console.log('Updated research:', research);
+            } catch (updateError) {
+                console.error('Error in approval updates:', updateError);
+                throw updateError;
+            }
+        }
+
+        res.json({ 
+            success: true, 
+            request,
+            message: `Request ${status.toLowerCase()} successfully`
+        });
+    } catch (error) {
+        console.error('Error handling team request:', error);
+        res.status(500).json({ 
+            message: 'Error processing request',
+            error: error.message 
+        });
     }
 });
 

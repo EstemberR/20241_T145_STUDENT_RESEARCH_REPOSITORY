@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
@@ -6,309 +6,270 @@ import { getUserName, getToken } from './resources/Utils';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
-import '../css/admin_dashboard.css';
-
-const getStatusBadgeClass = (status) => {
-  switch (status) {
-    case 'pending': return 'bg-warning';
-    case 'approved': return 'bg-success';
-    case 'rejected': return 'bg-danger';
-    default: return 'bg-secondary';
-  }
-};
-
-// Table component for requests
-const RequestTable = ({ requests }) => (
-  <div className="table-responsive">
-    <table className="table table-hover">
-      <thead>
-        <tr>
-          <th>Research Title</th>
-          <th>Message</th>
-          <th>Date Requested</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {requests.length === 0 ? (
-          <tr>
-            <td colSpan="4" className="text-center">No requests found</td>
-          </tr>
-        ) : (
-          requests.map((request) => (
-            <tr key={request._id}>
-              <td>{request.researchTitle}</td>
-              <td>{request.message}</td>
-              <td>{new Date(request.createdAt).toLocaleDateString()}</td>
-              <td>
-                <span className={`badge ${getStatusBadgeClass(request.status)}`}>
-                  {request.status}
-                </span>
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </div>
-);
 
 const InstructorRequest = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
-  const [userRole, setUserRole] = useState([]);
-  const [researchList, setResearchList] = useState([]);
   const [requests, setRequests] = useState([]);
-  const [selectedResearch, setSelectedResearch] = useState("");
-  const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoadingResearch, setIsLoadingResearch] = useState(true);
-  const [activeTab, setActiveTab] = useState('pending');
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('UNREAD');
+  const [rejectMessage, setRejectMessage] = useState('');
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [userRole, setUserRole] = useState('');
 
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      try {
-        const token = getToken();
-        if (!token) {
-          localStorage.removeItem('userName');
-          localStorage.removeItem('token');
-          alert('Please log in first.');
-          navigate('/');
-          return;
-        }
-        const response = await fetch('http://localhost:8000/instructor/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
-        if (response.ok) {
-          setUserRole(data.role || 'Instructor');
-        }
-      } catch (error) {
-        console.error('Error fetching user role:', error);
-        setUserRole('Instructor');
-      }
-    };
-
-    const token = getToken();
-    fetchUserRole();
-    fetchData(token);
-  }, [navigate]);
-
-  const fetchData = async (token) => {
+  const fetchRequests = useCallback(async () => {
     try {
-      const [researchResponse, requestsResponse] = await Promise.all([
-        fetch('http://localhost:8000/instructor/available-research', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch('http://localhost:8000/instructor/adviser-requests', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      ]);
-
-      if (!researchResponse.ok || !requestsResponse.ok) {
-        throw new Error('Failed to fetch data');
+      const token = getToken();
+      if (!token) {
+        navigate('/');
+        return;
       }
 
-      const [researchData, requestsData] = await Promise.all([
-        researchResponse.json(),
-        requestsResponse.json()
-      ]);
+      const response = await fetch('http://localhost:8000/instructor/team-requests', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-      setResearchList(researchData);
-      setRequests(requestsData);
+      if (!response.ok) throw new Error('Failed to fetch requests');
+      
+      const data = await response.json();
+      setRequests(data);
     } catch (error) {
       console.error('Error:', error);
-      setError('Failed to load data');
+      alert('Error fetching requests');
     } finally {
-      setIsLoadingResearch(false);
+      setLoading(false);
     }
-  };
+  }, [navigate]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!selectedResearch) {
-      setError("Please select a research project");
-      return;
-    }
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
 
-    setIsLoading(true);
-    setError("");
-
+  const handleRequest = async (requestId, status) => {
     try {
-      const selectedResearchTitle = researchList.find(r => r._id === selectedResearch)?.title;
+      console.log('Starting request handling...', { requestId, status });
+      setLoading(true);
+      const token = getToken();
+      console.log('Token retrieved:', token ? 'Valid token' : 'No token');
 
-      const response = await fetch('http://localhost:8000/instructor/adviser-request', {
-        method: 'POST',
+      // Close modal if rejecting
+      if (status === 'REJECTED') {
+        console.log('Closing reject modal...');
+        const modal = document.getElementById('rejectModal');
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (modal) modal.style.display = 'none';
+        if (backdrop) backdrop.remove();
+        document.body.classList.remove('modal-open');
+      }
+
+      console.log('Sending request to server...', {
+        url: `http://localhost:8000/instructor/team-requests/${requestId}/handle`,
+        method: 'PUT',
+        status,
+        hasMessage: !!rejectMessage
+      });
+
+      const response = await fetch(`http://localhost:8000/instructor/team-requests/${requestId}/handle`, {
+        method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getToken()}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          researchId: selectedResearch,
-          message: message
+          status,
+          message: status === 'REJECTED' ? rejectMessage : ''
         })
       });
 
+      console.log('Server response received:', {
+        status: response.status,
+        ok: response.ok
+      });
+
+      const data = await response.json();
+      console.log('Response data:', data);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Request failed');
+        throw new Error(data.message || 'Failed to process request');
       }
 
-      // Refresh the requests list
-      const token = getToken();
-      await fetchData(token);
+      console.log('Updating local state...');
+      // Update local state
+      setRequests(prev => {
+        const updated = prev.map(req => 
+          req._id === requestId ? { ...req, status } : req
+        );
+        console.log('New requests state:', updated);
+        return updated;
+      });
 
-      // Reset form
-      setSelectedResearch("");
-      setMessage("");
+      // Reset states
+      console.log('Resetting form states...');
+      setRejectMessage('');
+      setSelectedRequest(null);
       
-      // Close modal
-      const modalElement = document.getElementById('requestModal');
-      if (modalElement) {
-        const bootstrapModal = bootstrap.Modal.getInstance(modalElement);
-        if (bootstrapModal) {
-          bootstrapModal.hide();
-        }
-      }
-
-      alert('Request submitted successfully!');
-    } catch (err) {
-      setError(err.message || "Failed to submit request");
+      // Switch to new tab
+      console.log('Switching to tab:', status);
+      setActiveTab(status);
+      
+      alert(`Request ${status.toLowerCase()} successfully`);
+    } catch (error) {
+      console.error('Detailed error information:', {
+        message: error.message,
+        stack: error.stack,
+        error
+      });
+      alert('Error processing request: ' + error.message);
     } finally {
-      setIsLoading(false);
+      console.log('Request handling completed');
+      setLoading(false);
     }
   };
 
-  const filteredRequests = requests.filter(request => request.status === activeTab);
+  const filteredRequests = requests.filter(request => 
+    activeTab === 'ALL' ? true : request.status === activeTab
+  );
+
+  // Add this helper function to format team members
+  const formatTeamMembers = (teamMembers) => {
+    if (!teamMembers || !Array.isArray(teamMembers)) return 'No members';
+    return teamMembers
+      .map(member => `${member.name} (${member.studentId})`)
+      .join(', ');
+  };
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
-      <div className="main-section col-10 d-flex flex-column">
-      <Header userName={userName} userRole={userRole} />
-        
-        <main className="main-content p-4">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h4>ADVISER REQUESTS</h4>
-            <button 
-              className="btn btn-success" 
-              data-bs-toggle="modal" 
-              data-bs-target="#requestModal"
-            >
-              <i className="fas fa-plus me-2"></i>New Request
-            </button>
+      <div className="main-section col-10">
+        <Header userName={userName} userRole={userRole} />
+        <main className="p-4">
+          <div className="mb-4">
+            <h4>Team Formation Requests</h4>
           </div>
 
           <ul className="nav nav-tabs mb-4">
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'pending' ? 'active' : ''}`}
-                onClick={() => setActiveTab('pending')}
-              >
-                Pending
-                <span className="badge bg-warning ms-2">
-                  {requests.filter(r => r.status === 'pending').length}
-                </span>
-              </button>
-            </li>
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'approved' ? 'active' : ''}`}
-                onClick={() => setActiveTab('approved')}
-              >
-                Approved
-                <span className="badge bg-success ms-2">
-                  {requests.filter(r => r.status === 'approved').length}
-                </span>
-              </button>
-            </li>
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'rejected' ? 'active' : ''}`}
-                onClick={() => setActiveTab('rejected')}
-              >
-                Rejected
-                <span className="badge bg-danger ms-2">
-                  {requests.filter(r => r.status === 'rejected').length}
-                </span>
-              </button>
-            </li>
+            {['UNREAD', 'APPROVED', 'REJECTED'].map(tab => (
+              <li key={tab} className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === tab ? 'active' : ''}`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab}
+                  <span className={`badge ms-2 ${
+                    tab === 'UNREAD' ? 'bg-warning' :
+                    tab === 'APPROVED' ? 'bg-success' : 'bg-danger'
+                  }`}>
+                    {requests.filter(r => r.status === tab).length}
+                  </span>
+                </button>
+              </li>
+            ))}
           </ul>
 
           <div className="card">
             <div className="card-body">
-              <RequestTable requests={filteredRequests} />
-            </div>
-          </div>
-
-          <div className="modal fade" id="requestModal" tabIndex="-1" aria-hidden="true">
-            <div className="modal-dialog">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">New Adviser Request</h5>
-                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div className="modal-body">
-                  <form id="requestForm" onSubmit={handleSubmit}>
-                    {error && <div className="alert alert-danger mb-3">{error}</div>}
-                    <div className="mb-3">
-                      <label htmlFor="researchSelect" className="form-label">Select Research to Apply As Adviser</label>
-                      <select 
-                        id="researchSelect" 
-                        className="form-select" 
-                        value={selectedResearch} 
-                        onChange={(e) => setSelectedResearch(e.target.value)}
-                        disabled={isLoadingResearch}
-                      >
-                        <option value="">
-                          {isLoadingResearch ? "Loading research projects..." : "Choose a research project..."}
-                        </option>
-                        {researchList.map((research) => (
-                          <option key={research._id} value={research._id}>
-                            {research.title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="mb-3">
-                      <label htmlFor="adviserMessage" className="form-label">Message to Admin (Optional)</label>
-                      <textarea
-                        id="adviserMessage"
-                        className="form-control"
-                        rows="3"
-                        placeholder="Explain why you wish to be the adviser..."
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                      ></textarea>
-                    </div>
-                  </form>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button 
-                    type="submit" 
-                    form="requestForm"
-                    className="btn btn-success"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Submitting...
-                      </>
+              <div className="table-responsive">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Student Name</th>
+                      <th>Student ID</th>
+                      <th>Team Members</th>
+                      <th>Date Requested</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="text-center">No requests found</td>
+                      </tr>
                     ) : (
-                      'Submit Request'
+                      filteredRequests.map(request => (
+                        <tr key={request._id}>
+                          <td>{request.relatedData.studentId?.name || 'Unknown'}</td>
+                          <td>{request.relatedData.studentId?.studentId || 'Unknown'}</td>
+                          <td>{formatTeamMembers(request.relatedData.teamMembers)}</td>
+                          <td>{new Date(request.timestamp).toLocaleDateString()}</td>
+                          <td>
+                            <span className={`badge ${
+                              request.status === 'UNREAD' ? 'bg-warning' :
+                              request.status === 'APPROVED' ? 'bg-success' : 'bg-danger'
+                            }`}>
+                              {request.status}
+                            </span>
+                          </td>
+                          <td>
+                            {request.status === 'UNREAD' && (
+                              <>
+                                <button
+                                  className="btn btn-success btn-sm me-2"
+                                  onClick={() => handleRequest(request._id, 'APPROVED')}
+                                  disabled={loading}
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => setSelectedRequest(request)}
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#rejectModal"
+                                  disabled={loading}
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      ))
                     )}
-                  </button>
-                </div>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
         </main>
+
+        {/* Reject Modal */}
+        <div className="modal fade" id="rejectModal" tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Reject Request</h5>
+                <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Reason for rejection (optional):</label>
+                  <textarea
+                    className="form-control"
+                    value={rejectMessage}
+                    onChange={(e) => setRejectMessage(e.target.value)}
+                    rows="3"
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => selectedRequest && handleRequest(selectedRequest._id, 'REJECTED')}
+                  disabled={loading}
+                >
+                  Reject Request
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
