@@ -1,176 +1,72 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../Admin/resources/Header';
-import Sidebar from '../Admin/resources/Sidebar';
+import Sidebar from './resources/Sidebar';
+import Header from './resources/Header';
+import { getUserName, getToken } from './resources/Utils';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '../css/Dashboard.css';
+import '../css/Dashboard2.css';
+import '../css/admin_dashboard.css';
 
-const SuperAdminDashboard = () => {
-    const [admins, setAdmins] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [newAdmin, setNewAdmin] = useState({
-        name: '',
-        email: '',
-        password: ''
-    });
-    const navigate = useNavigate();
+const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const [userName] = useState(getUserName());
 
-    // Fetch all admins
-    useEffect(() => {
-        fetchAdmins();
-    }, []);
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      alert('Please log in first.');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('token');
+      navigate('/');
+    }
+  }, [navigate]);
 
-    const fetchAdmins = async () => {
-       
-        try {
-            const response = await fetch('http://localhost:8000/api/superadmin/admins', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            const data = await response.json();
-            if (response.ok) {
-                setAdmins(data);
-            }
-        } catch (error) {
-            console.error('Error fetching admins:', error);
-        } finally {
-          
-        }
-    };
+  return (
+    <div className="dashboard-container d-flex">
+      <Sidebar />
+      <div className="main-section col-10 d-flex flex-column">
+        <Header userName={userName} />
 
-    // Add new admin
-    const handleAddAdmin = async (e) => {
-        e.preventDefault();
-      
-        try {
-            const response = await fetch('http://localhost:8000/api/superadmin/add-admin', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(newAdmin)
-            });
-
-            if (response.ok) {
-                alert('Admin added successfully');
-                setNewAdmin({ name: '', email: '', password: '' });
-                fetchAdmins();
-            } else {
-                const data = await response.json();
-                alert(data.message || 'Error adding admin');
-            }
-        } catch (error) {
-            console.error('Error adding admin:', error);
-            alert('Error adding admin');
-        } 
-    };
-
-    return (
-        <>
-            {isLoading && <LoadingScreen />}
-            <div className="d-flex">
-                <Sidebar />
-                <div className="w-100">
-                    <Header />
-                    <div className="dashboard-container">
-                        <div className="container-fluid py-4">
-                            <h1 className="h3 mb-4 text-gray-800">Super Admin Dashboard</h1>
-                            
-                            {/* Add Admin Form */}
-                            <div className="card shadow mb-4">
-                                <div className="card-header py-3">
-                                    <h2 className="m-0 font-weight-bold text-success">Add New Admin</h2>
-                                </div>
-                                <div className="card-body">
-                                    <form onSubmit={handleAddAdmin} className="row g-3">
-                                        <div className="col-md-4">
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                placeholder="Name"
-                                                value={newAdmin.name}
-                                                onChange={(e) => setNewAdmin({...newAdmin, name: e.target.value})}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="col-md-4">
-                                            <input
-                                                type="email"
-                                                className="form-control"
-                                                placeholder="Email"
-                                                value={newAdmin.email}
-                                                onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="col-md-4">
-                                            <input
-                                                type="password"
-                                                className="form-control"
-                                                placeholder="Password"
-                                                value={newAdmin.password}
-                                                onChange={(e) => setNewAdmin({...newAdmin, password: e.target.value})}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="col-12">
-                                            <button type="submit" className="btn btn-success">
-                                                <i className="fas fa-plus-circle me-2"></i>Add Admin
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-
-                            {/* Admin List */}
-                            <div className="card shadow mb-4">
-                                <div className="card-header py-3">
-                                    <h2 className="m-0 font-weight-bold text-success">Current Admins</h2>
-                                </div>
-                                <div className="card-body">
-                                    <div className="table-responsive">
-                                        <table className="table table-bordered table-hover">
-                                            <thead className="table-success">
-                                                <tr>
-                                                    <th>Name</th>
-                                                    <th>Email</th>
-                                                    <th>Created At</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {admins.map(admin => (
-                                                    <tr key={admin._id}>
-                                                        <td>{admin.name}</td>
-                                                        <td>{admin.email}</td>
-                                                        <td>{new Date(admin.createdAt).toLocaleDateString()}</td>
-                                                        <td>
-                                                            <button 
-                                                                className="btn btn-primary btn-sm me-2"
-                                                                onClick={() => handleEditAdmin(admin._id)}
-                                                            >
-                                                                <i className="fas fa-edit me-1"></i>Edit
-                                                            </button>
-                                                            <button 
-                                                                className="btn btn-danger btn-sm"
-                                                                onClick={() => handleDeleteAdmin(admin._id)}
-                                                            >
-                                                                <i className="fas fa-trash-alt me-1"></i>Delete
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <main className="main-content">
+          <div className="contentRow d-flex align-items-start">
+            <div className="notificationDashboard">
+              <h4 className="researchLabel2">Generate Report</h4>
+              <div className="staticData">[]</div>
             </div>
-        </>
-    );
+            <div className="researchDashboard">
+              <h4 className="researchLabel2">Repository Table Submissions</h4>
+              <div className="researchOverviewContainer">
+                <div className="researchBox1">PUBLISHED
+                  <p>[]</p>
+                </div>
+                <div className="researchBox2">PENDING
+                  <p>[]</p>
+                </div>
+                <div className="researchBox3">REJECTED
+                  <p>[]</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="repositoryDashboards">
+            <div className="repositoryOverviewContainer d-flex">
+              <div className="repoBox">
+                <p className="repoData">[MANAGE ACCOUNTS]</p>
+              </div>
+              <div className="repoBox">
+                <p className="repoData">[ROLE REQUESTS]</p>
+              </div>
+              <div className="repoBox">
+                <p className="repoData">[USER ACTIVITY]</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
 };
 
-export default SuperAdminDashboard; 
+export default AdminDashboard;
