@@ -6,7 +6,7 @@ import bodyParser from 'body-parser';
 
 import './firebaseAdminConfig.js';
 
-import authRoutes from '../routes/authRoutes.js'; 
+import authRoutes from '../routes/EmailRoutes.js'; 
 import studentRoutes from '../routes/studentRoutes.js'; 
 import instructorRoutes from '../routes/instructorRoutes.js'; 
 import adminRoutes from '../routes/adminRoutes.js';
@@ -15,6 +15,9 @@ import Admin from '../model/Admin.js';
 import Instructor from '../model/Instructor.js';
 import Student from '../model/Student.js'
 import driveRoutes from '../routes/driveRoutes.js';
+
+//SUPER ADMIN
+import superAdminRoutes from '../routes/superAdminRoutes.js';
 
 
 //MIDDLEWARE
@@ -52,6 +55,8 @@ app.use('/api/auth', authRoutes);
 //manual login
 app.use('/api', authRoutes);
 
+app.use('/api/superadmin', superAdminRoutes);
+
 app.use('/student', studentRoutes);
 //GOOGLE DRIVE
 app.use('/api/auth/google-drive', driveRoutes);
@@ -67,3 +72,5 @@ app.listen(PORT, () => {
         }
       });
 });
+
+export default app;

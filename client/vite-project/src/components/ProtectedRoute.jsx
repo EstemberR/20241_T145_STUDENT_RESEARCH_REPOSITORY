@@ -23,7 +23,8 @@ const ProtectedRoute = ({ allowedRole }) => {
     const dashboardPaths = {
       student: '/student/dashboard',
       instructor: '/instructor/instructor_dashboard',
-      admin: '/admin/admin_dashboard'
+      admin: '/admin/admin_dashboard',
+      superadmin: '/superadmin/dashboard'
     };
 
     // Only redirect if user has a valid role

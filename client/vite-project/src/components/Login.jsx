@@ -23,6 +23,7 @@ const Login = () => {
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState(''); // 'success' or 'danger'
     const [showAlert, setShowAlert] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -42,12 +43,36 @@ const Login = () => {
         e.preventDefault();
         if (!recaptchaToken) {
             showAlertMessage("Please complete the ReCAPTCHA verification.", "danger");
+           
             return;
         }
-        console.log('Login attempted with:', credentials.email, credentials.password);
 
-        setIsLoading(true); // START LOADING SCREEN
         try {
+            // Add console logs for debugging
+            console.log('Attempting login with:', {
+                email: credentials.email,
+                isSuperAdmin: credentials.email === 'superadmin@buksu.edu.ph'
+            });
+
+            // Check for superadmin
+            if (credentials.email === 'superadmin@buksu.edu.ph' && 
+                credentials.password === 'BuksuSuperAdmin2024') {
+                
+                console.log('Superadmin credentials matched');
+                
+                // Store superadmin data
+                const storage = credentials.rememberMe ? localStorage : sessionStorage;
+                storage.setItem('token', 'superadmin-token');
+                storage.setItem('userName', 'Super Administrator');
+                storage.setItem('userRole', 'superadmin');
+                
+                // Navigate to superadmin dashboard
+                navigate('/superadmin/dashboard');
+                showAlertMessage('Super Admin login successful', 'success');
+                return;
+            }
+
+            // Regular login process for other users
             const response = await fetch('http://localhost:8000/api/auth/admin-login', {
                 method: 'POST',
                 headers: {
@@ -61,41 +86,49 @@ const Login = () => {
             });
 
             const data = await response.json();
-            console.log('User response:', data);
 
             if (response.ok) {
                 if (data.archived) {
-                    console.log('Account is archived');
                     showAlertMessage('Your account is archived. Please contact the admin to restore your account.', 'warning');
                     return;
                 }
 
-                // Use appropriate storage based on rememberMe
                 const storage = credentials.rememberMe ? localStorage : sessionStorage;
-                
-                // Store the data in the appropriate storage
                 storage.setItem('token', data.token);
                 storage.setItem('userName', data.name);
                 storage.setItem('userRole', data.role);
-                storage.setItem('isAdminUser', 'true');
+
+                // Handle Google user data if present
+                if (data.isGoogleUser) {
+                    storage.setItem('isGoogleUser', 'true');
+                    storage.setItem('userEmail', data.email);
+                    storage.setItem('userPhoto', data.photoURL);
+                }
 
                 // Navigate based on role
-                if (data.role === 'admin') {
+                if (data.role === 'superadmin') {
+                    navigate('/SuperAdmin/dashboard'); // or wherever you want superadmin to go
+                    showAlertMessage('Super Admin login successful', 'success');
+                }
+                if (data.role === 'student') {
+                    navigate('/student/dashboard');
+                    showAlertMessage('Student login successful', 'success');
+                } else if (data.role === 'instructor') {
+                    navigate('/instructor/instructor_dashboard');
+                    showAlertMessage('Instructor login successful', 'success');
+                } else if (data.role === 'admin') {
                     navigate('/admin/admin_dashboard');
                     showAlertMessage('Admin login successful', 'success');
-                } else {
-                    showAlertMessage('Invalid admin credentials', 'danger');
                 }
             } else {
-                console.error('Authentication failed:', data.message || 'Unknown error');
-                showAlertMessage(data.message || 'Authentication failed', 'danger');
+                showAlertMessage(data.message || 'Invalid credentials', 'danger');
             }
         } catch (error) {
-            console.error('Error during login:', error);
-            showAlertMessage('An error occurred during login. Please try again.', 'danger');
-        }
+            console.error('Login error:', error);
+            showAlertMessage('An error occurred during login', 'danger');
+        } 
     };
-    
+
     // Firebase Google login function
     const handleGoogle = async () => {
         const provider = new GoogleAuthProvider();

@@ -28,6 +28,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 {/*LANDING PAGE*/ }
 import LandingPage from './components/landingPage';
+import SuperAdminDashboard from './components/SuperAdmin/Dashboard';
+
 
 function App() {
   return (
@@ -68,6 +70,11 @@ function App() {
           <Route path="/admin/report" element={<AdminReports />} />
           <Route path="/admin/request" element={<AdminRequest />} />
           <Route path="/admin/logout" element={<Navigate to="/" replace />} />
+        </Route>
+
+      {/*Super Admin Protected Routes*/}
+      <Route element={<ProtectedRoute allowedRole="superadmin" />}>
+          <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />
