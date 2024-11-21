@@ -46,7 +46,6 @@ const Login = () => {
         }
         console.log('Login attempted with:', credentials.email, credentials.password);
 
-        setIsLoading(true); // START LOADING SCREEN
         try {
             const response = await fetch('http://localhost:8000/api/auth/admin-login', {
                 method: 'POST',
