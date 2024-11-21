@@ -175,4 +175,28 @@ studentRoutes.get('/all-students', authenticateToken, async (req, res) => {
     }
 });
 
+// Add delete research route
+studentRoutes.delete('/research/:id', authenticateToken, async (req, res) => {
+    try {
+        const researchId = req.params.id;
+        const mongoId = req.user.userId;
+        
+        // Verify ownership
+        const research = await Research.findById(researchId);
+        if (!research) {
+            return res.status(404).json({ message: 'Research not found' });
+        }
+        
+        if (research.mongoId.toString() !== mongoId) {
+            return res.status(403).json({ message: 'Not authorized to delete this research' });
+        }
+
+        await Research.findByIdAndDelete(researchId);
+        res.json({ message: 'Research deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting research:', error);
+        res.status(500).json({ message: 'Error deleting research' });
+    }
+});
+
 export default studentRoutes;

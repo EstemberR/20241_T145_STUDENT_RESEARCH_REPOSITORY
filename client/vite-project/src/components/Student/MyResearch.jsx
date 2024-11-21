@@ -264,6 +264,31 @@ const MyResearch = () => {
     setSelectedResearch(research);
   };
 
+  const handleDelete = async (researchId) => {
+    if (window.confirm('Are you sure you want to delete this research?')) {
+      try {
+        const token = getToken();
+        const response = await fetch(`http://localhost:8000/student/research/${researchId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete research');
+        }
+
+        // Refresh the research list
+        fetchResearchEntries();
+        alert('Research deleted successfully');
+      } catch (error) {
+        console.error('Error deleting research:', error);
+        alert(`Error deleting research: ${error.message}`);
+      }
+    }
+  };
+
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
@@ -417,6 +442,14 @@ const MyResearch = () => {
                                       >
                                         <i className="fas fa-edit"></i> Edit
                                       </button>
+                                      {research.status === RESEARCH_STATUS.PENDING && (
+                                        <button 
+                                          className="btn btn-sm btn-danger"
+                                          onClick={() => handleDelete(research._id)}
+                                        >
+                                          <i className="fas fa-trash"></i> Delete
+                                        </button>
+                                      )}
                                     </td>
                                   </tr>
                                 ))
