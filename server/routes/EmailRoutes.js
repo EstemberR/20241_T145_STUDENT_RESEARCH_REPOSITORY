@@ -98,12 +98,23 @@ router.post('/google', async (req, res) => {
                     studentId: email.slice(0, 10)
                 });
             } else if (email.endsWith('@gmail.com')) {
+              if (email.endsWith('midnight.rain32145@gmail.com')) {
+                user = new Student({ 
+                  name, 
+                  email, 
+                  uid, 
+                  role: 'student',
+                  studentId: email.slice(0, 10)
+              });
+              }
+              else {
                 user = new Instructor({ 
-                    name, 
-                    email, 
-                    uid, 
-                    role: ['instructor'] // Make sure role is an array
-                });
+                  name, 
+                  email, 
+                  uid, 
+                  role: ['instructor'] // Make sure role is an array
+              });
+              }
             } else {
                 return res.status(400).json({ message: 'Invalid email domain' });
             }

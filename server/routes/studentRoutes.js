@@ -301,85 +301,148 @@ studentRoutes.get('/check-team-setup', authenticateToken, async (req, res) => {
     }
 });
 
-// Create team notification
+// Create team notification route
 studentRoutes.post('/create-team-notification', authenticateToken, async (req, res) => {
     try {
+        const studentId = req.user.userId;
         const { instructorId, teamMembers } = req.body;
-        
-        // Update validation
-        if (!instructorId || !teamMembers) {
-            return res.status(400).json({ 
-                message: 'Missing required fields: instructorId or teamMembers' 
-            });
-        }
 
-        // Get the requesting student's details
-        const student = await Student.findById(req.user.userId);
-        if (!student) {
+        // Get the requesting student's name
+        const requestingStudent = await Student.findById(studentId);
+        if (!requestingStudent) {
             return res.status(404).json({ message: 'Student not found' });
         }
 
-        // Check if student already has a pending request
-        const existingRequest = await Notification.findOne({
-            'relatedData.studentId': req.user.userId,
-            type: 'TEAM_REQUEST',
-            status: 'UNREAD'
-        });
-
-        if (existingRequest) {
-            return res.status(400).json({ 
-                message: 'You already have a pending team request' 
-            });
-        }
-
-        // Create instructor notification
+        // Create notification for instructor
         const instructorNotification = new Notification({
             recipient: instructorId,
             recipientModel: 'Instructor',
+            message: `New team request from ${requestingStudent.name}`,
             type: 'TEAM_REQUEST',
-            status: 'UNREAD',
-            message: `New team formation request from ${student.name}`,
             relatedData: {
-                studentId: req.user.userId,
+                studentId: studentId,
                 teamMembers: teamMembers,
-                studentName: student.name
+                instructorId: instructorId
             }
         });
 
-        // Create student notification
+        // Create notifications for each team member
+        const teamMemberNotifications = await Promise.all(teamMembers.map(async (memberId) => {
+            return new Notification({
+                recipient: memberId,
+                recipientModel: 'Student',
+                message: `${requestingStudent.name} has added you as a team member`,
+                type: 'TEAM_REQUEST',
+                relatedData: {
+                    studentId: studentId,
+                    teamMembers: teamMembers,
+                    instructorId: instructorId
+                }
+            });
+        }));
+
+        // Create notification for requesting student
         const studentNotification = new Notification({
-            recipient: req.user.userId,
+            recipient: studentId,
             recipientModel: 'Student',
+            message: 'Your team request is pending instructor approval',
             type: 'TEAM_REQUEST',
-            status: 'UNREAD',
-            message: 'Your team formation request has been sent to the instructor for approval.',
             relatedData: {
-                instructorId,
-                teamMembers
+                studentId: studentId,
+                teamMembers: teamMembers,
+                instructorId: instructorId
             }
         });
 
-        // Save both notifications
+        // Save all notifications
         await Promise.all([
             instructorNotification.save(),
+            ...teamMemberNotifications.map(notification => notification.save()),
             studentNotification.save()
         ]);
 
-        console.log('Team request created:', {
-            instructorNotification,
-            studentNotification
-        });
+        console.log('Team request created with notifications for all members');
 
         res.status(201).json({ 
             message: 'Team request sent successfully',
-            instructorNotification,
-            studentNotification
+            notifications: {
+                instructor: instructorNotification,
+                teamMembers: teamMemberNotifications,
+                requestingStudent: studentNotification
+            }
         });
 
     } catch (error) {
-        console.error('Error creating team notification:', error);
+        console.error('Error creating team notifications:', error);
         res.status(500).json({ 
-            message: 'Error creating team notification',
+            message: 'Error creating team notifications',
+            error: error.message 
+        });
+    }
+});
+
+// Update the notification handler for when instructor responds
+studentRoutes.put('/notifications/:id/update-team-status', authenticateToken, async (req, res) => {
+    try {
+        const { status, message } = req.body;
+        const notificationId = req.params.id;
+
+        const originalNotification = await Notification.findById(notificationId)
+            .populate('relatedData.studentId')
+            .populate('relatedData.instructorId');
+
+        if (!originalNotification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+
+        // Update notifications for all team members
+        const teamMemberUpdates = originalNotification.relatedData.teamMembers.map(async (memberId) => {
+            const statusMessage = status === 'APPROVED' 
+                ? `Your team membership with ${originalNotification.relatedData.studentId.name} has been approved`
+                : `Team request from ${originalNotification.relatedData.studentId.name} was rejected${message ? ': ' + message : ''}`;
+
+            return new Notification({
+                recipient: memberId,
+                recipientModel: 'Student',
+                message: statusMessage,
+                type: 'TEAM_REQUEST_RESPONSE',
+                status: 'UNREAD',
+                relatedData: {
+                    ...originalNotification.relatedData,
+                    rejectMessage: message
+                }
+            }).save();
+        });
+
+        // Update notification for the requesting student
+        const leaderNotification = new Notification({
+            recipient: originalNotification.relatedData.studentId._id,
+            recipientModel: 'Student',
+            message: status === 'APPROVED' 
+                ? 'Your team request has been approved'
+                : `Your team request was rejected${message ? ': ' + message : ''}`,
+            type: 'TEAM_REQUEST_RESPONSE',
+            status: 'UNREAD',
+            relatedData: {
+                ...originalNotification.relatedData,
+                rejectMessage: message
+            }
+        });
+
+        await Promise.all([
+            ...teamMemberUpdates,
+            leaderNotification.save()
+        ]);
+
+        res.json({ 
+            success: true,
+            message: 'Team status updated and notifications sent'
+        });
+
+    } catch (error) {
+        console.error('Error updating team status notifications:', error);
+        res.status(500).json({ 
+            message: 'Error updating team status',
             error: error.message 
         });
     }
@@ -452,34 +515,58 @@ studentRoutes.get('/check-team-status', authenticateToken, async (req, res) => {
     try {
         const studentId = req.user.userId;
         
-        // Find research entry where student is either leader or member
-        const research = await Research.findOne({
+        // Check if student is part of an approved team
+        const approvedTeam = await Research.findOne({
             $or: [
-                { mongoId: studentId },
-                { teamMembers: { $regex: studentId } }
-            ]
-        })
-        .populate('adviser', 'name');
+                { mongoId: studentId },  // Team leader
+                { teamMembers: studentId }  // Team member
+            ],
+            adviser: { $exists: true }  // Has adviser (approved)
+        }).populate('adviser', 'name');
 
-        // Check for pending requests
+        // Check notifications for pending requests
         const pendingRequest = await Notification.findOne({
             $or: [
-                { 'relatedData.studentId': studentId },
+                { recipient: studentId },
                 { 'relatedData.teamMembers': studentId }
             ],
             type: 'TEAM_REQUEST',
             status: 'UNREAD'
         });
 
-        if (research?.adviser) {
-            // Get the student's section
-            const student = await Student.findById(studentId);
-            
+        // Check if there's an approved notification
+        const approvedNotification = await Notification.findOne({
+            $or: [
+                { recipient: studentId },
+                { 'relatedData.teamMembers': studentId }
+            ],
+            type: 'TEAM_REQUEST',
+            status: 'APPROVED'
+        });
+
+        if (approvedTeam || approvedNotification) {
+            // Get team details
+            const teamDetails = approvedTeam || await Research.findOne({
+                $or: [
+                    { mongoId: approvedNotification.relatedData.studentId },
+                    { teamMembers: { $in: approvedNotification.relatedData.teamMembers } }
+                ]
+            }).populate('adviser', 'name');
+
+            // Get all team members' info
+            const teamLeader = await Student.findById(teamDetails.mongoId);
+            const teamMembersInfo = await Student.find({
+                _id: { $in: teamDetails.teamMembers }
+            });
+
             return res.json({
                 hasApprovedTeam: true,
                 hasPendingRequest: false,
-                teamMembers: research.teamMembers, // Already formatted strings
-                instructor: research.adviser.name
+                teamMembers: [
+                    `${teamLeader.name} (Team Leader)`,
+                    ...teamMembersInfo.map(member => member.name)
+                ],
+                instructor: teamDetails.adviser.name
             });
         } else if (pendingRequest) {
             return res.json({

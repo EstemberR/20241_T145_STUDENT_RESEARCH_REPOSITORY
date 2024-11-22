@@ -467,9 +467,14 @@ instructorRoutes.put('/team-requests/:requestId/handle', authenticateToken, asyn
         const { status, message } = req.body;
         const instructorId = req.user.userId;
 
+        console.log('Processing team request:', { requestId, status, instructorId });
+
         const request = await Notification.findById(requestId)
             .populate('relatedData.studentId')
-            .populate('relatedData.teamMembers');
+            .populate({
+                path: 'relatedData.teamMembers',
+                model: 'Student'
+            });
 
         if (!request) {
             return res.status(404).json({ message: 'Request not found' });
@@ -482,24 +487,32 @@ instructorRoutes.put('/team-requests/:requestId/handle', authenticateToken, asyn
 
         if (status === 'APPROVED') {
             try {
-                // Fetch all team member details
-                const teamMembers = await Student.find({
-                    _id: { $in: request.relatedData.teamMembers }
-                });
-
-                // Format team members as strings with name and ID
-                const formattedTeamMembers = teamMembers.map(member => 
-                    `${member.name} (${member.studentId})`
+                // Convert teamMembers from strings to ObjectIds if they aren't already
+                const teamMemberIds = request.relatedData.teamMembers.map(member => 
+                    typeof member === 'string' ? member : member._id
                 );
 
-                // Create or update research entry
+                // Get all team member IDs including the leader
+                const allTeamMembers = [
+                    request.relatedData.studentId._id,
+                    ...teamMemberIds
+                ];
+
+                console.log('Updating team members:', allTeamMembers);
+
+                // Update all students' managedBy field
+                await Student.updateMany(
+                    { _id: { $in: allTeamMembers } },
+                    { managedBy: instructorId }
+                );
+
+                // Create or update research entry with proper ObjectIds
                 const research = await Research.findOneAndUpdate(
                     { mongoId: request.relatedData.studentId._id },
-                    { 
+                    {
                         adviser: instructorId,
                         mongoId: request.relatedData.studentId._id,
-                        studentId: request.relatedData.studentId.studentId,
-                        teamMembers: formattedTeamMembers
+                        teamMembers: teamMemberIds // Store the ObjectIds
                     },
                     { 
                         new: true,
@@ -507,17 +520,25 @@ instructorRoutes.put('/team-requests/:requestId/handle', authenticateToken, asyn
                     }
                 );
 
-                // Update all students' managedBy field
-                await Student.updateMany(
-                    { _id: { $in: [...request.relatedData.teamMembers, request.relatedData.studentId._id] } },
-                    { 
-                        $set: { 
-                            managedBy: instructorId
-                        }
-                    }
+                console.log('Created/Updated research:', research);
+
+                // Update all related notifications to APPROVED
+                await Notification.updateMany(
+                    {
+                        $or: [
+                            { recipient: { $in: allTeamMembers } },
+                            { type: 'TEAM_REQUEST' },
+                            { 
+                                $or: [
+                                    { 'relatedData.studentId': request.relatedData.studentId._id },
+                                    { 'relatedData.teamMembers': { $in: teamMemberIds } }
+                                ]
+                            }
+                        ]
+                    },
+                    { status: 'APPROVED' }
                 );
 
-                console.log('Updated research:', research);
             } catch (updateError) {
                 console.error('Error in approval updates:', updateError);
                 throw updateError;
