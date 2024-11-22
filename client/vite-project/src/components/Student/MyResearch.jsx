@@ -43,7 +43,7 @@ const MyResearch = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [researchToDelete, setResearchToDelete] = useState(null);
-  const [showNoTeamModal, setShowNoTeamModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchResearchEntries = async () => {
     try {
@@ -100,11 +100,8 @@ const MyResearch = () => {
         if (!response.ok) throw new Error('Failed to fetch student info');
         
         const data = await response.json();
+        console.log('Student info loaded:', data);
         setStudentInfo(data);
-        
-        if (!data.managedBy) {
-          setShowNoTeamModal(true);
-        }
       } catch (error) {
         console.error('Error fetching student info:', error);
       }
@@ -230,31 +227,32 @@ const MyResearch = () => {
   };
 
   const handleConfirmedAction = async () => {
-    if (!pendingAction) return;
+    if (!pendingAction || isSubmitting) return;
+    setIsSubmitting(true);
 
-    if (pendingAction.type === 'delete') {
-      try {
-        const token = getToken();
-        const response = await fetch(`http://localhost:8000/student/research/${pendingAction.data._id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
+    try {
+      if (pendingAction.type === 'delete') {
+        try {
+          const token = getToken();
+          const response = await fetch(`http://localhost:8000/student/research/${pendingAction.data._id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            showAlertMessage('Research deleted successfully', 'success');
+            fetchResearchEntries(); // Refresh the list
+          } else {
+            const data = await response.json();
+            showAlertMessage(data.message || 'Error deleting research', 'danger');
           }
-        });
-
-        if (response.ok) {
-          showAlertMessage('Research deleted successfully', 'success');
-          fetchResearchEntries(); // Refresh the list
-        } else {
-          const data = await response.json();
-          showAlertMessage(data.message || 'Error deleting research', 'danger');
+        } catch (error) {
+          console.error('Error deleting research:', error);
+          showAlertMessage('Error deleting research', 'danger');
         }
-      } catch (error) {
-        console.error('Error deleting research:', error);
-        showAlertMessage('Error deleting research', 'danger');
-      }
-    } else if (pendingAction.type === 'submit') {
-      try {
+      } else {
         // Create form data with course included
         const formDataToSubmit = new FormData();
         formDataToSubmit.append('file', file);
@@ -320,15 +318,16 @@ const MyResearch = () => {
         await fetchResearchEntries();
         
         showAlertMessage('Research submitted successfully!', 'success');
-      } catch (error) {
-        console.error('Error submitting research:', error);
-        showAlertMessage('Error submitting research. Please try again.', 'danger');
       }
+    } catch (error) {
+      console.error('Error:', error);
+      showAlertMessage(error.message || 'An error occurred', 'danger');
+    } finally {
+      setIsSubmitting(false);
+      setShowConfirmModal(false);
+      setPendingAction(null);
+      setResearchToDelete(null);
     }
-    
-    setShowConfirmModal(false);
-    setPendingAction(null);
-    setResearchToDelete(null);
   };
 
   const handleViewResearch = (research) => {
@@ -868,56 +867,16 @@ const MyResearch = () => {
                       type="button" 
                       className={`btn ${pendingAction?.type === 'delete' ? 'btn-danger' : 'btn-success'}`}
                       onClick={handleConfirmedAction}
+                      disabled={isSubmitting}
                     >
-                      {pendingAction?.type === 'delete' ? 'Delete' : 'Confirm'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* No Team Modal */}
-          {showNoTeamModal && (
-            <div 
-              className="modal fade show" 
-              style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} 
-              tabIndex="-1"
-            >
-              <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">
-                      <i className="fas fa-exclamation-circle text-warning me-2"></i>
-                      Research Team Required
-                    </h5>
-                  </div>
-                  <div className="modal-body">
-                    <div className="text-center mb-3">
-                      <i className="fas fa-users text-warning" style={{ fontSize: '3rem' }}></i>
-                    </div>
-                    <p>Before you can submit research papers, you need to:</p>
-                    <ul className="mb-3">
-                      <li>Create or join a research team</li>
-                      <li>Have an instructor approve your team</li>
-                    </ul>
-                    <p className="mb-0">Would you like to set up your research team now?</p>
-                  </div>
-                  <div className="modal-footer">
-                    <button 
-                      type="button" 
-                      className="btn btn-secondary"
-                      onClick={() => navigate('/student/dashboard')}
-                    >
-                      Back to Dashboard
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-success"
-                      onClick={() => navigate('/student/project-members')}
-                    >
-                      <i className="fas fa-users me-2"></i>
-                      Set Up Team Now
+                      {isSubmitting ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          {pendingAction?.type === 'delete' ? 'Deleting...' : 'Submitting...'}
+                        </>
+                      ) : (
+                        pendingAction?.type === 'delete' ? 'Delete' : 'Confirm'
+                      )}
                     </button>
                   </div>
                 </div>

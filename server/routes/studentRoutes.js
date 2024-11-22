@@ -408,7 +408,8 @@ studentRoutes.post('/create-team-notification', authenticateToken, async (req, r
             relatedData: {
                 studentId: studentId,
                 teamMembers: teamMembers,
-                instructorId: instructorId
+                instructorId: instructorId,
+                timestamp: new Date()
             }
         });
 
@@ -422,7 +423,8 @@ studentRoutes.post('/create-team-notification', authenticateToken, async (req, r
                 relatedData: {
                     studentId: studentId,
                     teamMembers: teamMembers,
-                    instructorId: instructorId
+                    instructorId: instructorId,
+                    timestamp: new Date()
                 }
             });
         }));
@@ -436,7 +438,8 @@ studentRoutes.post('/create-team-notification', authenticateToken, async (req, r
             relatedData: {
                 studentId: studentId,
                 teamMembers: teamMembers,
-                instructorId: instructorId
+                instructorId: instructorId,
+                timestamp: new Date()
             }
         });
 
@@ -600,75 +603,77 @@ studentRoutes.put('/notifications/:id/mark-read', authenticateToken, async (req,
 studentRoutes.get('/check-team-status', authenticateToken, async (req, res) => {
     try {
         const studentId = req.user.userId;
+        const student = await Student.findById(studentId).populate('managedBy');
         
-        // Check if student is part of an approved team
-        const approvedTeam = await Research.findOne({
+        // Check for the most recent team request or response
+        const latestRequest = await Notification.findOne({
             $or: [
-                { mongoId: studentId },  // Team leader
-                { teamMembers: studentId }  // Team member
-            ],
-            adviser: { $exists: true }  // Has adviser (approved)
-        }).populate('adviser', 'name');
+                { 
+                    recipient: studentId,
+                    type: { $in: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE'] }
+                },
+                { 
+                    'relatedData.teamMembers': studentId,
+                    type: { $in: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE'] }
+                }
+            ]
+        }).sort({ timestamp: -1 })
+        .populate('relatedData.studentId')
+        .populate('relatedData.teamMembers')
+        .populate('relatedData.instructorId');
 
-        // Check notifications for pending requests
-        const pendingRequest = await Notification.findOne({
-            $or: [
-                { recipient: studentId },
-                { 'relatedData.teamMembers': studentId }
-            ],
-            type: 'TEAM_REQUEST',
-            status: 'UNREAD'
-        });
+        if (student.managedBy) {
+            // Student has an approved team
+            const research = await Research.findOne({ mongoId: studentId })
+                .populate('teamMembers')
+                .populate('mongoId');
 
-        // Check if there's an approved notification
-        const approvedNotification = await Notification.findOne({
-            $or: [
-                { recipient: studentId },
-                { 'relatedData.teamMembers': studentId }
-            ],
-            type: 'TEAM_REQUEST',
-            status: 'APPROVED'
-        });
-
-        if (approvedTeam || approvedNotification) {
-            // Get team details
-            const teamDetails = approvedTeam || await Research.findOne({
-                $or: [
-                    { mongoId: approvedNotification.relatedData.studentId },
-                    { teamMembers: { $in: approvedNotification.relatedData.teamMembers } }
-                ]
-            }).populate('adviser', 'name');
-
-            // Get all team members' info
-            const teamLeader = await Student.findById(teamDetails.mongoId);
-            const teamMembersInfo = await Student.find({
-                _id: { $in: teamDetails.teamMembers }
-            });
+            let teamMembers = [student.name]; // Add the poster (current student) first
+            
+            // Add other team members if they exist
+            if (research?.teamMembers) {
+                const otherMembers = research.teamMembers
+                    .filter(member => member._id.toString() !== studentId) // Exclude the poster if they're in teamMembers
+                    .map(member => member.name);
+                teamMembers = [...teamMembers, ...otherMembers];
+            }
 
             return res.json({
                 hasApprovedTeam: true,
                 hasPendingRequest: false,
-                teamMembers: [
-                    `${teamLeader.name} (Team Leader)`,
-                    ...teamMembersInfo.map(member => member.name)
-                ],
-                instructor: teamDetails.adviser.name
+                instructor: student.managedBy.name,
+                section: student.section,
+                teamMembers: teamMembers
             });
-        } else if (pendingRequest) {
+        } else if (latestRequest?.type === 'TEAM_REQUEST' && latestRequest?.status === 'UNREAD') {
             return res.json({
                 hasApprovedTeam: false,
                 hasPendingRequest: true,
-                message: 'You have a pending team request',
-                requestDetails: {
-                    timestamp: pendingRequest.timestamp
-                }
+                message: 'You have a pending team request'
             });
-        } else {
-            return res.json({
-                hasApprovedTeam: false,
-                hasPendingRequest: false
-            });
+        } else if (latestRequest?.type === 'TEAM_REQUEST_RESPONSE') {
+            if (latestRequest.status === 'APPROVED' || latestRequest.message.includes('approved')) {
+                return res.json({
+                    hasApprovedTeam: true,
+                    hasPendingRequest: false,
+                    message: 'Your team has been approved'
+                });
+            } else {
+                return res.json({
+                    hasApprovedTeam: false,
+                    hasPendingRequest: false,
+                    wasRejected: true,
+                    rejectionMessage: latestRequest.relatedData?.rejectMessage
+                });
+            }
         }
+
+        // If no team status found
+        return res.json({
+            hasApprovedTeam: false,
+            hasPendingRequest: false
+        });
+
     } catch (error) {
         console.error('Error checking team status:', error);
         res.status(500).json({ 

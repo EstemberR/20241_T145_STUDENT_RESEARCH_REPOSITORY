@@ -20,6 +20,8 @@ const ManageMember = () => {
   const [teamStatus, setTeamStatus] = useState(null);
   const [alert, setAlert] = useState({ show: false, message: '', type: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingSubmission, setPendingSubmission] = useState(null);
 
   // Helper function for showing alerts
   const showAlert = (message, type) => {
@@ -98,42 +100,46 @@ const ManageMember = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (!selectedInstructor || selectedStudents.length === 0) {
-      showAlert('Please select both an Instructor and Team Members', 'warning');
-      return;
-    }
+    // Store the submission data and show confirmation modal
+    setPendingSubmission({
+      students: selectedStudents,
+      instructor: selectedInstructor
+    });
+    setShowConfirmModal(true);
+  };
 
+  const confirmSubmit = async () => {
     setIsSubmitting(true);
-
     try {
       const token = getToken();
-      const response = await fetch('http://localhost:8000/student/create-team-notification', {
+      const response = await fetch('http://localhost:8000/student/team-request', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          instructorId: selectedInstructor.value,
-          teamMembers: selectedStudents.map(s => s.value)
+          teamMembers: pendingSubmission.students.map(student => student.value),
+          instructorId: pendingSubmission.instructor.value
         })
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to send team request');
+        throw new Error(data.message || 'Failed to submit team request');
       }
 
-      showAlert('Team request sent successfully. Awaiting instructor approval.', 'success');
-      navigate('/notification');
+      showAlert('Team request submitted successfully', 'success');
+      checkTeamStatus(); // Refresh the team status
     } catch (error) {
-      console.error('Error updating team:', error);
-      showAlert(error.message || 'Error sending team request', 'danger');
+      console.error('Error submitting team request:', error);
+      showAlert(error.message || 'Error submitting team request', 'danger');
     } finally {
       setIsSubmitting(false);
+      setShowConfirmModal(false);
+      setPendingSubmission(null);
     }
   };
 
@@ -207,6 +213,82 @@ const ManageMember = () => {
                 </div>
               </div>
             </div>
+          ) : teamStatus?.wasRejected ? (
+            <div className="card shadow-sm">
+                <div className="card-header bg-danger text-white">
+                    <h4 className="mb-0">
+                        <i className="fas fa-times-circle me-2"></i>
+                        Team Request Rejected
+                    </h4>
+                </div>
+                <div className="card-body">
+                    <div className="alert alert-danger">
+                        <h5 className="alert-heading">
+                            <i className="fas fa-exclamation-circle me-2"></i>
+                            Your previous team request was rejected
+                        </h5>
+                        <hr />
+                        {teamStatus.rejectionMessage && (
+                            <p>
+                                <strong>Reason: </strong>{teamStatus.rejectionMessage}
+                            </p>
+                        )}
+                        <p>
+                            You can now submit a new team request below.
+                        </p>
+                    </div>
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-4">
+                            <label className="form-label">
+                                <i className="fas fa-users me-2"></i>
+                                Select Team Members
+                            </label>
+                            <Select
+                                isMulti
+                                options={students}
+                                value={selectedStudents}
+                                onChange={setSelectedStudents}
+                                placeholder="Search and select students..."
+                                className="basic-multi-select"
+                                classNamePrefix="select"
+                            />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="form-label">
+                                <i className="fas fa-chalkboard-teacher me-2"></i>
+                                Select Instructor
+                            </label>
+                            <Select
+                                options={instructors}
+                                value={selectedInstructor}
+                                onChange={setSelectedInstructor}
+                                placeholder="Choose an instructor..."
+                                className="basic-select"
+                                classNamePrefix="select"
+                            />
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            className="btn btn-primary btn-lg w-100"
+                            disabled={isSubmitting || !selectedStudents.length || !selectedInstructor}
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Sending Request...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fas fa-paper-plane me-2"></i>
+                                    Send Team Request
+                                </>
+                            )}
+                        </button>
+                    </form>
+                </div>
+            </div>
           ) : teamStatus?.hasPendingRequest ? (
             <div className="card shadow-sm">
               <div className="card-header bg-warning text-dark">
@@ -277,7 +359,7 @@ const ManageMember = () => {
                   <button 
                     type="submit" 
                     className="btn btn-primary btn-lg w-100"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !selectedStudents.length || !selectedInstructor}
                   >
                     {isSubmitting ? (
                       <>
@@ -296,6 +378,55 @@ const ManageMember = () => {
             </div>
           )}
         </main>
+
+        {/* Confirmation Modal */}
+        <div className="modal fade" id="confirmModal" tabIndex="-1" 
+          show={showConfirmModal} onHide={() => setShowConfirmModal(false)}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Team Request</h5>
+                <button type="button" className="btn-close" onClick={() => setShowConfirmModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to send this team request?</p>
+                <strong>Team Members:</strong>
+                <ul>
+                  {pendingSubmission?.students.map((student, index) => (
+                    <li key={index}>{student.label}</li>
+                  ))}
+                </ul>
+                <strong>Instructor:</strong>
+                <p>{pendingSubmission?.instructor.label}</p>
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowConfirmModal(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-primary" 
+                  onClick={confirmSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Confirming...
+                    </>
+                  ) : (
+                    'Confirm'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

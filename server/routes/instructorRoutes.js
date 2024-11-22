@@ -487,6 +487,12 @@ instructorRoutes.put('/team-requests/:requestId/handle', authenticateToken, asyn
 
         if (status === 'APPROVED') {
             try {
+                // Get instructor name
+                const instructor = await Instructor.findById(instructorId);
+                if (!instructor) {
+                    throw new Error('Instructor not found');
+                }
+
                 // Convert teamMembers from strings to ObjectIds if they aren't already
                 const teamMemberIds = request.relatedData.teamMembers.map(member => 
                     typeof member === 'string' ? member : member._id
@@ -498,42 +504,53 @@ instructorRoutes.put('/team-requests/:requestId/handle', authenticateToken, asyn
                     ...teamMemberIds
                 ];
 
-                console.log('Updating team members:', allTeamMembers);
+                // Create approval notifications for all team members
+                const approvalNotifications = allTeamMembers.map(memberId => ({
+                    recipient: memberId,
+                    recipientModel: 'Student',
+                    type: 'TEAM_REQUEST_RESPONSE',
+                    status: 'UNREAD',
+                    message: `Your team request has been approved by ${instructor.name}`,
+                    relatedData: {
+                        studentId: request.relatedData.studentId._id,
+                        teamMembers: request.relatedData.teamMembers,
+                        instructorId: instructorId,
+                        instructorName: instructor.name,
+                        timestamp: request.timestamp
+                    }
+                }));
 
-                // Update all students' managedBy field
+                // Save approval notifications
+                await Notification.insertMany(approvalNotifications);
+
+                // Rest of your existing approval logic...
                 await Student.updateMany(
                     { _id: { $in: allTeamMembers } },
                     { managedBy: instructorId }
                 );
 
-                // Create or update research entry with proper ObjectIds
                 const research = await Research.findOneAndUpdate(
                     { mongoId: request.relatedData.studentId._id },
                     {
                         adviser: instructorId,
                         mongoId: request.relatedData.studentId._id,
-                        teamMembers: teamMemberIds // Store the ObjectIds
+                        teamMembers: teamMemberIds
                     },
-                    { 
-                        new: true,
-                        upsert: true
-                    }
+                    { new: true, upsert: true }
                 );
 
-                console.log('Created/Updated research:', research);
-
-                // Update all related notifications to APPROVED
+                // Update original request status
                 await Notification.updateMany(
                     {
-                        $or: [
-                            { recipient: { $in: allTeamMembers } },
-                            { type: 'TEAM_REQUEST' },
+                        type: 'TEAM_REQUEST',
+                        $and: [
                             { 
                                 $or: [
                                     { 'relatedData.studentId': request.relatedData.studentId._id },
                                     { 'relatedData.teamMembers': { $in: teamMemberIds } }
                                 ]
-                            }
+                            },
+                            { 'relatedData.timestamp': request.timestamp }
                         ]
                     },
                     { status: 'APPROVED' }
@@ -542,6 +559,59 @@ instructorRoutes.put('/team-requests/:requestId/handle', authenticateToken, asyn
             } catch (updateError) {
                 console.error('Error in approval updates:', updateError);
                 throw updateError;
+            }
+        }
+
+        if (status === 'REJECTED') {
+            try {
+                console.log('Processing rejection...');
+                // Get instructor name
+                const instructor = await Instructor.findById(instructorId);
+                if (!instructor) {
+                    throw new Error('Instructor not found');
+                }
+
+                // Get all team members including the leader
+                const allTeamMembers = [
+                    request.relatedData.studentId._id,
+                    ...request.relatedData.teamMembers
+                ].filter(Boolean);
+
+                // Create rejection notifications for all team members
+                const rejectionNotifications = allTeamMembers.map(memberId => ({
+                    recipient: memberId,
+                    recipientModel: 'Student',
+                    type: 'TEAM_REQUEST_RESPONSE',
+                    status: 'UNREAD',
+                    message: `Your team request was rejected by ${instructor.name}${message ? ': ' + message : ''}`,
+                    relatedData: {
+                        studentId: request.relatedData.studentId._id,
+                        teamMembers: request.relatedData.teamMembers,
+                        instructorId: instructorId,
+                        instructorName: instructor.name,  // Include instructor name in relatedData
+                        rejectMessage: message
+                    }
+                }));
+
+                // Save rejection notifications
+                await Notification.insertMany(rejectionNotifications);
+
+                // Update the original request status to REJECTED
+                await Notification.updateMany(
+                    {
+                        type: 'TEAM_REQUEST',
+                        $or: [
+                            { 'relatedData.studentId': request.relatedData.studentId._id },
+                            { 'relatedData.teamMembers': { $in: request.relatedData.teamMembers } }
+                        ]
+                    },
+                    { status: 'REJECTED' }
+                );
+
+                console.log('Rejection processed successfully');
+            } catch (error) {
+                console.error('Error processing rejection:', error);
+                throw error;
             }
         }
 
