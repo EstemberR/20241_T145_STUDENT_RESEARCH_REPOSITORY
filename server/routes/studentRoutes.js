@@ -75,26 +75,105 @@ studentRoutes.post('/submit-research', authenticateToken, async (req, res) => {
             return res.status(400).json({ message: 'Please set your course in your profile before submitting research' });
         }
 
-        console.log('Student found:', student); // Debug log
+        // Get team information
+        const research = await Research.findOne({
+            $or: [
+                { mongoId: mongoId },
+                { teamMembers: mongoId }
+            ],
+            adviser: { $exists: true }
+        }).populate('adviser', 'name');
+
+        if (!research) {
+            return res.status(400).json({ message: 'You must be part of an approved team to submit research' });
+        }
+
+        // Get team members' names
+        const teamLeader = await Student.findById(research.mongoId);
+        const teamMembers = await Student.find({
+            _id: { $in: research.teamMembers }
+        });
+
+        // Format authors list
+        const authorsList = [
+            teamLeader.name,
+            ...teamMembers.map(member => member.name)
+        ].join(', ');
 
         const newResearch = new Research({
-            studentId: student.studentId, // Use the school ID (2201102944)
-            mongoId: student._id,  // Store MongoDB ID as reference
+            studentId: student.studentId,
+            mongoId: student._id,
             title: req.body.title,
             abstract: req.body.abstract,
-            authors: req.body.authors,
+            authors: authorsList, // Use the automatically generated authors list
             keywords: req.body.keywords,
-            course: student.course, // Add course from student profile
+            course: student.course,
             fileUrl: req.body.fileUrl,
             driveFileId: req.body.driveFileId,
             status: 'Pending',
-            uploadDate: req.body.uploadDate || new Date()
+            uploadDate: req.body.uploadDate || new Date(),
+            teamMembers: research.teamMembers, // Include team members
+            adviser: research.adviser, // Include adviser
+            submittedBy: mongoId,  // Add submitter information
         });
 
-        console.log('Attempting to save research:', newResearch); // Debug log
-
         const savedResearch = await newResearch.save();
-        console.log('Saved research:', savedResearch);
+
+        // Create notifications for team members and instructor
+        const notificationPromises = [
+            // Notification for submitter
+            new Notification({
+                recipient: mongoId,
+                recipientModel: 'Student',
+                type: 'RESEARCH_SUBMISSION',
+                message: `You have submitted a research paper: "${req.body.title}"`,
+                status: 'UNREAD',
+                relatedData: {
+                    researchId: savedResearch._id,
+                    title: req.body.title,
+                    submittedBy: student.name,
+                    mongoId: student._id
+                }
+            }).save(),
+
+            // Notifications for other team members
+            ...research.teamMembers
+                .filter(memberId => memberId.toString() !== mongoId.toString())
+                .map(memberId => 
+                    new Notification({
+                        recipient: memberId,
+                        recipientModel: 'Student',
+                        type: 'RESEARCH_SUBMISSION',
+                        message: `${student.name} has submitted a research paper: "${req.body.title}"`,
+                        status: 'UNREAD',
+                        relatedData: {
+                            researchId: savedResearch._id,
+                            title: req.body.title,
+                            submittedBy: student.name,
+                            mongoId: student._id
+                        }
+                    }).save()
+                ),
+
+            // Notification for instructor
+            new Notification({
+                recipient: research.adviser._id,
+                recipientModel: 'Instructor',
+                type: 'RESEARCH_SUBMISSION',
+                message: `New research submission from ${student.name}: "${req.body.title}"`,
+                status: 'UNREAD',
+                relatedData: {
+                    researchId: savedResearch._id,
+                    title: req.body.title,
+                    submittedBy: student.name,
+                    mongoId: student._id,
+                    studentNumber: student.studentId
+                }
+            }).save()
+        ];
+
+        await Promise.all(notificationPromises);
+        
         res.status(201).json(savedResearch);
     } catch (error) {
         console.error('Error saving research:', error);
@@ -115,13 +194,18 @@ studentRoutes.get('/research', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: 'Student not found' });
         }
 
-        console.log('Fetching research for student:', student.studentId); // Debug log
-
+        // Find research where student is either submitter, leader, or team member
         const research = await Research.find({ 
-            studentId: student.studentId // Use school ID for querying
-        }).sort({ createdAt: -1 });
+            $or: [
+                { mongoId: mongoId },
+                { teamMembers: mongoId }
+            ]
+        })
+        .populate('submittedBy', 'name')  // Populate submitter's name
+        .populate('teamMembers', 'name')   // Populate team members' names
+        .sort({ uploadDate: -1 });
         
-        console.log('Found research entries:', research.length); // Debug log
+        console.log('Found research entries:', research.length);
         res.json(research);
     } catch (error) {
         console.error('Error fetching research:', error);

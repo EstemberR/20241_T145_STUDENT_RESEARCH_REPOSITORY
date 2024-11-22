@@ -17,7 +17,7 @@ const notificationSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE', 'GENERAL'],
+        enum: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE', 'GENERAL', 'RESEARCH_SUBMISSION'],
         default: 'GENERAL'
     },
     status: {

@@ -36,6 +36,7 @@ const MyResearch = () => {
   const [availableAuthors, setAvailableAuthors] = useState([]);
   const [selectedAuthors, setSelectedAuthors] = useState([]);
   const [authorSearchTerm, setAuthorSearchTerm] = useState('');
+  const [teamInfo, setTeamInfo] = useState(null);
 
   const fetchResearchEntries = async () => {
     try {
@@ -122,6 +123,37 @@ const MyResearch = () => {
     };
 
     fetchAuthors();
+  }, []);
+
+  useEffect(() => {
+    const fetchTeamInfo = async () => {
+      try {
+        const token = getToken();
+        const response = await fetch('http://localhost:8000/student/check-team-status', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch team info');
+        
+        const data = await response.json();
+        if (data.hasApprovedTeam) {
+          setTeamInfo(data);
+          const authorsList = data.teamMembers
+            .map(member => member.replace(' (Team Leader)', ''))
+            .join(', ');
+          setFormData(prev => ({
+            ...prev,
+            authors: authorsList
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching team info:', error);
+      }
+    };
+
+    fetchTeamInfo();
   }, []);
 
   const handleInputChange = (e) => {
@@ -489,51 +521,22 @@ const MyResearch = () => {
                     </div>
 
                     <div className="mb-3">
-                      <label htmlFor="authors" className="form-label" style={{marginLeft: '5%'}}>Authors</label>
-                      <div className="position-relative" style={{width: '90%', marginLeft: '5%'}}>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search authors..."
-                          value={authorSearchTerm}
-                          onChange={(e) => setAuthorSearchTerm(e.target.value)}
-                        />
-                        <div className="selected-authors mt-2">
-                          {selectedAuthors.map(author => (
-                            <span key={author._id} className="badge bg-primary me-2 mb-2">
-                              {author.name}
-                              <button 
-                                type="button"
-                                className="btn-close btn-close-white ms-2"
-                                style={{ fontSize: '0.5rem' }}
-                                onClick={() => setSelectedAuthors(prev => prev.filter(a => a._id !== author._id))}
-                              ></button>
-                            </span>
-                          ))}
-                        </div>
-                        {authorSearchTerm && (
-                          <div className="dropdown-menu show position-absolute w-100">
-                            {availableAuthors
-                              .filter(author => 
-                                author.name.toLowerCase().includes(authorSearchTerm.toLowerCase()) &&
-                                !selectedAuthors.find(selected => selected._id === author._id)
-                              )
-                              .map(author => (
-                                <button
-                                  key={author._id}
-                                  type="button"
-                                  className="dropdown-item"
-                                  onClick={() => {
-                                    setSelectedAuthors(prev => [...prev, author]);
-                                    setAuthorSearchTerm('');
-                                  }}
-                                >
-                                  {author.name} - {author.studentId}
-                                </button>
-                              ))}
-                          </div>
-                        )}
-                      </div>
+                      <label htmlFor="authors" className="form-label">Authors</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="authors"
+                        name="authors"
+                        value={formData.authors}
+                        onChange={handleInputChange}
+                        required
+                        readOnly={teamInfo !== null}
+                      />
+                      {teamInfo && (
+                        <small className="text-muted">
+                          Authors are automatically set based on your team members
+                        </small>
+                      )}
                     </div>
 
                     <div className="row">

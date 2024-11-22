@@ -559,4 +559,75 @@ instructorRoutes.put('/team-requests/:requestId/handle', authenticateToken, asyn
     }
 });
 
+// Get all notifications for instructor
+instructorRoutes.get('/notifications', authenticateToken, async (req, res) => {
+    try {
+        const instructorId = req.user.userId;
+        console.log('Fetching notifications for instructor:', instructorId);
+        
+        const notifications = await Notification.find({
+            recipient: instructorId,
+            recipientModel: 'Instructor'
+        })
+        .sort({ timestamp: -1 }); // Most recent first
+        
+        console.log('Found notifications:', notifications.length);
+        
+        // Transform notifications to ensure all data is properly formatted
+        const transformedNotifications = notifications.map(notification => ({
+            _id: notification._id,
+            type: notification.type,
+            message: notification.message,
+            status: notification.status,
+            timestamp: notification.timestamp,
+            relatedData: notification.relatedData || {},
+            recipientModel: notification.recipientModel
+        }));
+
+        console.log('Transformed notifications:', transformedNotifications);
+        
+        res.json(transformedNotifications);
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ 
+            message: 'Error fetching notifications',
+            error: error.message 
+        });
+    }
+});
+
+// Mark notification as read
+instructorRoutes.put('/notifications/:id/mark-read', authenticateToken, async (req, res) => {
+    try {
+        const notificationId = req.params.id;
+        const instructorId = req.user.userId;
+
+        const notification = await Notification.findOneAndUpdate(
+            {
+                _id: notificationId,
+                recipient: instructorId,
+                status: 'UNREAD'
+            },
+            { status: 'READ' },
+            { new: true }
+        );
+
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found or already read' });
+        }
+
+        res.json({ 
+            success: true,
+            message: 'Notification marked as read',
+            notification 
+        });
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+        res.status(500).json({ 
+            message: 'Error updating notification',
+            error: error.message 
+        });
+    }
+});
+
 export default instructorRoutes;

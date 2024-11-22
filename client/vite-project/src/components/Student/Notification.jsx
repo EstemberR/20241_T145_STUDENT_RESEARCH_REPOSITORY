@@ -123,6 +123,11 @@ const Notification = () => {
                      className={`list-group-item d-flex justify-content-between align-items-start ${notification.status === 'UNREAD' ? 'bg-light' : ''}`}>
                   <div className="ms-2 me-auto">
                     <div className="d-flex align-items-center mb-1">
+                      <i className={`fas ${
+                        notification.type === 'TEAM_REQUEST' ? 'fa-users' : 
+                        notification.type === 'RESEARCH_SUBMISSION' ? 'fa-file-alt' : 
+                        'fa-bell'
+                      } me-2`}></i>
                       <div className="fw-bold">{notification.message}</div>
                       <span className={`ms-2 ${getStatusBadge(notification.status)}`}>
                         {notification.status}
@@ -131,6 +136,13 @@ const Notification = () => {
                     <small className="text-muted">
                       {new Date(notification.timestamp).toLocaleString()}
                     </small>
+                    {notification.type === 'RESEARCH_SUBMISSION' && notification.relatedData && (
+                      <div className="mt-1">
+                        <small className="text-muted">
+                          Title: {notification.relatedData.title}
+                        </small>
+                      </div>
+                    )}
                   </div>
                   {notification.status === 'UNREAD' && (
                     <button 

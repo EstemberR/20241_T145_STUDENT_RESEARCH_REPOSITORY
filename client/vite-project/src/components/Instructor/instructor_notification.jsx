@@ -39,21 +39,24 @@ const InstructorNotification = () => {
         }
 
         // Fetch notifications
-        const notificationsResponse = await fetch('http://localhost:8000/instructor/team-requests', {
+        const notificationsResponse = await fetch('http://localhost:8000/instructor/notifications', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         
         if (!notificationsResponse.ok) {
-          throw new Error('Failed to fetch notifications');
+          const errorData = await notificationsResponse.json();
+          console.error('Notifications error:', errorData);
+          throw new Error(errorData.message || 'Failed to fetch notifications');
         }
 
         const notificationsData = await notificationsResponse.json();
+        console.log('Received notifications:', notificationsData);
         setNotifications(notificationsData);
       } catch (error) {
-        console.error('Error:', error);
-        alert('Error loading data');
+        console.error('Error details:', error);
+        alert('Error loading data: ' + error.message);
       } finally {
         setLoading(false);
       }
@@ -108,7 +111,16 @@ const InstructorNotification = () => {
                     <div className="d-flex justify-content-between align-items-start">
                       <div className="ms-2 me-auto">
                         <div className="d-flex align-items-center mb-1">
-                          <h6 className="mb-1">Team Formation Request</h6>
+                          <i className={`fas ${
+                            notification.type === 'TEAM_REQUEST' ? 'fa-users' : 
+                            notification.type === 'RESEARCH_SUBMISSION' ? 'fa-file-alt' : 
+                            'fa-bell'
+                          } me-2`}></i>
+                          <h6 className="mb-1">
+                            {notification.type === 'TEAM_REQUEST' ? 'Team Formation Request' : 
+                             notification.type === 'RESEARCH_SUBMISSION' ? 'Research Submission' : 
+                             'Notification'}
+                          </h6>
                           <span className={`ms-2 ${getStatusBadge(notification.status)}`}>
                             {notification.status}
                           </span>
@@ -117,10 +129,16 @@ const InstructorNotification = () => {
                         <small className="text-muted">
                           {new Date(notification.timestamp).toLocaleString()}
                         </small>
-                        {notification.relatedData?.studentId && (
+                        {notification.relatedData && (
                           <div className="mt-1">
                             <small className="text-muted">
-                              Student: {notification.relatedData.studentId.name} ({notification.relatedData.studentId.studentId})
+                              {notification.type === 'TEAM_REQUEST' && notification.relatedData.studentId && (
+                                <>Student: {notification.relatedData.studentId.name} ({notification.relatedData.studentId.studentId})</>
+                              )}
+                              {notification.type === 'RESEARCH_SUBMISSION' && (
+                                <>Title: {notification.relatedData.title}<br/>
+                                Submitted by: {notification.relatedData.submittedBy}</>
+                              )}
                             </small>
                           </div>
                         )}
@@ -129,9 +147,13 @@ const InstructorNotification = () => {
                         <div>
                           <button 
                             className="btn btn-success btn-sm me-2"
-                            onClick={() => navigate('/instructor/request')}
+                            onClick={() => navigate(
+                              notification.type === 'TEAM_REQUEST' ? '/instructor/request' :
+                              notification.type === 'RESEARCH_SUBMISSION' ? '/instructor/submissions' :
+                              '#'
+                            )}
                           >
-                            View Request
+                            View {notification.type === 'TEAM_REQUEST' ? 'Request' : 'Submission'}
                           </button>
                         </div>
                       )}

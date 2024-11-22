@@ -68,12 +68,17 @@ const researchSchema = new mongoose.Schema({
     required: true
   },
   teamMembers: [{
-      type: String,
-      trim: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Student'
   }],
   section: {
       type: String,
       trim: true
+  },
+  submittedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Student',
+      required: true
   }
 }, { 
     timestamps: true,
