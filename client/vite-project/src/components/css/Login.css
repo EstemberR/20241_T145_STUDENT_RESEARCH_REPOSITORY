@@ -33,51 +33,104 @@ html, body {
   
   .login-container {
     display: flex;
-    height: 100vh;
-    background-color: #f4f4f4; 
+    min-height: 100vh;
+    background-color: #f4f4f4;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
   }
   
   .login-image {
-    flex: 1; 
+    flex: 1;
     position: relative;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
-  .login-image .background {
-    background-image: url("../../assets/cas_building.jpg");
-    background-size: cover;
-    background-position: center;
-    width: 100%;
-    height: 100%;
-    filter: blur(5px); 
+  .background {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1; 
-  
+    width: 100%;
+    height: 100%;
+    background-image: url('../../assets/cas_building.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: blur(5px);
+    transform: scale(1.1);
   }
   
+  .content-overlay {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: white;
+    padding: 2rem;
+  }
+  
+  .overlay-image {
+    background-image: url('../../assets/cas-logo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto 2rem;
+  }
+  
+  .welcome-text {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  
+  .welcome-text h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .welcome-text p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+  }
   
   .login-form-container {
     flex: 1;
-    background-color: #e6f2e6;
     display: flex;
-    flex-direction: column;
     align-items: center;
+    justify-content: center;
     padding: 2rem;
-    border-radius: 10px; 
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); 
+    background-color: #e6f2e6;  /* Light green background */
   }
   
-  .login-title-container {
-    margin-bottom: 1rem;
-    margin-top: -2rem;
+  .login-card {
+    width: 100%;
+    max-width: 450px;
+    padding: 2rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(47, 107, 47, 0.1);  /* Green-tinted shadow */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
   
-  .login-title {
-    color: #2f6b2f; /* Dark green for title */
+  .login-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(47, 107, 47, 0.15);
+  }
+  
+  .login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .login-header h2 {
+    color: #2f6b2f;
     font-weight: bold;
-    font-size: 2.8rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .login-header p {
+    color: #666;
   }
   
   .user-section{
@@ -95,11 +148,23 @@ html, body {
   }
   
   .btn-google {
-    background-color: #2f6b2f;
-    color: white;
-    font-size: 1.1rem; 
-    border-radius: 5px; 
+    width: 100%;
+    padding: 0.8rem;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
   }
+  
+  .btn-google:hover {
+    background-color: #f8f8f8;
+    border-color: #2f6b2f;
+  }
+  
   .btn-signup {
     background-color: #2f6b2f; 
     color: white;
@@ -107,11 +172,18 @@ html, body {
     border-radius: 5px;
   }
   .btn-submit {
+    width: 100%;
+    padding: 0.8rem;
     background-color: #2f6b2f;
     color: white;
-    font-size: 1.1rem;
-    border-radius: 5px; 
-    margin-top: 0.7rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-submit:hover {
+    background-color: #245324;
   }
   
   .or-label {
@@ -139,5 +211,187 @@ html, body {
 .user-section .form-check-label {
     font-size: 0.9rem;
     color: #666;
+}
+  
+.divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 35%;
+    height: 1px;
+    background-color: #ddd;
+}
+
+.divider::before { left: 0; }
+.divider::after { right: 0; }
+
+.divider span {
+    background-color: white;
+    padding: 0 1rem;
+    color: #666;
+    font-size: 0.9rem;
+    text-align: center;
+    white-space: nowrap;
+}
+  
+.recaptcha-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem auto;  /* Changed to auto for horizontal centering */
+    width: 100%;
+}
+
+.g-recaptcha {
+    display: inline-block;
+    margin: 0 auto;
+}
+  
+/* Alert Styles */
+.alert {
+    text-align: center;
+    animation: slideDown 0.3s ease-out;
+    transition: opacity 0.3s ease;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translate(-50%, -100%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+/* Add hover effect for close button */
+.alert .btn-close:hover {
+    opacity: 1;
+}
+  
+/* Button loading states */
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Spinner styles */
+.spinner-border {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+    transition: opacity 0.2s ease;
+}
+
+/* Adjust button styles when disabled */
+.btn-google:disabled {
+    background-color: #cccccc;
+}
+
+.btn-submit:disabled {
+    background-color: #4a8f4a;
+}
+  
+/* Base styles for login container */
+.login-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Fade out animation */
+.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Page transition animations */
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Apply animations to main container */
+.login-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.login-container.fade-out {
+    animation: fadeOut 0.5s ease-in forwards;
+}
+
+/* Optional: Add transitions to form elements */
+.login-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(47, 107, 47, 0.15);
+}
+
+/* Button transitions */
+.btn-google,
+.btn-submit {
+    transition: all 0.3s ease;
+}
+
+/* Form input transitions */
+.form-control {
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Alert transitions */
+.alert {
+    transition: opacity 0.3s ease;
+}
+
+/* Optional: Add loading transition */
+.spinner-border {
+    transition: opacity 0.2s ease;
 }
   

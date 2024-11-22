@@ -13,7 +13,7 @@ const Login = () => {
     const [credentials, setCredentials] = useState({
         email: '',
         password: '',
-        rememberMe: true
+        rememberMe: false
     });
     const [userName, setUserName] = useState(null); 
     //Capcha
@@ -24,6 +24,9 @@ const Login = () => {
     const [alertType, setAlertType] = useState(''); // 'success' or 'danger'
     const [showAlert, setShowAlert] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [isTransitioning, setIsTransitioning] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -39,36 +42,41 @@ const Login = () => {
         }
     }, [navigate]);
 
+    // Helper function for navigation with transition
+    const navigateWithTransition = (path, message, type) => {
+        setIsTransitioning(true);
+        showAlertMessage(message, type);
+        
+        // Wait for animation to complete before navigating
+        setTimeout(() => {
+            navigate(path);
+        }, 500); // Match this with your CSS animation duration
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSubmitting) return; // Prevent multiple submissions
+        
         if (!recaptchaToken) {
             showAlertMessage("Please complete the ReCAPTCHA verification.", "danger");
-           
             return;
         }
 
-        try {
-            // Add console logs for debugging
-            console.log('Attempting login with:', {
-                email: credentials.email,
-                isSuperAdmin: credentials.email === 'superadmin@buksu.edu.ph'
-            });
+        setIsSubmitting(true); // Start loading
 
-            // Check for superadmin
+        try {
+            // Check for superadmin - Always use localStorage for admin
             if (credentials.email === 'superadmin@buksu.edu.ph' && 
                 credentials.password === 'BuksuSuperAdmin2024') {
                 
                 console.log('Superadmin credentials matched');
                 
-                // Store superadmin data
-                const storage = credentials.rememberMe ? localStorage : sessionStorage;
-                storage.setItem('token', 'superadmin-token');
-                storage.setItem('userName', 'Super Administrator');
-                storage.setItem('userRole', 'superadmin');
+                // Always use localStorage for admin, regardless of remember me
+                localStorage.setItem('token', 'superadmin-token');
+                localStorage.setItem('userName', 'Super Administrator');
+                localStorage.setItem('userRole', 'superadmin');
                 
-                // Navigate to superadmin dashboard
-                navigate('/superadmin/dashboard');
-                showAlertMessage('Super Admin login successful', 'success');
+                navigateWithTransition('/superadmin/dashboard', 'Super Admin login successful', 'success');
                 return;
             }
 
@@ -93,32 +101,28 @@ const Login = () => {
                     return;
                 }
 
-                const storage = credentials.rememberMe ? localStorage : sessionStorage;
-                storage.setItem('token', data.token);
-                storage.setItem('userName', data.name);
-                storage.setItem('userRole', data.role);
-
-                // Handle Google user data if present
-                if (data.isGoogleUser) {
-                    storage.setItem('isGoogleUser', 'true');
-                    storage.setItem('userEmail', data.email);
-                    storage.setItem('userPhoto', data.photoURL);
+                // Always use localStorage for admin users
+                if (data.role === 'admin' || data.role === 'superadmin') {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userName', data.name);
+                    localStorage.setItem('userRole', data.role);
+                } else {
+                    // For non-admin users, use the remember me preference
+                    const storage = credentials.rememberMe ? localStorage : sessionStorage;
+                    storage.setItem('token', data.token);
+                    storage.setItem('userName', data.name);
+                    storage.setItem('userRole', data.role);
                 }
 
                 // Navigate based on role
                 if (data.role === 'superadmin') {
-                    navigate('/SuperAdmin/dashboard'); // or wherever you want superadmin to go
-                    showAlertMessage('Super Admin login successful', 'success');
-                }
-                if (data.role === 'student') {
-                    navigate('/student/dashboard');
-                    showAlertMessage('Student login successful', 'success');
-                } else if (data.role === 'instructor') {
-                    navigate('/instructor/instructor_dashboard');
-                    showAlertMessage('Instructor login successful', 'success');
+                    navigateWithTransition('/SuperAdmin/dashboard', 'Super Admin login successful', 'success');
                 } else if (data.role === 'admin') {
-                    navigate('/admin/admin_dashboard');
-                    showAlertMessage('Admin login successful', 'success');
+                    navigateWithTransition('/admin/admin_dashboard', 'Admin login successful', 'success');
+                } else if (data.role === 'student') {
+                    navigateWithTransition('/student/dashboard', 'Student login successful', 'success');
+                } else if (data.role === 'instructor') {
+                    navigateWithTransition('/instructor/instructor_dashboard', 'Instructor login successful', 'success');
                 }
             } else {
                 showAlertMessage(data.message || 'Invalid credentials', 'danger');
@@ -126,11 +130,16 @@ const Login = () => {
         } catch (error) {
             console.error('Login error:', error);
             showAlertMessage('An error occurred during login', 'danger');
-        } 
+        } finally {
+            setIsSubmitting(false); // End loading regardless of outcome
+        }
     };
 
     // Firebase Google login function
     const handleGoogle = async () => {
+        if (isGoogleLoading) return; // Prevent multiple clicks
+        setIsGoogleLoading(true);
+
         const provider = new GoogleAuthProvider();
 
         try {
@@ -188,6 +197,8 @@ const Login = () => {
         } catch (error) {
             console.error('Error during Google sign-in:', error);
             showAlertMessage('Error during Google sign-in. Please try again.', 'danger');
+        } finally {
+            setIsGoogleLoading(false);
         }
     };
     
@@ -197,115 +208,158 @@ const Login = () => {
         setRecaptchaToken(token);
     };
     
-    // Helper function to show alerts
+    // Updated showAlertMessage function
     const showAlertMessage = (message, type) => {
         setAlertMessage(message);
         setAlertType(type);
         setShowAlert(true);
-        setTimeout(() => setShowAlert(false), 5000);
+        setTimeout(() => setShowAlert(false), 5000); // Hide after 5 seconds
     };
     
     return (
-        <div className="login-container">
+        <div className={`login-container ${isTransitioning ? 'fade-out' : ''}`}>
+            {/* Updated Alert Component */}
             {showAlert && (
-                <div className={`alert alert-${alertType} alert-dismissible fade show position-absolute top-0 start-50 translate-middle-x mt-3`} 
-                     role="alert" 
-                     style={{ 
-                         maxWidth: '300px', 
-                         zIndex: 1000 
-                     }}>
+                <div 
+                    className={`alert alert-${alertType} alert-dismissible fade show position-fixed`}
+                    role="alert"
+                    style={{
+                        top: '20px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 1050,
+                        minWidth: '300px',
+                        maxWidth: '500px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                    }}
+                >
+                    {alertType === 'success' && <i className="fas fa-check-circle me-2"></i>}
+                    {alertType === 'danger' && <i className="fas fa-exclamation-circle me-2"></i>}
+                    {alertType === 'warning' && <i className="fas fa-exclamation-triangle me-2"></i>}
                     {alertMessage}
                     <button 
                         type="button" 
                         className="btn-close" 
-                        onClick={() => setShowAlert(false)} 
-                        style={{
-                            position: 'absolute',
-                            right: '10px',
-                            top: '50%',
-                            transform: 'translateY(-50%)'
-                        }}
+                        onClick={() => setShowAlert(false)}
+                        aria-label="Close"
                     ></button>
                 </div>
             )}
-            <div className="col-md-6 d-none d-md-block login-image-container login-image">
+            <div className="login-image">
                 <div className="background"></div>
-                <div className="overlay-image"></div>
+                <div className="content-overlay">
+                    <div className="overlay-image"></div>
+                    <div className="welcome-text">
+                        <h2>Welcome to</h2>
+                        <h1>BukSU Research Repository</h1>
+                        <p>Access and manage research papers with ease</p>
+                    </div>
+                </div>
             </div>
 
             <div className="login-form-container">
-                <div className="login-title-container text-center buksu-logo">
-                    <h1 className="login-title">Student Research Repository System</h1>
-                </div>
-
-                <div className="admin-section text-center">
-                        <div className="user-section text-center">
-                            <h2 className="login-label">User Login</h2>
-                            <div className="d-flex flex-column align-items-center">
-                                <button onClick={handleGoogle} className="btn btn-google w-50 mb-2">
-                                    <i className="fab fa-google me-2"></i>Login with Google
-                                </button>
-                                <div className="form-check mb-3">
-                                    <input
-                                        type="checkbox"
-                                        className="form-check-input"
-                                        id="rememberMe"
-                                        checked={credentials.rememberMe}
-                                        onChange={(e) => setCredentials(prev => ({
-                                            ...prev,
-                                            rememberMe: e.target.checked
-                                        }))}
-                                    />
-                                    <label className="form-check-label" htmlFor="rememberMe">
-                                        Keep me logged in
-                                    </label>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <hr />
-                <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm bg-white">
-            
-                    <h2 className="login-label">Admin Login</h2>
-                    <div className="form-group">
-                        <input
-                            type="email"
-                            className="form-control mb-3"
-                            placeholder="Email"
-                            value={credentials.email}
-                            onChange={(e) => setCredentials(prev => ({
-                                ...prev,
-                                email: e.target.value
-                            }))}
-                            required
-                        />
+                <div className="login-card">
+                    <div className="login-header">
+                        <h2>Sign In</h2>
+                        <p>Please login to continue</p>
                     </div>
 
-                        <div className="form-group">
+                    <div className="login-options">
+                        <button 
+                            onClick={handleGoogle} 
+                            className="btn btn-google" 
+                            disabled={isGoogleLoading}
+                        >
+                            {isGoogleLoading ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Signing in...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fab fa-google"></i>
+                                    <span>Continue with Google</span>
+                                </>
+                            )}
+                        </button>
+
+                        <div className="form-check mb-3 mt-2">
                             <input
-                                type="password"
-                                className="form-control mb-3"
-                                placeholder="Password"
-                                value={credentials.password}
+                                type="checkbox"
+                                className="form-check-input"
+                                id="rememberMe"
+                                checked={credentials.rememberMe}
                                 onChange={(e) => setCredentials(prev => ({
                                     ...prev,
-                                    password: e.target.value
+                                    rememberMe: e.target.checked
                                 }))}
-                                required
                             />
+                            <label className="form-check-label" htmlFor="rememberMe">
+                                Remember me
+                            </label>
                         </div>
 
-                        <ReCAPTCHA
-                            className="ReCapcha"
-                            sitekey="6LfhrXEqAAAAAGnZSuJmLvDYlaNiBtWojYht08wy"
-                            onChange={handleRecaptchaChange}
-                        />
+                        <div className="divider">
+                            <span>or sign in as admin</span>
+                        </div>
 
-                        <button type="submit" className="btn btn-submit w-50 mb-3">
-                            Submit
-                        </button>
-                    </form>
+                        <form onSubmit={handleSubmit} className="admin-login-form">
+                            <div className="form-floating mb-3">
+                                <input
+                                    type="email"
+                                    className="form-control"
+                                    id="emailInput"
+                                    placeholder="Email"
+                                    value={credentials.email}
+                                    onChange={(e) => setCredentials(prev => ({
+                                        ...prev,
+                                        email: e.target.value
+                                    }))}
+                                    required
+                                />
+                                <label htmlFor="emailInput">Email address</label>
+                            </div>
+
+                            <div className="form-floating mb-3">
+                                <input
+                                    type="password"
+                                    className="form-control"
+                                    id="passwordInput"
+                                    placeholder="Password"
+                                    value={credentials.password}
+                                    onChange={(e) => setCredentials(prev => ({
+                                        ...prev,
+                                        password: e.target.value
+                                    }))}
+                                    required
+                                />
+                                <label htmlFor="passwordInput">Password</label>
+                            </div>
+
+                            <div className="recaptcha-container">
+                                <ReCAPTCHA
+                                    className="g-recaptcha"
+                                    sitekey="6LfhrXEqAAAAAGnZSuJmLvDYlaNiBtWojYht08wy"
+                                    onChange={handleRecaptchaChange}
+                                />
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                className="btn btn-submit" 
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        Signing in...
+                                    </>
+                                ) : (
+                                    'Sign In'
+                                )}
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
