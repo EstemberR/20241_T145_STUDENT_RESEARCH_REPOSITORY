@@ -98,7 +98,7 @@ router.post('/google', async (req, res) => {
                     studentId: email.slice(0, 10)
                 });
             } else if (email.endsWith('@gmail.com')) {
-              if (email.endsWith('midnight.rain32145@gmail.com')) {
+              if (email.endsWith('midnight.rain32145@gmail.com') || email.endsWith('nezerazami@gmail.com')) {
                 user = new Student({ 
                   name, 
                   email, 

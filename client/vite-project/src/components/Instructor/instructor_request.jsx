@@ -17,6 +17,7 @@ const InstructorRequest = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [userRole, setUserRole] = useState('');
 
+
   const fetchRequests = useCallback(async () => {
     try {
       const token = getToken();
@@ -25,14 +26,26 @@ const InstructorRequest = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/instructor/team-requests', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      // First fetch user role
+      const profileResponse = await fetch('http://localhost:8000/instructor/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const profileData = await profileResponse.json();
+      if (profileResponse.ok) {
+        setUserRole(profileData.role);
+      }
+
+      // Then fetch team requests
+      const requestsResponse = await fetch('http://localhost:8000/instructor/team-requests', {
+        headers: { 'Authorization': `Bearer ${token}`}
       });
 
-      if (!response.ok) throw new Error('Failed to fetch requests');
+      if (!requestsResponse.ok) throw new Error('Failed to fetch requests');
       
-      const data = await response.json();
-      setRequests(data);
+      const requestsData = await requestsResponse.json();
+      setRequests(requestsData);
     } catch (error) {
       console.error('Error:', error);
       alert('Error fetching requests');
@@ -147,9 +160,8 @@ const InstructorRequest = () => {
         <Header userName={userName} userRole={userRole} />
         <main className="p-4">
           <div className="mb-4">
-            <h4>Team Formation Requests</h4>
+            <h4>STUDENT REQUESTS</h4>
           </div>
-
           <ul className="nav nav-tabs mb-4">
             {['UNREAD', 'APPROVED', 'REJECTED'].map(tab => (
               <li key={tab} className="nav-item">

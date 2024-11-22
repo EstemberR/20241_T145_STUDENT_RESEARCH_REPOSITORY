@@ -55,7 +55,7 @@ const Sidebar = () => {
     </li>
     <li className="nav-item">
     <Link className={`nav-link ${location.pathname === '/instructor/requesting' ? 'active' : ''}`} to="/instructor/requesting">
-    <i className="fas fa-user-shield request zx"></i> Role Request
+    <i className="fas fa-user-shield request zx"></i> Student Requests
         </Link>
     </li>
     <li className="nav-item">
@@ -68,16 +68,6 @@ const Sidebar = () => {
     <i className="fas fa-bell notification zx"></i> Notifications
         </Link>
     </li>
-    {userRoles.includes('instructor') && userRoles.includes('adviser') && (
-        <li className="nav-item">
-            <Link 
-                className={`nav-link ${location.pathname === '/instructor/adviser-researches' ? 'active' : ''}`} 
-                to="/instructor/adviser-researches"
-            >
-                <i className="fas fa-microscope zx"></i> Adviser Researches
-            </Link>
-        </li>
-    )}
     <li className="nav-item">
           <span className="nav-link" onClick={handleLogoutClick} to="/">
             <i className="fas fa-sign-out-alt logout zx"></i> Logout

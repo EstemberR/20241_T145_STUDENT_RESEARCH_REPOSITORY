@@ -47,7 +47,6 @@ const Login = () => {
         setIsTransitioning(true);
         showAlertMessage(message, type);
         
-        // Wait for animation to complete before navigating
         setTimeout(() => {
             navigate(path);
         }, 500); // Match this with your CSS animation duration

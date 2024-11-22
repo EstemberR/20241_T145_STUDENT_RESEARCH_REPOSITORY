@@ -12,7 +12,9 @@ const studentRoutes = express.Router();
 studentRoutes.get('/profile', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId; 
-        const user = await Student.findById(userId).select('name email role course section');
+        const user = await Student.findById(userId)
+            .select('name email role course section managedBy')
+            .populate('managedBy', 'name');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
