@@ -356,7 +356,8 @@ const MyResearch = () => {
         <main className="main-content p-4">
           {/* Research Table Section */}
           <h4 className="my-3">STUDENT SUBMISSIONS</h4>
-          <button 
+          <div className="d-flex justify-content-end mb-3" style={{marginRight: '60px'}}>
+            <button 
               className="btn btn-success" 
               onClick={handleAddNewClick}
               data-bs-toggle="modal" 
@@ -364,6 +365,7 @@ const MyResearch = () => {
             >
               <i className="fas fa-plus me-2"></i>Add New Research
             </button>
+          </div>
           <div>
             {/* Tab Navigation */}
             <ul className="nav nav-tabs mb-4">
