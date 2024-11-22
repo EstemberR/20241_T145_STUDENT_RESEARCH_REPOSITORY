@@ -85,3 +85,65 @@
     margin-top: 10px; 
   }
   
+  /* Alert animations */
+  .alert {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+        transform: translate(-50%, -100%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+  }
+
+  /* Select styles */
+  .basic-multi-select,
+  .basic-select {
+    margin-top: 0.5rem;
+  }
+
+  .select__control {
+    border-color: #dee2e6 !important;
+    box-shadow: none !important;
+  }
+
+  .select__control:hover {
+    border-color: #80bdff !important;
+  }
+
+  .select__control--is-focused {
+    border-color: #80bdff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+  }
+
+  /* Card improvements */
+  .card {
+    transition: all 0.3s ease;
+    border: none;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .card-header {
+    border-bottom: none;
+    padding: 1.25rem;
+  }
+
+  /* Button improvements */
+  .btn {
+    transition: all 0.3s ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+  

@@ -37,12 +37,18 @@ const MyResearch = () => {
   const [selectedAuthors, setSelectedAuthors] = useState([]);
   const [authorSearchTerm, setAuthorSearchTerm] = useState('');
   const [teamInfo, setTeamInfo] = useState(null);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [researchToDelete, setResearchToDelete] = useState(null);
 
   const fetchResearchEntries = async () => {
     try {
       const token = getToken();
       if (!token) {
-        alert('Please log in first.');
+        showAlertMessage('Please log in first.', 'danger');
         localStorage.removeItem('userName');
         localStorage.removeItem('token');
         navigate('/');
@@ -64,7 +70,7 @@ const MyResearch = () => {
       setResearchEntries(data);
     } catch (error) {
       console.error('Error fetching research entries:', error);
-      alert(`Error fetching research entries: ${error.message}`);
+      showAlertMessage(`Error fetching research entries: ${error.message}`, 'danger');
     }
   };
 
@@ -196,129 +202,149 @@ const MyResearch = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    try {
-      if (!file) {
-        alert('Please select a file to upload.');
-        return;
-      }
-
-      if (!studentInfo) {
-        alert('Student information not loaded yet. Please try again.');
-        return;
-      }
-
-      if (!studentInfo.course) {
-        alert('Please set your course in your profile before submitting research.');
-        navigate('/profile');
-        return;
-      }
-
-      // Create form data with course included
-      const formDataToSubmit = new FormData();
-      formDataToSubmit.append('file', file);
-      formDataToSubmit.append('title', formData.title);
-      formDataToSubmit.append('abstract', formData.abstract);
-      formDataToSubmit.append('authors', selectedAuthors.map(author => author.name).join(', '));
-      formDataToSubmit.append('keywords', formData.keywords);
-      formDataToSubmit.append('course', studentInfo.course);
-      formDataToSubmit.append('status', 'Pending');
-      formDataToSubmit.append('uploadDate', new Date().toISOString());
-
-      const fileUploadResponse = await fetch('http://localhost:8000/api/auth/google-drive', {
-        method: 'POST',
-        body: formDataToSubmit,
-      });
-
-      if (!fileUploadResponse.ok) {
-        throw new Error('File upload failed');
-      }
-
-      const fileResult = await fileUploadResponse.json();
-      
-      // Then submit research data
-      const token = getToken();
-      const researchSubmitResponse = await fetch('http://localhost:8000/student/submit-research', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          abstract: formData.abstract,
-          authors: selectedAuthors.map(author => author.name).join(', '),
-          keywords: formData.keywords,
-          fileUrl: `https://drive.google.com/file/d/${fileResult.fileId}/view`,
-          driveFileId: fileResult.fileId,
-          uploadDate: new Date().toISOString()
-        })
-      });
-
-      if (!researchSubmitResponse.ok) {
-        throw new Error('Failed to submit research');
-      }
-
-      const savedResearch = await researchSubmitResponse.json();
-      console.log('Research saved:', savedResearch);
-
-      // Reset form
-      setFormData({
-        title: '',
-        abstract: '',
-        authors: '',
-        keywords: '',
-        driveLink: '',
-        status: RESEARCH_STATUS.PENDING,
-        uploadDate: new Date().toISOString().split('T')[0]
-      });
-      setFile(null);
-
-      // Close modal
-      const modal = document.getElementById('submitResearchModal');
-      if (modal) {
-        const bootstrapModal = bootstrap.Modal.getInstance(modal);
-        if (bootstrapModal) {
-          bootstrapModal.hide();
-        }
-      }
-
-      // Refresh research entries
-      await fetchResearchEntries();
-      
-      alert('Research submitted successfully!');
-    } catch (error) {
-      console.error('Error submitting research:', error);
-      alert(`Error submitting research: ${error.message}`);
+    if (!file) {
+      showAlertMessage('Please select a file to upload.', 'warning');
+      return;
     }
+
+    if (!studentInfo) {
+      showAlertMessage('Student information not loaded yet. Please try again.', 'warning');
+      return;
+    }
+
+    if (!studentInfo.course) {
+      showAlertMessage('Please set your course in your profile before submitting research.', 'warning');
+      navigate('/profile');
+      return;
+    }
+
+    setPendingAction({
+      type: 'submit',
+      data: { formData, file }
+    });
+    setShowConfirmModal(true);
   };
 
-  const handleViewResearch = (research) => {
-    setSelectedResearch(research);
-  };
+  const handleConfirmedAction = async () => {
+    if (!pendingAction) return;
 
-  const handleDelete = async (researchId) => {
-    if (window.confirm('Are you sure you want to delete this research?')) {
+    if (pendingAction.type === 'delete') {
       try {
         const token = getToken();
-        const response = await fetch(`http://localhost:8000/student/research/${researchId}`, {
+        const response = await fetch(`http://localhost:8000/student/research/${pendingAction.data._id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to delete research');
+        if (response.ok) {
+          showAlertMessage('Research deleted successfully', 'success');
+          fetchResearchEntries(); // Refresh the list
+        } else {
+          const data = await response.json();
+          showAlertMessage(data.message || 'Error deleting research', 'danger');
         }
-
-        // Refresh the research list
-        fetchResearchEntries();
-        alert('Research deleted successfully');
       } catch (error) {
         console.error('Error deleting research:', error);
-        alert(`Error deleting research: ${error.message}`);
+        showAlertMessage('Error deleting research', 'danger');
+      }
+    } else if (pendingAction.type === 'submit') {
+      try {
+        // Create form data with course included
+        const formDataToSubmit = new FormData();
+        formDataToSubmit.append('file', file);
+        formDataToSubmit.append('title', formData.title);
+        formDataToSubmit.append('abstract', formData.abstract);
+        formDataToSubmit.append('authors', selectedAuthors.map(author => author.name).join(', '));
+        formDataToSubmit.append('keywords', formData.keywords);
+        formDataToSubmit.append('course', studentInfo.course);
+        formDataToSubmit.append('status', 'Pending');
+        formDataToSubmit.append('uploadDate', new Date().toISOString());
+
+        const fileUploadResponse = await fetch('http://localhost:8000/api/auth/google-drive', {
+          method: 'POST',
+          body: formDataToSubmit,
+        });
+
+        if (!fileUploadResponse.ok) {
+          throw new Error('File upload failed');
+        }
+
+        const fileResult = await fileUploadResponse.json();
+        
+        // Then submit research data
+        const token = getToken();
+        const researchSubmitResponse = await fetch('http://localhost:8000/student/submit-research', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            abstract: formData.abstract,
+            authors: selectedAuthors.map(author => author.name).join(', '),
+            keywords: formData.keywords,
+            fileUrl: `https://drive.google.com/file/d/${fileResult.fileId}/view`,
+            driveFileId: fileResult.fileId,
+            uploadDate: new Date().toISOString()
+          })
+        });
+
+        if (!researchSubmitResponse.ok) {
+          throw new Error('Failed to submit research');
+        }
+
+        const savedResearch = await researchSubmitResponse.json();
+        console.log('Research saved:', savedResearch);
+
+        // Reset form and close modal
+        setFormData({
+          title: '',
+          abstract: '',
+          authors: '',
+          keywords: '',
+          driveLink: '',
+          status: RESEARCH_STATUS.PENDING,
+          uploadDate: new Date().toISOString().split('T')[0]
+        });
+        setFile(null);
+        setShowForm(false);
+
+        // Refresh research entries
+        await fetchResearchEntries();
+        
+        showAlertMessage('Research submitted successfully!', 'success');
+      } catch (error) {
+        console.error('Error submitting research:', error);
+        showAlertMessage('Error submitting research. Please try again.', 'danger');
       }
     }
+    
+    setShowConfirmModal(false);
+    setPendingAction(null);
+    setResearchToDelete(null);
+  };
+
+  const handleViewResearch = (research) => {
+    setSelectedResearch(research);
+  };
+
+  const handleDelete = (research) => {
+    setResearchToDelete(research);
+    setPendingAction({
+      type: 'delete',
+      data: research
+    });
+    setShowConfirmModal(true);
+  };
+
+  const showAlertMessage = (message, type) => {
+    setAlertMessage(message);
+    setAlertType(type);
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 5000);
   };
 
   return (
@@ -329,7 +355,6 @@ const MyResearch = () => {
 
         <main className="main-content p-4">
           {/* Research Table Section */}
-          <div className="d-flex justify-content-between align-items-center mb-4">
           <h4 className="my-3">STUDENT SUBMISSIONS</h4>
           <button 
               className="btn btn-success" 
@@ -339,7 +364,6 @@ const MyResearch = () => {
             >
               <i className="fas fa-plus me-2"></i>Add New Research
             </button>
-          </div>
           <div>
             {/* Tab Navigation */}
             <ul className="nav nav-tabs mb-4">
@@ -477,7 +501,7 @@ const MyResearch = () => {
                                       {research.status === RESEARCH_STATUS.PENDING && (
                                         <button 
                                           className="btn btn-sm btn-danger"
-                                          onClick={() => handleDelete(research._id)}
+                                          onClick={() => handleDelete(research)}
                                         >
                                           <i className="fas fa-trash"></i> Delete
                                         </button>
@@ -758,6 +782,94 @@ const MyResearch = () => {
               </div>
             </div>
           </div>
+
+          {/* Alert Component */}
+          {showAlert && (
+            <div 
+              className={`alert alert-${alertType} alert-dismissible fade show position-fixed`}
+              role="alert"
+              style={{
+                top: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 1050,
+                minWidth: '300px',
+                maxWidth: '500px',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              {alertType === 'success' && <i className="fas fa-check-circle me-2"></i>}
+              {alertType === 'danger' && <i className="fas fa-exclamation-circle me-2"></i>}
+              {alertType === 'warning' && <i className="fas fa-exclamation-triangle me-2"></i>}
+              {alertMessage}
+              <button 
+                type="button" 
+                className="btn-close" 
+                onClick={() => setShowAlert(false)}
+              ></button>
+            </div>
+          )}
+
+          {/* Updated Confirmation Modal */}
+          {showConfirmModal && (
+            <div className="modal fade show" 
+                 style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} 
+                 tabIndex="-1">
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      {pendingAction?.type === 'submit' ? 'Submit Research' : 
+                       pendingAction?.type === 'delete' ? 'Delete Research' : 'Confirm Action'}
+                    </h5>
+                    <button 
+                      type="button" 
+                      className="btn-close" 
+                      onClick={() => {
+                        setShowConfirmModal(false);
+                        setPendingAction(null);
+                        setResearchToDelete(null);
+                      }}
+                    ></button>
+                  </div>
+                  <div className="modal-body">
+                    {pendingAction?.type === 'delete' ? (
+                      <div>
+                        <p className="text-danger">
+                          <i className="fas fa-exclamation-triangle me-2"></i>
+                          Are you sure you want to delete this research?
+                        </p>
+                        <p className="fw-bold mb-1">{researchToDelete?.title}</p>
+                        <p className="text-muted small">This action cannot be undone.</p>
+                      </div>
+                    ) : (
+                      <p>Are you sure you want to submit this research paper?</p>
+                    )}
+                  </div>
+                  <div className="modal-footer">
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary" 
+                      onClick={() => {
+                        setShowConfirmModal(false);
+                        setPendingAction(null);
+                        setResearchToDelete(null);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="button" 
+                      className={`btn ${pendingAction?.type === 'delete' ? 'btn-danger' : 'btn-success'}`}
+                      onClick={handleConfirmedAction}
+                    >
+                      {pendingAction?.type === 'delete' ? 'Delete' : 'Confirm'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

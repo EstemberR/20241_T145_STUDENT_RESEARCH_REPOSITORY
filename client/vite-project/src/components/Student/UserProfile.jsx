@@ -32,6 +32,19 @@ const Profile = () => {
   });
   const [profilePic, setProfilePic] = useState(null);
   const navigate = useNavigate();
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingChanges, setPendingChanges] = useState(null);
+
+  // Helper function for showing alerts
+  const showAlertMessage = (message, type) => {
+    setAlertMessage(message);
+    setAlertType(type);
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 5000);
+  };
 
   // Fetch profile data
   useEffect(() => {
@@ -95,10 +108,16 @@ const Profile = () => {
   // Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setShowConfirmModal(true);
+    setPendingChanges(user);
+  };
+
+  // New function to handle confirmed submission
+  const handleConfirmedSubmit = async () => {
     try {
-      const token = localStorage.getItem('token'); // Get the token from local storage
+      const token = localStorage.getItem('token');
       if (!token) {
-        alert('Please log in first.');
+        showAlertMessage('Please log in first.', 'danger');
         navigate('/');
         return;
       }
@@ -107,22 +126,25 @@ const Profile = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Include the token in the request headers
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(user),
+        body: JSON.stringify(pendingChanges),
       });
 
       const data = await response.json();
       if (response.ok) {
-        setProfile(data); // Update profile state with new data
-        alert('Profile updated successfully');
-        setIsEditing(false); // Exit edit mode
+        setProfile(data);
+        showAlertMessage('Profile updated successfully', 'success');
+        setIsEditing(false);
         updateUserName(data.name);
       } else {
-        alert(data.message || 'Error updating profile');
+        showAlertMessage(data.message || 'Error updating profile', 'danger');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
+      showAlertMessage('Error updating profile', 'danger');
+    } finally {
+      setShowConfirmModal(false);
     }
   };
 
@@ -132,6 +154,71 @@ const Profile = () => {
 
   return (
     <div className="dashboard-container d-flex">
+      {/* Alert Component */}
+      {showAlert && (
+        <div 
+          className={`alert alert-${alertType} alert-dismissible fade show position-fixed`}
+          role="alert"
+          style={{
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1050,
+            minWidth: '300px',
+            maxWidth: '500px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          }}
+        >
+          {alertType === 'success' && <i className="fas fa-check-circle me-2"></i>}
+          {alertType === 'danger' && <i className="fas fa-exclamation-circle me-2"></i>}
+          {alertMessage}
+          <button 
+            type="button" 
+            className="btn-close" 
+            onClick={() => setShowAlert(false)}
+          ></button>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="modal fade show" 
+             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} 
+             tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Changes</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => setShowConfirmModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to save these changes to your profile?</p>
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowConfirmModal(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-success" 
+                  onClick={handleConfirmedSubmit}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
         <Header userName={userName} />

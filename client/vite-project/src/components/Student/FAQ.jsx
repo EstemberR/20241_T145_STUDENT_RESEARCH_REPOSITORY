@@ -44,7 +44,8 @@ const FAQ = () => {
         <Header userName={userName} />
         {/* Main Content Area */}
         <main className="main-content p-3">
-          <h4 className="mb-3">Frequently Asked Questions</h4>
+        <div className="card shadow-sm">
+          <h4 className="mb-3">FREQUENTLY ASKED QUESTIONS</h4>
           <div className="accordion" id="faqAccordion">
             {faqs.map((faq, index) => (
               <div className="accordion-item" key={index}>
@@ -72,6 +73,7 @@ const FAQ = () => {
                 </div>
               </div>
             ))}
+          </div>
           </div>
         </main>
       </div>
