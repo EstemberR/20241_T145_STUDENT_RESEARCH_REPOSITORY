@@ -44,25 +44,44 @@ const InstructorStudents = () => {
 
         // Fetch user role
         const profileResponse = await fetch('http://localhost:8000/instructor/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         const profileData = await profileResponse.json();
-        if (profileResponse.ok) {
-          setUserRole(profileData.role);
-        }
+        setUserRole(profileData.role);
 
-        // Fetch students
+        // Fetch students with their team information
         const studentsResponse = await fetch('http://localhost:8000/instructor/students', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         const studentsData = await studentsResponse.json();
-        if (studentsResponse.ok) {
-          setStudents(studentsData);
+
+        // Group students by team
+        const groupedStudents = {};
+        for (const student of studentsData) {
+          if (student.managedBy) {
+            const research = await fetch(`http://localhost:8000/instructor/research/${student._id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const researchData = await research.json();
+            
+            if (researchData) {
+              const teamId = researchData.mongoId; // Team leader's ID
+              if (!groupedStudents[teamId]) {
+                groupedStudents[teamId] = {
+                  teamLeader: student,
+                  members: [],
+                  section: student.section
+                };
+              }
+              if (student._id === researchData.mongoId) {
+                groupedStudents[teamId].teamLeader = student;
+              } else {
+                groupedStudents[teamId].members.push(student);
+              }
+            }
+          }
         }
+        setStudents(groupedStudents);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -123,80 +142,135 @@ const InstructorStudents = () => {
     }
   };
 
-  const handleViewStudent = async (id) => {
+  const handleViewStudent = async (student) => {
     try {
       const token = getToken();
-      const response = await fetch(`http://localhost:8000/instructor/students/${id}/details`, {
+      const response = await fetch(`http://localhost:8000/instructor/students/${student._id}/details`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      const data = await response.json();
-      console.log('Student details received:', data);
-      console.log('Submissions:', data.submissions);
+      
       if (response.ok) {
-        setSelectedStudent(data);
+        const detailedStudent = await response.json();
+        setSelectedStudent({
+          ...student,
+          ...detailedStudent,
+          submissions: detailedStudent.submissions || []
+        });
         setShowViewModal(true);
-      } else {
-        setError(data.message);
       }
     } catch (error) {
       console.error('Error fetching student details:', error);
-      setError('Failed to fetch student details');
+      showAlert('Error fetching student details', 'danger');
+    }
+  };
+
+  // Add new handler for deleting a group
+  const handleDeleteGroup = async (teamId, teamLeaderName) => {
+    if (window.confirm(`Are you sure you want to dissolve ${teamLeaderName}'s team?`)) {
+      try {
+        const token = getToken();
+        const response = await fetch(`http://localhost:8000/instructor/teams/${teamId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          // Refresh the students list
+          fetchUserAndStudents();
+          showAlert('Team has been dissolved successfully', 'success');
+        } else {
+          showAlert('Failed to dissolve team', 'danger');
+        }
+      } catch (error) {
+        console.error('Error dissolving team:', error);
+        showAlert('Error dissolving team', 'danger');
+      }
     }
   };
 
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
-      <div className="main-section col-10 d-flex flex-column">
-      <Header userName={userName} userRole={userRole} />
-        <main className="main-content">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h4>STUDENT PROFILES</h4>
-              <button 
-                className="btn btn-success" 
-                onClick={() => setShowAddModal(true)}
-              >
-                Add Student
-              </button>
-            </div>
-            <div className="container">
-              <div className="row">
-                {students.map((student) => (
-                  <div key={student._id} className="col-md-4 mb-4">
-                    <div className="card">
-                      <div className="card-body">
-                        <h5 className="card-title">{student.name}</h5>
-                        <p className="card-text">
-                          <strong>Student ID:</strong> {student.studentId}<br />
-                          <strong>Email:</strong> {student.email}<br />
-                          <strong>Course:</strong> {student.course}<br />
-                          <strong>Section:</strong> {student.section}
-                        </p>
-                        <div className="d-flex gap-2">
+      <div className="main-section col-10">
+        <Header userName={userName} userRole={userRole} />
+        <div className="content-wrapper" style={{ height: 'calc(100vh - 60px)', overflowY: 'auto' }}>
+          <main className="p-4">
+            <h5 className="mb-4">Research Teams</h5>
+            {Object.entries(students).map(([teamId, team]) => (
+              <div key={teamId} className="card mb-4">
+                <div className="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 className="mb-0">Team Leader: {team.teamLeader.name}</h6>
+                    <small>Section: {team.section}</small>
+                  </div>
+                  <button 
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDeleteGroup(teamId, team.teamLeader.name)}
+                  >
+                    <i className="fas fa-users-slash me-2"></i>
+                    Dissolve Team
+                  </button>
+                </div>
+                <div className="card-body">
+                  <div className="row">
+                    {/* Team Leader Card */}
+                    <div className="col-md-4 mb-3">
+                      <div className="card h-100 border-primary">
+                        <div className="card-body">
+                          <h6 className="card-title">
+                            {team.teamLeader.name}
+                            <span className="badge bg-primary ms-2">Team Leader</span>
+                          </h6>
+                          <p className="card-text">
+                            <strong>Student ID:</strong> {team.teamLeader.studentId}<br />
+                            <strong>Email:</strong> {team.teamLeader.email}<br />
+                            <strong>Course:</strong> {team.teamLeader.course}<br />
+                            <strong>Section:</strong> {team.teamLeader.section}
+                          </p>
                           <button 
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleViewStudent(student.studentId)}
+                            className="btn btn-info btn-sm w-100"
+                            onClick={() => handleViewStudent(team.teamLeader)}
                           >
                             <i className="fas fa-eye me-2"></i>
                             View Details
                           </button>
-                          <button 
-                            className="btn btn-danger btn-sm"
-                            onClick={() => handleDeleteStudent(student.studentId)}
-                          >
-                            <i className="fas fa-trash-alt me-2"></i>
-                            Remove Student
-                          </button>
                         </div>
                       </div>
                     </div>
+                    {/* Team Members Cards */}
+                    {team.members.map(member => (
+                      <div key={member._id} className="col-md-4 mb-3">
+                        <div className="card h-100 border-success">
+                          <div className="card-body">
+                            <h6 className="card-title">{member.name}</h6>
+                            <p className="card-text">
+                              <strong>Student ID:</strong> {member.studentId}<br />
+                              <strong>Email:</strong> {member.email}<br />
+                              <strong>Course:</strong> {member.course}<br />
+                              <strong>Section:</strong> {member.section}
+                            </p>
+                            <button 
+                              className="btn btn-info btn-sm w-100"
+                              onClick={() => handleViewStudent(member)}
+                            >
+                              <i className="fas fa-eye me-2"></i>
+                              View Details
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-        </main>
+            ))}
+          </main>
+        </div>
       </div>
 
       {/* Add Student Modal */}

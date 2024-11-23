@@ -202,23 +202,24 @@ instructorRoutes.delete('/students/:studentId', authenticateToken, async (req, r
 // Get detailed student information
 instructorRoutes.get('/students/:studentId/details', authenticateToken, async (req, res) => {
     try {
-        const { studentId } = req.params;
+        const student = await Student.findById(req.params.studentId)
+            .populate('managedBy', 'name');
         
-        // Get student basic info
-        const student = await Student.findOne({ studentId });
-        
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
-        }
-        // Combine all information
-        const studentDetails = {
-            ...student.toObject()
-        };
+        // Get student's submissions
+        const submissions = await Research.find({
+            $or: [
+                { mongoId: req.params.studentId },
+                { teamMembers: req.params.studentId }
+            ]
+        }).sort({ createdAt: -1 });
 
-        res.status(200).json(studentDetails);
+        res.json({
+            ...student.toObject(),
+            submissions
+        });
     } catch (error) {
         console.error('Error fetching student details:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Error fetching student details' });
     }
 });
 
@@ -695,6 +696,75 @@ instructorRoutes.put('/notifications/:id/mark-read', authenticateToken, async (r
         console.error('Error marking notification as read:', error);
         res.status(500).json({ 
             message: 'Error updating notification',
+            error: error.message 
+        });
+    }
+});
+
+instructorRoutes.get('/research/:studentId', authenticateToken, async (req, res) => {
+  try {
+    const research = await Research.findOne({
+      $or: [
+        { mongoId: req.params.studentId },
+        { teamMembers: req.params.studentId }
+      ]
+    });
+    res.json(research);
+  } catch (error) {
+    console.error('Error fetching research:', error);
+    res.status(500).json({ message: 'Error fetching research information' });
+  }
+});
+
+// Add new endpoint to dissolve a team
+instructorRoutes.delete('/teams/:teamId', authenticateToken, async (req, res) => {
+    try {
+        const instructorId = req.user.userId;
+        const teamId = req.params.teamId;
+
+        // Find all students in the team
+        const research = await Research.findOne({ mongoId: teamId });
+        if (!research) {
+            return res.status(404).json({ message: 'Team not found' });
+        }
+
+        // Get all team member IDs including the leader
+        const allTeamMembers = [research.mongoId, ...research.teamMembers];
+
+        // Update all team members to remove team association
+        await Student.updateMany(
+            { _id: { $in: allTeamMembers } },
+            { 
+                $unset: { 
+                    managedBy: 1,
+                    teamLeader: 1,
+                    teamMembers: 1
+                }
+            }
+        );
+
+        // Delete the research document
+        await Research.deleteOne({ _id: research._id });
+
+        // Create notifications for all team members
+        const notifications = allTeamMembers.map(memberId => ({
+            recipient: memberId,
+            recipientModel: 'Student',
+            type: 'GENERAL',
+            status: 'UNREAD',
+            message: 'Your team has been dissolved by the instructor.',
+            relatedData: {
+                instructorId: instructorId
+            }
+        }));
+
+        await Notification.insertMany(notifications);
+
+        res.json({ message: 'Team dissolved successfully' });
+    } catch (error) {
+        console.error('Error dissolving team:', error);
+        res.status(500).json({ 
+            message: 'Error dissolving team',
             error: error.message 
         });
     }
