@@ -114,7 +114,7 @@ const ManageMember = () => {
     setIsSubmitting(true);
     try {
       const token = getToken();
-      const response = await fetch('http://localhost:8000/student/team-request', {
+      const response = await fetch('http://localhost:8000/student/create-team-notification', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -380,8 +380,11 @@ const ManageMember = () => {
         </main>
 
         {/* Confirmation Modal */}
-        <div className="modal fade" id="confirmModal" tabIndex="-1" 
-          show={showConfirmModal} onHide={() => setShowConfirmModal(false)}>
+        <div 
+          className={`modal fade ${showConfirmModal ? 'show' : ''}`} 
+          style={{ display: showConfirmModal ? 'block' : 'none', backgroundColor: 'rgba(0,0,0,0.5)' }}
+          tabIndex="-1"
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">

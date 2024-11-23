@@ -605,73 +605,59 @@ studentRoutes.get('/check-team-status', authenticateToken, async (req, res) => {
         const studentId = req.user.userId;
         const student = await Student.findById(studentId).populate('managedBy');
         
-        // Check for the most recent team request or response
+        // Find the most recent team request/response
         const latestRequest = await Notification.findOne({
             $or: [
-                { 
-                    recipient: studentId,
-                    type: { $in: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE'] }
-                },
-                { 
-                    'relatedData.teamMembers': studentId,
-                    type: { $in: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE'] }
-                }
+                { recipient: studentId, type: { $in: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE'] }},
+                { 'relatedData.teamMembers': studentId, type: { $in: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE'] }}
             ]
         }).sort({ timestamp: -1 })
         .populate('relatedData.studentId')
-        .populate('relatedData.teamMembers')
-        .populate('relatedData.instructorId');
+        .populate('relatedData.teamMembers');
 
         if (student.managedBy) {
             // Student has an approved team
-            const research = await Research.findOne({ mongoId: studentId })
-                .populate('teamMembers')
-                .populate('mongoId');
+            const research = await Research.findOne({
+                $or: [
+                    { mongoId: studentId },
+                    { teamMembers: studentId }
+                ]
+            }).populate('mongoId')
+             .populate('teamMembers');
 
-            let teamMembers = [student.name]; // Add the poster (current student) first
-            
-            // Add other team members if they exist
-            if (research?.teamMembers) {
-                const otherMembers = research.teamMembers
-                    .filter(member => member._id.toString() !== studentId) // Exclude the poster if they're in teamMembers
-                    .map(member => member.name);
-                teamMembers = [...teamMembers, ...otherMembers];
-            }
+            if (research) {
+                const teamLeader = await Student.findById(research.mongoId);
+                let allTeamMembers = [teamLeader.name];
+                if (research.teamMembers && research.teamMembers.length > 0) {
+                    const otherMembers = research.teamMembers
+                        .filter(member => member._id.toString() !== teamLeader._id.toString())
+                        .map(member => member.name);
+                    allTeamMembers = [...allTeamMembers, ...otherMembers];
+                }
 
-            return res.json({
-                hasApprovedTeam: true,
-                hasPendingRequest: false,
-                instructor: student.managedBy.name,
-                section: student.section,
-                teamMembers: teamMembers
-            });
-        } else if (latestRequest?.type === 'TEAM_REQUEST' && latestRequest?.status === 'UNREAD') {
-            return res.json({
-                hasApprovedTeam: false,
-                hasPendingRequest: true,
-                message: 'You have a pending team request'
-            });
-        } else if (latestRequest?.type === 'TEAM_REQUEST_RESPONSE') {
-            if (latestRequest.status === 'APPROVED' || latestRequest.message.includes('approved')) {
                 return res.json({
                     hasApprovedTeam: true,
                     hasPendingRequest: false,
-                    message: 'Your team has been approved'
-                });
-            } else {
-                return res.json({
-                    hasApprovedTeam: false,
-                    hasPendingRequest: false,
-                    wasRejected: true,
-                    rejectionMessage: latestRequest.relatedData?.rejectMessage
+                    instructor: student.managedBy.name,
+                    section: student.section,
+                    teamMembers: allTeamMembers
                 });
             }
         }
 
-        // If no team status found
+        // Check for pending request
+        if (latestRequest && latestRequest.type === 'TEAM_REQUEST' && latestRequest.status === 'UNREAD') {
+            return res.json({
+                hasApprovedTeam: false,
+                hasPendingRequest: true
+            });
+        }
+
+        // If no team setup found, return default state
         return res.json({
             hasApprovedTeam: false,
-            hasPendingRequest: false
+            hasPendingRequest: false,
+            wasRejected: false
         });
 
     } catch (error) {

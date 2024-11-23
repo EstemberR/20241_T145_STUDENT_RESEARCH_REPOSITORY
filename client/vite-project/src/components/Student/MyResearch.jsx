@@ -44,6 +44,7 @@ const MyResearch = () => {
   const [pendingAction, setPendingAction] = useState(null);
   const [researchToDelete, setResearchToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasTeam, setHasTeam] = useState(false);
 
   const fetchResearchEntries = async () => {
     try {
@@ -161,6 +162,36 @@ const MyResearch = () => {
     };
 
     fetchTeamInfo();
+  }, []);
+
+  useEffect(() => {
+    const checkTeamStatus = async () => {
+      try {
+        const token = getToken();
+        const response = await fetch('http://localhost:8000/student/check-team-status', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        setHasTeam(data.hasApprovedTeam);
+
+        if (!data.hasApprovedTeam) {
+          showAlertMessage(
+            'You need to have an approved team before submitting research. Please go to Manage Members section first.',
+            'warning'
+          );
+          setShowForm(false);  // Hide the submission form if no team
+        }
+      } catch (error) {
+        console.error('Error checking team status:', error);
+        showAlertMessage('Error checking team status', 'danger');
+      }
+    };
+
+    checkTeamStatus();
   }, []);
 
   const handleInputChange = (e) => {
@@ -353,534 +384,563 @@ const MyResearch = () => {
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
-      <div className="main-section col-10 d-flex flex-column">
+      <div className="main-section col-10">
         <Header userName={userName} />
+        <main className="p-4">
+          {!hasTeam ? (
+            <div className="card shadow-sm">
+              <div className="card-header bg-warning text-dark">
+                <h4 className="mb-0">
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  Team Required
+                </h4>
+              </div>
+              <div className="card-body">
+                <div className="alert alert-warning">
+                  <h5 className="alert-heading">
+                    <i className="fas fa-users me-2"></i>
+                    No Approved Team Found
+                  </h5>
+                  <hr />
+                  <p>
+                    You need to have an approved team before you can submit research papers.
+                    Please set up your team first.
+                  </p>
+                  <a href="/student/project-members" className="btn btn-primary mt-2">
+                    <i className="fas fa-user-plus me-2"></i>
+                    Go to Manage Members
+                  </a>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              {/* Research Table Section */}
+              <h4 className="my-3">STUDENT SUBMISSIONS</h4>
+              <div className="d-flex justify-content-end mb-3" style={{marginRight: '60px'}}>
+                <button 
+                  className="btn btn-success" 
+                  onClick={handleAddNewClick}
+                  data-bs-toggle="modal" 
+                  data-bs-target="#submitResearchModal"
+                >
+                  <i className="fas fa-plus me-2"></i>Add New Research
+                </button>
+              </div>
+              <div>
+                {/* Tab Navigation */}
+                <ul className="nav nav-tabs mb-4">
+                  <li className="nav-item">
+                    <button 
+                      className={`nav-link ${activeTab === RESEARCH_STATUS.PENDING ? 'active' : ''}`}
+                      onClick={() => setActiveTab(RESEARCH_STATUS.PENDING)}
+                    >
+                      Pending
+                      <span className="badge bg-warning ms-2">
+                        {researchEntries.filter(r => r.status === RESEARCH_STATUS.PENDING).length}
+                      </span>
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    <button 
+                      className={`nav-link ${activeTab === RESEARCH_STATUS.APPROVED ? 'active' : ''}`}
+                      onClick={() => setActiveTab(RESEARCH_STATUS.APPROVED)}
+                    >
+                      Accepted
+                      <span className="badge bg-success ms-2">
+                        {researchEntries.filter(r => r.status === RESEARCH_STATUS.APPROVED).length}
+                      </span>
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    <button 
+                      className={`nav-link ${activeTab === RESEARCH_STATUS.REVISE ? 'active' : ''}`}
+                      onClick={() => setActiveTab(RESEARCH_STATUS.REVISE)}
+                    >
+                      Revision
+                      <span className="badge bg-info ms-2">
+                        {researchEntries.filter(r => r.status === RESEARCH_STATUS.REVISE).length}
+                      </span>
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    <button 
+                      className={`nav-link ${activeTab === RESEARCH_STATUS.REJECTED ? 'active' : ''}`}
+                      onClick={() => setActiveTab(RESEARCH_STATUS.REJECTED)}
+                    >
+                      Rejected
+                      <span className="badge bg-secondary ms-2">
+                        {researchEntries.filter(r => r.status === RESEARCH_STATUS.REJECTED).length}
+                      </span>
+                    </button>
+                  </li>
+                </ul>
 
-        <main className="main-content p-4">
-          {/* Research Table Section */}
-          <h4 className="my-3">STUDENT SUBMISSIONS</h4>
-          <div className="d-flex justify-content-end mb-3" style={{marginRight: '60px'}}>
-            <button 
-              className="btn btn-success" 
-              onClick={handleAddNewClick}
-              data-bs-toggle="modal" 
-              data-bs-target="#submitResearchModal"
-            >
-              <i className="fas fa-plus me-2"></i>Add New Research
-            </button>
-          </div>
-          <div>
-            {/* Tab Navigation */}
-            <ul className="nav nav-tabs mb-4">
-              <li className="nav-item">
-                <button 
-                  className={`nav-link ${activeTab === RESEARCH_STATUS.PENDING ? 'active' : ''}`}
-                  onClick={() => setActiveTab(RESEARCH_STATUS.PENDING)}
-                >
-                  Pending
-                  <span className="badge bg-warning ms-2">
-                    {researchEntries.filter(r => r.status === RESEARCH_STATUS.PENDING).length}
-                  </span>
-                </button>
-              </li>
-              <li className="nav-item">
-                <button 
-                  className={`nav-link ${activeTab === RESEARCH_STATUS.APPROVED ? 'active' : ''}`}
-                  onClick={() => setActiveTab(RESEARCH_STATUS.APPROVED)}
-                >
-                  Accepted
-                  <span className="badge bg-success ms-2">
-                    {researchEntries.filter(r => r.status === RESEARCH_STATUS.APPROVED).length}
-                  </span>
-                </button>
-              </li>
-              <li className="nav-item">
-                <button 
-                  className={`nav-link ${activeTab === RESEARCH_STATUS.REVISE ? 'active' : ''}`}
-                  onClick={() => setActiveTab(RESEARCH_STATUS.REVISE)}
-                >
-                  Revision
-                  <span className="badge bg-info ms-2">
-                    {researchEntries.filter(r => r.status === RESEARCH_STATUS.REVISE).length}
-                  </span>
-                </button>
-              </li>
-              <li className="nav-item">
-                <button 
-                  className={`nav-link ${activeTab === RESEARCH_STATUS.REJECTED ? 'active' : ''}`}
-                  onClick={() => setActiveTab(RESEARCH_STATUS.REJECTED)}
-                >
-                  Rejected
-                  <span className="badge bg-secondary ms-2">
-                    {researchEntries.filter(r => r.status === RESEARCH_STATUS.REJECTED).length}
-                  </span>
-                </button>
-              </li>
-            </ul>
-
-            {/* Tables for each status */}
-            <div className="tab-content">
-              {Object.values(RESEARCH_STATUS).map((status) => (
-                <div 
-                  key={status}
-                  className={`tab-pane fade ${activeTab === status ? 'show active' : ''}`}
-                >
-                  <div className="card">
-                    <div className="card-body">
-                      <div className="table-responsive">
-                        <table className="table table-hover">
-                          <thead>
-                            <tr>
-                              <th>Title</th>
-                              <th>Authors</th>
-                              <th>Keywords</th>
-                              <th>File</th>
-                              <th>Status</th>
-                              <th>Submission Date</th>
-                              <th>View</th>
-                              <th>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {researchEntries.filter(research => research.status === status).length === 0 ? (
-                              <tr>
-                                <td colSpan="6" className="text-center py-4">
-                                  No research entries found in this category.
-                                </td>
-                              </tr>
-                            ) : (
-                              researchEntries
-                                .filter(research => research.status === status)
-                                .map((research, index) => (
-                                  <tr key={index}>
-                                    <td>{research.title}</td>
-                                    <td>{research.authors}</td>
-                                    <td>{research.keywords}</td>
-                                    <td>
-                                      <div className="d-flex align-items-center">
-                                        <i className="fas fa-file-pdf text-danger me-2"></i>
-                                        {research.fileName || 'research.pdf'}
-                                        <a 
-                                          href={`https://drive.google.com/file/d/${research.driveFileId}/view`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="ms-2"
-                                        >
-                                          <i className="fas fa-download text-primary"></i>
-                                        </a>
-                                      </div>
-                                    </td>
-                                    <td>
-                                      <span className={`badge bg-${
-                                      research.status === RESEARCH_STATUS.APPROVED ? 'success' :
-                                      research.status === RESEARCH_STATUS.PENDING ? 'warning' :
-                                      research.status === RESEARCH_STATUS.REVISE ? 'info' : 'danger'
-                                    } mb-2`}>
-                                      {research.status}
-                                    </span>
-                                    </td>
-                                    <td>
-                                      {new Date(research.uploadDate).toLocaleDateString('en-US', {
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                        year: 'numeric'
-                                      })}
-                                    </td>
-                                    <td>
-                                      <button 
-                                          className="btn btn-sm btn-success"
-                                          onClick={() => handleViewResearch(research)}
-                                          data-bs-toggle="modal"
-                                          data-bs-target="#viewResearchModal"
-                                        >
-                                          <i className="fas fa-eye"></i> View
-                                        </button>
-                                    </td>
-                                    <td>
-                                      <button 
-                                        className="btn btn-sm btn-secondary"
-                                        onClick={() => {/* Add edit functionality */}}
-                                      >
-                                        <i className="fas fa-edit"></i> Edit
-                                      </button>
-                                      {research.status === RESEARCH_STATUS.PENDING && (
-                                        <button 
-                                          className="btn btn-sm btn-danger"
-                                          onClick={() => handleDelete(research)}
-                                        >
-                                          <i className="fas fa-trash"></i> Delete
-                                        </button>
-                                      )}
+                {/* Tables for each status */}
+                <div className="tab-content">
+                  {Object.values(RESEARCH_STATUS).map((status) => (
+                    <div 
+                      key={status}
+                      className={`tab-pane fade ${activeTab === status ? 'show active' : ''}`}
+                    >
+                      <div className="card">
+                        <div className="card-body">
+                          <div className="table-responsive">
+                            <table className="table table-hover">
+                              <thead>
+                                <tr>
+                                  <th>Title</th>
+                                  <th>Authors</th>
+                                  <th>Keywords</th>
+                                  <th>File</th>
+                                  <th>Status</th>
+                                  <th>Submission Date</th>
+                                  <th>View</th>
+                                  <th>Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {researchEntries.filter(research => research.status === status).length === 0 ? (
+                                  <tr>
+                                    <td colSpan="6" className="text-center py-4">
+                                      No research entries found in this category.
                                     </td>
                                   </tr>
-                                ))
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit Research Modal */}
-          <div className="modal fade" id="submitResearchModal" tabIndex="-1" aria-labelledby="submitResearchModalLabel" aria-hidden="true">
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title" id="submitResearchModalLabel">New Research</h5>
-                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div className="modal-body">
-                  <form className="research-form" onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                      <label htmlFor="title" className="form-label" style={{marginLeft: '5%'}}>Research Title</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="title"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        required
-                        style={{width: '90%', marginLeft: '5%'}}
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label htmlFor="authors" className="form-label">Authors</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="authors"
-                        name="authors"
-                        value={formData.authors}
-                        onChange={handleInputChange}
-                        required
-                        readOnly={teamInfo !== null}
-                      />
-                      {teamInfo && (
-                        <small className="text-muted">
-                          Authors are automatically set based on your team members
-                        </small>
-                      )}
-                    </div>
-
-                    <div className="row">
-                      <div className="col-md-7">
-                        <div className="mb-3">
-                          <label htmlFor="abstract" className="form-label">Abstract</label>
-                          <textarea
-                            className="form-control"
-                            id="abstract"
-                            name="abstract"
-                            rows="8"
-                            value={formData.abstract}
-                            onChange={handleInputChange}
-                            required
-                          ></textarea>
+                                ) : (
+                                  researchEntries
+                                    .filter(research => research.status === status)
+                                    .map((research, index) => (
+                                      <tr key={index}>
+                                        <td>{research.title}</td>
+                                        <td>{research.authors}</td>
+                                        <td>{research.keywords}</td>
+                                        <td>
+                                          <div className="d-flex align-items-center">
+                                            <i className="fas fa-file-pdf text-danger me-2"></i>
+                                            {research.fileName || 'research.pdf'}
+                                            <a 
+                                              href={`https://drive.google.com/file/d/${research.driveFileId}/view`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="ms-2"
+                                            >
+                                              <i className="fas fa-download text-primary"></i>
+                                            </a>
+                                          </div>
+                                        </td>
+                                        <td>
+                                          <span className={`badge bg-${
+                                          research.status === RESEARCH_STATUS.APPROVED ? 'success' :
+                                          research.status === RESEARCH_STATUS.PENDING ? 'warning' :
+                                          research.status === RESEARCH_STATUS.REVISE ? 'info' : 'danger'
+                                        } mb-2`}>
+                                            {research.status}
+                                          </span>
+                                        </td>
+                                        <td>
+                                          {new Date(research.uploadDate).toLocaleDateString('en-US', {
+                                            month: '2-digit',
+                                            day: '2-digit',
+                                            year: 'numeric'
+                                          })}
+                                        </td>
+                                        <td>
+                                          <button 
+                                              className="btn btn-sm btn-success"
+                                              onClick={() => handleViewResearch(research)}
+                                              data-bs-toggle="modal"
+                                              data-bs-target="#viewResearchModal"
+                                            >
+                                              <i className="fas fa-eye"></i> View
+                                            </button>
+                                        </td>
+                                        <td>
+                                          <button 
+                                            className="btn btn-sm btn-secondary"
+                                            onClick={() => {/* Add edit functionality */}}
+                                          >
+                                            <i className="fas fa-edit"></i> Edit
+                                          </button>
+                                          {research.status === RESEARCH_STATUS.PENDING && (
+                                            <button 
+                                              className="btn btn-sm btn-danger"
+                                              onClick={() => handleDelete(research)}
+                                            >
+                                              <i className="fas fa-trash"></i> Delete
+                                            </button>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    ))
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-                      <div className="col-md-5">
+              {/* Submit Research Modal */}
+              <div className="modal fade" id="submitResearchModal" tabIndex="-1" aria-labelledby="submitResearchModalLabel" aria-hidden="true">
+                <div className="modal-dialog modal-lg">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title" id="submitResearchModalLabel">New Research</h5>
+                      <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div className="modal-body">
+                      <form className="research-form" onSubmit={handleSubmit}>
                         <div className="mb-3">
-                          <label htmlFor="keywords" className="form-label">Keywords</label>
+                          <label htmlFor="title" className="form-label" style={{marginLeft: '5%'}}>Research Title</label>
                           <input
                             type="text"
                             className="form-control"
-                            id="keywords"
-                            name="keywords"
-                            value={formData.keywords}
+                            id="title"
+                            name="title"
+                            value={formData.title}
                             onChange={handleInputChange}
-                            placeholder="Separate keywords with commas"
                             required
+                            style={{width: '90%', marginLeft: '5%'}}
                           />
                         </div>
 
                         <div className="mb-3">
-                          <label htmlFor="uploadDate" className="form-label">Upload Date</label>
+                          <label htmlFor="authors" className="form-label">Authors</label>
                           <input
-                            type="date"
+                            type="text"
                             className="form-control"
-                            id="uploadDate"
-                            name="uploadDate"
-                            value={formData.uploadDate}
+                            id="authors"
+                            name="authors"
+                            value={formData.authors}
                             onChange={handleInputChange}
                             required
+                            readOnly={teamInfo !== null}
                           />
+                          {teamInfo && (
+                            <small className="text-muted">
+                              Authors are automatically set based on your team members
+                            </small>
+                          )}
                         </div>
 
-                        <div className="mb-3">
-                          <button 
-                            type="button" 
-                            className="btn btn-success w-60" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#fileUploadModal"
-                            data-bs-dismiss="modal"
-                          >
-                            Select File
-                          </button>
-                          <small className="form-text text-muted d-block mt-2">
-                            The file must be in PDF format
-                          </small>
+                        <div className="row">
+                          <div className="col-md-7">
+                            <div className="mb-3">
+                              <label htmlFor="abstract" className="form-label">Abstract</label>
+                              <textarea
+                                className="form-control"
+                                id="abstract"
+                                name="abstract"
+                                rows="8"
+                                value={formData.abstract}
+                                onChange={handleInputChange}
+                                required
+                              ></textarea>
+                            </div>
+                          </div>
+
+                          <div className="col-md-5">
+                            <div className="mb-3">
+                              <label htmlFor="keywords" className="form-label">Keywords</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                id="keywords"
+                                name="keywords"
+                                value={formData.keywords}
+                                onChange={handleInputChange}
+                                placeholder="Separate keywords with commas"
+                                required
+                              />
+                            </div>
+
+                            <div className="mb-3">
+                              <label htmlFor="uploadDate" className="form-label">Upload Date</label>
+                              <input
+                                type="date"
+                                className="form-control"
+                                id="uploadDate"
+                                name="uploadDate"
+                                value={formData.uploadDate}
+                                onChange={handleInputChange}
+                                required
+                              />
+                            </div>
+
+                            <div className="mb-3">
+                              <button 
+                                type="button" 
+                                className="btn btn-success w-60" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#fileUploadModal"
+                                data-bs-dismiss="modal"
+                              >
+                                Select File
+                              </button>
+                              <small className="form-text text-muted d-block mt-2">
+                                The file must be in PDF format
+                              </small>
+                            </div>
+                          </div>
                         </div>
-                      </div>
+
+                        <div className="modal-footer">
+                          <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          <button type="submit" className="btn btn-success">Submit Research</button>
+                        </div>
+                      </form>
                     </div>
+                  </div>
+                </div>
+              </div>
 
+              {/* Modal for file upload */}
+              <div 
+                className="modal fade" 
+                id="fileUploadModal" 
+                tabIndex="-1" 
+                aria-labelledby="fileUploadModalLabel" 
+                aria-hidden="true"
+                data-bs-backdrop="static"
+              >
+                <div className="modal-dialog modal-dialog-centered">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title" id="fileUploadModalLabel">Upload File</h5>
+                      <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div className="modal-body">
+                      <input type="file" className="form-control mb-3" onChange={handleFileChange} />
+                      <div
+                        className="drop-zone"
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        style={{
+                          border: '2px dashed #ccc',
+                          borderRadius: '5px',
+                          padding: '20px',
+                          textAlign: 'center',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Drag & Drop your file here
+                      </div>
+                      {file && <p className="mt-2">Selected file: {file.name}</p>}
+                    </div>
+                    <div className="modal-footer">
+                      <button 
+                        type="button" 
+                        className="btn btn-secondary" 
+                        data-bs-dismiss="modal"
+                        data-bs-toggle="modal"
+                        data-bs-target="#submitResearchModal"
+                      >
+                        Close
+                      </button>
+                      <button 
+                        type="button" 
+                        className="btn btn-primary" 
+                        data-bs-dismiss="modal"
+                        data-bs-toggle="modal"
+                        data-bs-target="#submitResearchModal"
+                        style={{
+                          background: '#4CAF50', 
+                          color: 'white', 
+                          border: 'none'
+                        }}
+                      >
+                        Save changes
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* View Research Modal */}
+              <div className="modal fade" id="viewResearchModal" tabIndex="-1" aria-labelledby="viewResearchModalLabel" aria-hidden="true">
+                <div className="modal-dialog modal-lg">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title" id="viewResearchModalLabel">Research Details</h5>
+                      <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div className="modal-body">
+                      {selectedResearch && (
+                        <div className="container">
+                          <div className="row mb-3">
+                            <div className="col-12">
+                              <h4>{selectedResearch.title}</h4>
+                              <span className={`badge bg-${
+                                selectedResearch.status === RESEARCH_STATUS.APPROVED ? 'success' :
+                                selectedResearch.status === RESEARCH_STATUS.PENDING ? 'warning' :
+                                selectedResearch.status === RESEARCH_STATUS.REVISE ? 'info' : 'danger'
+                              } mb-2`}>
+                                {selectedResearch.status}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="row mb-3">
+                            <div className="col-md-6">
+                              <p><strong>Authors:</strong></p>
+                              <p>{selectedResearch.authors}</p>
+                            </div>
+                            <div className="col-md-6">
+                              <p><strong>Keywords:</strong></p>
+                              <p>{selectedResearch.keywords}</p>
+                            </div>
+                          </div>
+
+                          <div className="row mb-3">
+                            <div className="col-12">
+                              <p><strong>Abstract:</strong></p>
+                              <p className="text-justify">{selectedResearch.abstract}</p>
+                            </div>
+                          </div>
+
+                          <div className="row mb-3">
+                            <div className="col-md-6">
+                              <p><strong>Submission Date:</strong></p>
+                              <p>{new Date(selectedResearch.uploadDate).toLocaleDateString('en-US', {
+                                month: '2-digit',
+                                day: '2-digit',
+                                year: 'numeric'
+                              })}</p>
+                            </div>
+                            <div className="col-md-6">
+                              <p><strong>File:</strong></p>
+                              <div className="d-flex align-items-center">
+                                <i className="fas fa-file-pdf text-danger me-2"></i>
+                                <span className="me-2">{selectedResearch.fileName || 'research.pdf'}</span>
+                                <a 
+                                  href={`https://drive.google.com/file/d/${selectedResearch.driveFileId}/view`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-sm btn-primary"
+                                >
+                                  <i className="fas fa-external-link-alt me-1"></i>
+                                  Open File
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+
+                          {selectedResearch.comments && (
+                            <div className="row mb-3">
+                              <div className="col-12">
+                                <p><strong>Comments:</strong></p>
+                                <p>{selectedResearch.comments}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <div className="modal-footer">
                       <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <button type="submit" className="btn btn-success">Submit Research</button>
                     </div>
-                  </form>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Modal for file upload */}
-          <div 
-            className="modal fade" 
-            id="fileUploadModal" 
-            tabIndex="-1" 
-            aria-labelledby="fileUploadModalLabel" 
-            aria-hidden="true"
-            data-bs-backdrop="static"
-          >
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title" id="fileUploadModalLabel">Upload File</h5>
-                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div className="modal-body">
-                  <input type="file" className="form-control mb-3" onChange={handleFileChange} />
-                  <div
-                    className="drop-zone"
-                    onDrop={handleDrop}
-                    onDragOver={handleDragOver}
-                    style={{
-                      border: '2px dashed #ccc',
-                      borderRadius: '5px',
-                      padding: '20px',
-                      textAlign: 'center',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Drag & Drop your file here
-                  </div>
-                  {file && <p className="mt-2">Selected file: {file.name}</p>}
-                </div>
-                <div className="modal-footer">
+              {/* Alert Component */}
+              {showAlert && (
+                <div 
+                  className={`alert alert-${alertType} alert-dismissible fade show position-fixed`}
+                  role="alert"
+                  style={{
+                    top: '20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 1050,
+                    minWidth: '300px',
+                    maxWidth: '500px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  {alertType === 'success' && <i className="fas fa-check-circle me-2"></i>}
+                  {alertType === 'danger' && <i className="fas fa-exclamation-circle me-2"></i>}
+                  {alertType === 'warning' && <i className="fas fa-exclamation-triangle me-2"></i>}
+                  {alertMessage}
                   <button 
                     type="button" 
-                    className="btn btn-secondary" 
-                    data-bs-dismiss="modal"
-                    data-bs-toggle="modal"
-                    data-bs-target="#submitResearchModal"
-                  >
-                    Close
-                  </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-primary" 
-                    data-bs-dismiss="modal"
-                    data-bs-toggle="modal"
-                    data-bs-target="#submitResearchModal"
-                    style={{
-                      background: '#4CAF50', 
-                      color: 'white', 
-                      border: 'none'
-                    }}
-                  >
-                    Save changes
-                  </button>
+                    className="btn-close" 
+                    onClick={() => setShowAlert(false)}
+                  ></button>
                 </div>
-              </div>
-            </div>
-          </div>
+              )}
 
-          {/* View Research Modal */}
-          <div className="modal fade" id="viewResearchModal" tabIndex="-1" aria-labelledby="viewResearchModalLabel" aria-hidden="true">
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title" id="viewResearchModalLabel">Research Details</h5>
-                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div className="modal-body">
-                  {selectedResearch && (
-                    <div className="container">
-                      <div className="row mb-3">
-                        <div className="col-12">
-                          <h4>{selectedResearch.title}</h4>
-                          <span className={`badge bg-${
-                            selectedResearch.status === RESEARCH_STATUS.APPROVED ? 'success' :
-                            selectedResearch.status === RESEARCH_STATUS.PENDING ? 'warning' :
-                            selectedResearch.status === RESEARCH_STATUS.REVISE ? 'info' : 'danger'
-                          } mb-2`}>
-                            {selectedResearch.status}
-                          </span>
-                        </div>
+              {/* Updated Confirmation Modal */}
+              {showConfirmModal && (
+                <div className="modal fade show" 
+                     style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} 
+                     tabIndex="-1">
+                  <div className="modal-dialog modal-dialog-centered">
+                    <div className="modal-content">
+                      <div className="modal-header">
+                        <h5 className="modal-title">
+                          {pendingAction?.type === 'submit' ? 'Submit Research' : 
+                           pendingAction?.type === 'delete' ? 'Delete Research' : 'Confirm Action'}
+                        </h5>
+                        <button 
+                          type="button" 
+                          className="btn-close" 
+                          onClick={() => {
+                            setShowConfirmModal(false);
+                            setPendingAction(null);
+                            setResearchToDelete(null);
+                          }}
+                        ></button>
                       </div>
-
-                      <div className="row mb-3">
-                        <div className="col-md-6">
-                          <p><strong>Authors:</strong></p>
-                          <p>{selectedResearch.authors}</p>
-                        </div>
-                        <div className="col-md-6">
-                          <p><strong>Keywords:</strong></p>
-                          <p>{selectedResearch.keywords}</p>
-                        </div>
-                      </div>
-
-                      <div className="row mb-3">
-                        <div className="col-12">
-                          <p><strong>Abstract:</strong></p>
-                          <p className="text-justify">{selectedResearch.abstract}</p>
-                        </div>
-                      </div>
-
-                      <div className="row mb-3">
-                        <div className="col-md-6">
-                          <p><strong>Submission Date:</strong></p>
-                          <p>{new Date(selectedResearch.uploadDate).toLocaleDateString('en-US', {
-                            month: '2-digit',
-                            day: '2-digit',
-                            year: 'numeric'
-                          })}</p>
-                        </div>
-                        <div className="col-md-6">
-                          <p><strong>File:</strong></p>
-                          <div className="d-flex align-items-center">
-                            <i className="fas fa-file-pdf text-danger me-2"></i>
-                            <span className="me-2">{selectedResearch.fileName || 'research.pdf'}</span>
-                            <a 
-                              href={`https://drive.google.com/file/d/${selectedResearch.driveFileId}/view`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn btn-sm btn-primary"
-                            >
-                              <i className="fas fa-external-link-alt me-1"></i>
-                              Open File
-                            </a>
+                      <div className="modal-body">
+                        {pendingAction?.type === 'delete' ? (
+                          <div>
+                            <p className="text-danger">
+                              <i className="fas fa-exclamation-triangle me-2"></i>
+                              Are you sure you want to delete this research?
+                            </p>
+                            <p className="fw-bold mb-1">{researchToDelete?.title}</p>
+                            <p className="text-muted small">This action cannot be undone.</p>
                           </div>
-                        </div>
+                        ) : (
+                          <p>Are you sure you want to submit this research paper?</p>
+                        )}
                       </div>
-
-                      {selectedResearch.comments && (
-                        <div className="row mb-3">
-                          <div className="col-12">
-                            <p><strong>Comments:</strong></p>
-                            <p>{selectedResearch.comments}</p>
-                          </div>
-                        </div>
-                      )}
+                      <div className="modal-footer">
+                        <button 
+                          type="button" 
+                          className="btn btn-secondary" 
+                          onClick={() => {
+                            setShowConfirmModal(false);
+                            setPendingAction(null);
+                            setResearchToDelete(null);
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          type="button" 
+                          className={`btn ${pendingAction?.type === 'delete' ? 'btn-danger' : 'btn-success'}`}
+                          onClick={handleConfirmedAction}
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                              {pendingAction?.type === 'delete' ? 'Deleting...' : 'Submitting...'}
+                            </>
+                          ) : (
+                            pendingAction?.type === 'delete' ? 'Delete' : 'Confirm'
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Alert Component */}
-          {showAlert && (
-            <div 
-              className={`alert alert-${alertType} alert-dismissible fade show position-fixed`}
-              role="alert"
-              style={{
-                top: '20px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 1050,
-                minWidth: '300px',
-                maxWidth: '500px',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-              }}
-            >
-              {alertType === 'success' && <i className="fas fa-check-circle me-2"></i>}
-              {alertType === 'danger' && <i className="fas fa-exclamation-circle me-2"></i>}
-              {alertType === 'warning' && <i className="fas fa-exclamation-triangle me-2"></i>}
-              {alertMessage}
-              <button 
-                type="button" 
-                className="btn-close" 
-                onClick={() => setShowAlert(false)}
-              ></button>
-            </div>
-          )}
-
-          {/* Updated Confirmation Modal */}
-          {showConfirmModal && (
-            <div className="modal fade show" 
-                 style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} 
-                 tabIndex="-1">
-              <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">
-                      {pendingAction?.type === 'submit' ? 'Submit Research' : 
-                       pendingAction?.type === 'delete' ? 'Delete Research' : 'Confirm Action'}
-                    </h5>
-                    <button 
-                      type="button" 
-                      className="btn-close" 
-                      onClick={() => {
-                        setShowConfirmModal(false);
-                        setPendingAction(null);
-                        setResearchToDelete(null);
-                      }}
-                    ></button>
-                  </div>
-                  <div className="modal-body">
-                    {pendingAction?.type === 'delete' ? (
-                      <div>
-                        <p className="text-danger">
-                          <i className="fas fa-exclamation-triangle me-2"></i>
-                          Are you sure you want to delete this research?
-                        </p>
-                        <p className="fw-bold mb-1">{researchToDelete?.title}</p>
-                        <p className="text-muted small">This action cannot be undone.</p>
-                      </div>
-                    ) : (
-                      <p>Are you sure you want to submit this research paper?</p>
-                    )}
-                  </div>
-                  <div className="modal-footer">
-                    <button 
-                      type="button" 
-                      className="btn btn-secondary" 
-                      onClick={() => {
-                        setShowConfirmModal(false);
-                        setPendingAction(null);
-                        setResearchToDelete(null);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      type="button" 
-                      className={`btn ${pendingAction?.type === 'delete' ? 'btn-danger' : 'btn-success'}`}
-                      onClick={handleConfirmedAction}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                          {pendingAction?.type === 'delete' ? 'Deleting...' : 'Submitting...'}
-                        </>
-                      ) : (
-                        pendingAction?.type === 'delete' ? 'Delete' : 'Confirm'
-                      )}
-                    </button>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </main>
