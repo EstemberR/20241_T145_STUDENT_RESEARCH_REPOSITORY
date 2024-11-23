@@ -28,65 +28,79 @@ const InstructorStudents = () => {
   const [error, setError] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [alert, setAlert] = useState({ show: false, message: '', type: '' });
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    teamId: null,
+    teamLeaderName: null
+  });
 
-  // Fetch students
-  useEffect(() => {
-    const fetchUserAndStudents = async () => {
-      try {
-        const token = getToken();
-        if (!token) {
-          alert('Please log in first.');
-          localStorage.removeItem('userName');
-          localStorage.removeItem('token');
-          navigate('/');
-          return;
-        }
+  // Add showAlert function
+  const showAlert = (message, type) => {
+    setAlert({ show: true, message, type });
+    setTimeout(() => setAlert({ show: false, message: '', type: '' }), 3000);
+  };
 
-        // Fetch user role
-        const profileResponse = await fetch('http://localhost:8000/instructor/profile', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const profileData = await profileResponse.json();
-        setUserRole(profileData.role);
+  // Move fetchUserAndStudents outside useEffect so it can be reused
+  const fetchUserAndStudents = async () => {
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('Please log in first.');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('token');
+        navigate('/');
+        return;
+      }
 
-        // Fetch students with their team information
-        const studentsResponse = await fetch('http://localhost:8000/instructor/students', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const studentsData = await studentsResponse.json();
+      // Fetch user role
+      const profileResponse = await fetch('http://localhost:8000/instructor/profile', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const profileData = await profileResponse.json();
+      setUserRole(profileData.role);
 
-        // Group students by team
-        const groupedStudents = {};
-        for (const student of studentsData) {
-          if (student.managedBy) {
-            const research = await fetch(`http://localhost:8000/instructor/research/${student._id}`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const researchData = await research.json();
-            
-            if (researchData) {
-              const teamId = researchData.mongoId; // Team leader's ID
-              if (!groupedStudents[teamId]) {
-                groupedStudents[teamId] = {
-                  teamLeader: student,
-                  members: [],
-                  section: student.section
-                };
-              }
-              if (student._id === researchData.mongoId) {
-                groupedStudents[teamId].teamLeader = student;
-              } else {
-                groupedStudents[teamId].members.push(student);
-              }
+      // Fetch students with their team information
+      const studentsResponse = await fetch('http://localhost:8000/instructor/students', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const studentsData = await studentsResponse.json();
+
+      // Group students by team
+      const groupedStudents = {};
+      for (const student of studentsData) {
+        if (student.managedBy) {
+          const research = await fetch(`http://localhost:8000/instructor/research/${student._id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const researchData = await research.json();
+          
+          if (researchData) {
+            const teamId = researchData.mongoId; // Team leader's ID
+            if (!groupedStudents[teamId]) {
+              groupedStudents[teamId] = {
+                teamLeader: student,
+                members: [],
+                section: student.section
+              };
+            }
+            if (student._id === researchData.mongoId) {
+              groupedStudents[teamId].teamLeader = student;
+            } else {
+              groupedStudents[teamId].members.push(student);
             }
           }
         }
-        setStudents(groupedStudents);
-      } catch (error) {
-        console.error('Error fetching data:', error);
       }
-    };
+      setStudents(groupedStudents);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      showAlert('Error fetching data', 'danger');
+    }
+  };
 
+  // Update useEffect to use the moved function
+  useEffect(() => {
     fetchUserAndStudents();
   }, [navigate]);
 
@@ -166,30 +180,40 @@ const InstructorStudents = () => {
     }
   };
 
-  // Add new handler for deleting a group
-  const handleDeleteGroup = async (teamId, teamLeaderName) => {
-    if (window.confirm(`Are you sure you want to dissolve ${teamLeaderName}'s team?`)) {
-      try {
-        const token = getToken();
-        const response = await fetch(`http://localhost:8000/instructor/teams/${teamId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+  // Update handleDeleteGroup to show modal first
+  const handleDeleteGroup = (teamId, teamLeaderName) => {
+    setConfirmModal({
+      show: true,
+      teamId,
+      teamLeaderName
+    });
+  };
 
-        if (response.ok) {
-          // Refresh the students list
-          fetchUserAndStudents();
-          showAlert('Team has been dissolved successfully', 'success');
-        } else {
-          showAlert('Failed to dissolve team', 'danger');
+  // Add new function to handle the actual deletion
+  const confirmDeleteGroup = async () => {
+    try {
+      const token = getToken();
+      const response = await fetch(`http://localhost:8000/instructor/teams/${confirmModal.teamId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      } catch (error) {
-        console.error('Error dissolving team:', error);
-        showAlert('Error dissolving team', 'danger');
+      });
+
+      if (response.ok) {
+        const updatedStudents = { ...students };
+        delete updatedStudents[confirmModal.teamId];
+        setStudents(updatedStudents);
+        showAlert('Team has been dissolved successfully', 'success');
+      } else {
+        showAlert('Failed to dissolve team', 'danger');
       }
+    } catch (error) {
+      console.error('Error dissolving team:', error);
+      showAlert('Error dissolving team', 'danger');
+    } finally {
+      setConfirmModal({ show: false, teamId: null, teamLeaderName: null });
     }
   };
 
@@ -198,6 +222,13 @@ const InstructorStudents = () => {
       <Sidebar />
       <div className="main-section col-10">
         <Header userName={userName} userRole={userRole} />
+        {/* Add Alert component at the top of content */}
+        {alert.show && (
+          <div className={`alert alert-${alert.type} alert-dismissible fade show m-3`} role="alert">
+            {alert.message}
+            <button type="button" className="btn-close" onClick={() => setAlert({ show: false, message: '', type: '' })}></button>
+          </div>
+        )}
         <div className="content-wrapper" style={{ height: 'calc(100vh - 60px)', overflowY: 'auto' }}>
           <main className="p-4">
             <h5 className="mb-4">Research Teams</h5>
@@ -392,6 +423,44 @@ const InstructorStudents = () => {
                   }}
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add the confirmation modal to your JSX (add this before the closing div of your component) */}
+      {confirmModal.show && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Team Dissolution</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => setConfirmModal({ show: false, teamId: null, teamLeaderName: null })}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to dissolve {confirmModal.teamLeaderName}'s team?</p>
+                <p className="text-muted small">This action cannot be undone.</p>
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => setConfirmModal({ show: false, teamId: null, teamLeaderName: null })}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-danger" 
+                  onClick={confirmDeleteGroup}
+                >
+                  Dissolve Team
                 </button>
               </div>
             </div>

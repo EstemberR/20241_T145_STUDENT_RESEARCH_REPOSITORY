@@ -68,7 +68,7 @@ const ManageMember = () => {
     try {
       const token = getToken();
       const [studentsRes, instructorsRes] = await Promise.all([
-        fetch('http://localhost:8000/student/all-students', {
+        fetch('http://localhost:8000/student/available-students', {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

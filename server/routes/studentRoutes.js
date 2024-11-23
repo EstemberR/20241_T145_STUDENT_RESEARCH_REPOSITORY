@@ -669,4 +669,27 @@ studentRoutes.get('/check-team-status', authenticateToken, async (req, res) => {
     }
 });
 
+// Get only available students (not in any team)
+studentRoutes.get('/available-students', authenticateToken, async (req, res) => {
+    try {
+        const currentUserId = req.user.userId;
+ 
+        const availableStudents = await Student.find({
+            $and: [
+                { managedBy: null },  // Not in a team
+                { _id: { $ne: currentUserId } },  // Not the current user
+                { archived: false }  // Not archived
+            ]
+        }).select('name studentId email');
+
+        res.json(availableStudents);
+    } catch (error) {
+        console.error('Error fetching available students:', error);
+        res.status(500).json({ 
+            message: 'Error fetching available students',
+            error: error.message 
+        });
+    }
+});
+
 export default studentRoutes;
