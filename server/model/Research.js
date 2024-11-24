@@ -84,6 +84,10 @@ const researchSchema = new mongoose.Schema({
       type: String,
       trim: true,
       default: null
+  },
+  version: {
+      type: Number,
+      default: 1
   }
 }, { 
     timestamps: true,

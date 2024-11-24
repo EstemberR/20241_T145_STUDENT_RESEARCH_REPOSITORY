@@ -5,8 +5,11 @@ import FAQ from '../model/FAQ.js';
 import Research from '../model/Research.js';
 import Instructor from '../model/Instructor.js';
 import Notification from '../model/Notification.js';
+import multer from 'multer';
 
 const studentRoutes = express.Router();
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Get profile route
 studentRoutes.get('/profile', authenticateToken, async (req, res) => {
@@ -690,6 +693,89 @@ studentRoutes.get('/available-students', authenticateToken, async (req, res) => 
             error: error.message 
         });
     }
+});
+
+studentRoutes.put('/resubmit-research', authenticateToken, async (req, res) => {
+  try {
+    const mongoId = req.user.userId;
+    const { researchId, fileUrl, driveFileId, version } = req.body;
+
+    // Find the research and populate necessary fields
+    const research = await Research.findById(researchId)
+      .populate('mongoId')
+      .populate('teamMembers')
+      .populate('adviser');
+
+    if (!research) {
+      return res.status(404).json({ message: 'Research not found' });
+    }
+
+    // Update research document while preserving team info
+    research.status = 'Pending';
+    research.fileUrl = fileUrl;
+    research.driveFileId = driveFileId;
+    research.version = parseInt(version);
+    research.uploadDate = new Date();
+    research.submittedBy = mongoId;
+
+    await research.save();
+
+    // Create notifications for team members and instructor
+    const notificationPromises = [
+      // Notification for submitter
+      new Notification({
+        recipient: mongoId,
+        recipientModel: 'Student',
+        type: 'RESEARCH_SUBMISSION',
+        message: `You have resubmitted the research paper: "${research.title}" (Version ${version})`,
+        status: 'UNREAD',
+        relatedData: {
+          researchId: research._id,
+          title: research.title,
+          version: version
+        }
+      }).save(),
+
+      // Notifications for other team members
+      ...research.teamMembers
+        .filter(member => member._id.toString() !== mongoId.toString())
+        .map(member => 
+          new Notification({
+            recipient: member._id,
+            recipientModel: 'Student',
+            type: 'RESEARCH_SUBMISSION',
+            message: `Research paper "${research.title}" has been resubmitted (Version ${version})`,
+            status: 'UNREAD',
+            relatedData: {
+              researchId: research._id,
+              title: research.title,
+              version: version
+            }
+          }).save()
+        ),
+
+      // Notification for instructor
+      new Notification({
+        recipient: research.adviser._id,
+        recipientModel: 'Instructor',
+        type: 'RESEARCH_SUBMISSION',
+        message: `Revised research submitted: "${research.title}" (Version ${version})`,
+        status: 'UNREAD',
+        relatedData: {
+          researchId: research._id,
+          title: research.title,
+          version: version
+        }
+      }).save()
+    ];
+
+    await Promise.all(notificationPromises);
+
+    res.json({ message: 'Research resubmitted successfully', research });
+  } catch (error) {
+    console.error('Error resubmitting research:', error);
+    res.status(500).json({ message: 'Error resubmitting research' });
+  }
 });
 
 export default studentRoutes;
