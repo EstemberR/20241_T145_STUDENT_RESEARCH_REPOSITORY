@@ -45,6 +45,7 @@ const MyResearch = () => {
   const [researchToDelete, setResearchToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasTeam, setHasTeam] = useState(false);
+  const [fileVersion, setFileVersion] = useState(1);
 
   const fetchResearchEntries = async () => {
     try {
@@ -381,6 +382,70 @@ const MyResearch = () => {
     setTimeout(() => setShowAlert(false), 5000);
   };
 
+  const handleResubmitClick = (research) => {
+    setSelectedResearch(research);
+    setFormData({
+      ...research,
+      file: null
+    });
+    setFileVersion(research.version || 1);
+  };
+
+  const handleResubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = getToken();
+      const newVersion = (selectedResearch.version || 1) + 1;
+      
+      // Create form data with all necessary fields
+      const formDataToSubmit = new FormData();
+      formDataToSubmit.append('file', file);
+      formDataToSubmit.append('title', selectedResearch.title);
+      formDataToSubmit.append('course', selectedResearch.course);
+      formDataToSubmit.append('status', 'Pending');
+      formDataToSubmit.append('uploadDate', new Date().toISOString());
+
+      // Use the existing Google Drive upload endpoint
+      const fileUploadResponse = await fetch('http://localhost:8000/api/auth/google-drive', {
+        method: 'POST',
+        body: formDataToSubmit,
+      });
+
+      if (!fileUploadResponse.ok) {
+        throw new Error('File upload failed');
+      }
+
+      const fileResult = await fileUploadResponse.json();
+
+      // Now resubmit the research with the new file info
+      const response = await fetch('http://localhost:8000/student/resubmit-research', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          researchId: selectedResearch._id,
+          fileUrl: `https://drive.google.com/file/d/${fileResult.fileId}/view`,
+          driveFileId: fileResult.fileId,
+          version: newVersion
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to resubmit research');
+
+      // Close modal and refresh
+      const modal = bootstrap.Modal.getInstance(document.getElementById('resubmitModal'));
+      modal.hide();
+      fetchResearchEntries();
+      showAlertMessage('Research resubmitted successfully!', 'success');
+      
+    } catch (error) {
+      console.error('Error resubmitting research:', error);
+      showAlertMessage('Failed to resubmit research', 'danger');
+    }
+  };
+
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
@@ -567,6 +632,16 @@ const MyResearch = () => {
                                               onClick={() => handleDelete(research)}
                                             >
                                               <i className="fas fa-trash"></i> Delete
+                                            </button>
+                                          )}
+                                          {research.status === RESEARCH_STATUS.REVISE && (
+                                            <button
+                                              className="btn btn-primary btn-sm"
+                                              onClick={() => handleResubmitClick(research)}
+                                              data-bs-toggle="modal"
+                                              data-bs-target="#resubmitModal"
+                                            >
+                                              <i className="fas fa-upload"></i> Resubmit
                                             </button>
                                           )}
                                         </td>
@@ -952,6 +1027,48 @@ const MyResearch = () => {
                   </div>
                 </div>
               )}
+
+              {/* Resubmit Modal */}
+              <div className="modal fade" id="resubmitModal" tabIndex="-1">
+                <div className="modal-dialog modal-lg">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">Resubmit Research</h5>
+                      <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div className="modal-body">
+                      <form onSubmit={handleResubmit}>
+                        <div className="mb-3">
+                          <label className="form-label">Revision Note from Instructor:</label>
+                          <div className="alert alert-info">
+                            {selectedResearch?.note}
+                          </div>
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Updated Research File (PDF)</label>
+                          <input
+                            type="file"
+                            className="form-control"
+                            accept=".pdf"
+                            onChange={handleFileChange}
+                            required
+                          />
+                        </div>
+                      </form>
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      <button 
+                        type="button" 
+                        className="btn btn-primary"
+                        onClick={handleResubmit}
+                      >
+                        Resubmit Research
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </main>
