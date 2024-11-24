@@ -56,52 +56,46 @@ instructorRoutes.put('/profile', authenticateToken, async (req, res) => {
 // Get all submissions from managed students only
 instructorRoutes.get('/submissions', authenticateToken, async (req, res) => {
     try {
-        console.log('Fetching submissions...');
         const instructorId = req.user.userId;
+        
+        // Find all students managed by this instructor
+        const managedStudents = await Student.find({ managedBy: instructorId });
+        const managedStudentIds = managedStudents.map(student => student._id);
 
-        // First, get all students managed by this specific instructor
-        const managedStudents = await Student.find({ 
-            managedBy: instructorId,  // Only get students managed by this instructor
-            archived: false
-        });
-
-        // Get the student IDs managed by this instructor
-        const managedStudentIds = managedStudents.map(student => student.studentId);
-        console.log('Managed student IDs:', managedStudentIds);
-
-        // Only get submissions from these managed students
+        // Get all submissions from these students
         const submissions = await Research.find({
-            studentId: { $in: managedStudentIds }
-        }).populate({
-            path: 'mongoId',
-            model: 'Student',
-            select: 'name email studentId section'
-        }).sort({ createdAt: -1 });
-            
+            $or: [
+                { mongoId: { $in: managedStudentIds } },
+                { teamMembers: { $in: managedStudentIds } }
+            ]
+        })
+        .populate('mongoId', 'name email studentId section')
+        .populate('teamMembers', 'name email studentId')
+        .select('title status uploadDate studentId mongoId teamMembers version authors abstract keywords driveFileId fileUrl')
+        .sort({ uploadDate: -1 });
+
+        // Transform the data to include student name and version
         const transformedSubmissions = submissions.map(submission => ({
             _id: submission._id,
             title: submission.title,
             authors: submission.authors,
             abstract: submission.abstract,
             keywords: submission.keywords,
+            studentId: submission.mongoId?.studentId || 'Unknown',
+            studentName: submission.mongoId?.name || 'Unknown',
+            studentEmail: submission.mongoId?.email || 'Unknown',
+            section: submission.mongoId?.section || 'Unknown',
             status: submission.status,
             uploadDate: submission.uploadDate,
             driveFileId: submission.driveFileId,
-            studentName: submission.mongoId?.name || 'Unknown',
-            studentEmail: submission.mongoId?.email || 'Unknown',
-            studentId: submission.studentId,
-            section: submission.mongoId?.section || 'Unknown'
+            fileUrl: submission.fileUrl,
+            version: submission.version || 1
         }));
 
-        console.log('Found submissions for instructor:', transformedSubmissions);
-        
         res.json(transformedSubmissions);
     } catch (error) {
-        console.error('Error in /submissions route:', error);
-        res.status(500).json({ 
-            message: 'Error fetching submissions',
-            error: error.message 
-        });
+        console.error('Error fetching submissions:', error);
+        res.status(500).json({ message: 'Error fetching submissions' });
     }
 });
 

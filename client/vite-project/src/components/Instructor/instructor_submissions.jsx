@@ -8,6 +8,16 @@ import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 
+const getViewableFileUrl = (fileUrl) => {
+    if (!fileUrl) return '';
+    // Convert from /file/d/ to /file/d/ID/preview
+    if (fileUrl.includes('/file/d/')) {
+        const fileId = fileUrl.split('/file/d/')[1].split('/')[0];
+        return `https://drive.google.com/file/d/${fileId}/preview`;
+    }
+    return fileUrl;
+};
+
 const InstructorSubmissions = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
@@ -171,6 +181,7 @@ const InstructorSubmissions = () => {
                   <tr>
                     <th className="centering">ID</th>
                     <th className="centering">Title</th>
+                    <th className="centering">Version</th>
                     <th className="centering">Student</th>
                     <th className="centering">Date Submitted</th>
                     <th className="centering">Status</th>
@@ -183,6 +194,7 @@ const InstructorSubmissions = () => {
                     <tr key={submission._id}>
                       <td className="centering">{submission.studentId}</td>
                       <td className="centering">{submission.title}</td>
+                      <td className="centering">v{submission.version || 1}</td>
                       <td className="centering">{submission.studentName}</td>
                       <td className="centering">
                         {new Date(submission.uploadDate).toLocaleDateString()}
@@ -251,95 +263,85 @@ const InstructorSubmissions = () => {
             </div>
             <div className="modal-body">
               {selectedResearch && (
-                <div className="container">
-                  <div className="row mb-3">
-                    <div className="col-12">
-                      <h4>{selectedResearch.title}</h4>
-                      <span className={`badge bg-${
-                        selectedResearch.status === 'Accepted' ? 'success' :
-                        selectedResearch.status === 'Pending' ? 'warning' :
-                        selectedResearch.status === 'Revision' ? 'info' : 'danger'
-                      } mb-2`}>
-                        {selectedResearch.status}
-                      </span>
+                <div>
+                    <h5>{selectedResearch.title}</h5>
+                    <div className="row mb-3">
+                        <div className="col-md-12">
+                            <p><strong>Abstract:</strong></p>
+                            <p>{selectedResearch.abstract}</p>
+                        </div>
                     </div>
-                  </div>
-
-                  <div className="row mb-3">
-                    <div className="col-md-6">
-                      <p><strong>Authors:</strong></p>
-                      <p>{selectedResearch.authors}</p>
+                    <div className="row mb-3">
+                        <div className="col-md-6">
+                            <p><strong>Authors:</strong></p>
+                            <p>{selectedResearch.authors}</p>
+                        </div>
+                        <div className="col-md-6">
+                            <p><strong>Keywords:</strong></p>
+                            <p>{selectedResearch.keywords}</p>
+                        </div>
                     </div>
-                    <div className="col-md-6">
-                      <p><strong>Keywords:</strong></p>
-                      <p>{selectedResearch.keywords}</p>
+                    <div className="row mb-3">
+                        <div className="col-md-6">
+                            <p><strong>Version:</strong> v{selectedResearch.version}</p>
+                            <p><strong>Status:</strong> {selectedResearch.status}</p>
+                        </div>
+                        <div className="col-md-6">
+                            <p><strong>Submission Date:</strong></p>
+                            <p>{new Date(selectedResearch.uploadDate).toLocaleDateString()}</p>
+                        </div>
                     </div>
-                  </div>
-
-                  <div className="row mb-3">
-                    <div className="col-12">
-                      <p><strong>Abstract:</strong></p>
-                      <p className="text-justify">{selectedResearch.abstract}</p>
+                    <div className="row mb-3">
+                        <div className="col-md-6">
+                            <p><strong>Student:</strong> {selectedResearch.studentName}</p>
+                            <p><strong>Student ID:</strong> {selectedResearch.studentId}</p>
+                        </div>
+                        <div className="col-md-6">
+                            <p><strong>Section:</strong> {selectedResearch.section}</p>
+                            <p><strong>Email:</strong> {selectedResearch.studentEmail}</p>
+                        </div>
                     </div>
-                  </div>
-
-                  <div className="row mb-3">
-                    <div className="col-md-6">
-                      <p><strong>Submission Date:</strong></p>
-                      <p>{new Date(selectedResearch.uploadDate).toLocaleDateString('en-US', {
-                        month: '2-digit',
-                        day: '2-digit',
-                        year: 'numeric'
-                      })}</p>
+                    <div className="row mb-3">
+                        <div className="col-12">
+                            <p><strong>Research Paper:</strong></p>
+                            {selectedResearch.driveFileId ? (
+                                <div className="d-flex align-items-center">
+                                    <i className="fas fa-file-pdf text-danger me-2"></i>
+                                    <span className="me-2">research.pdf</span>
+                                    <a 
+                                        href={`https://drive.google.com/file/d/${selectedResearch.driveFileId}/view`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn btn-sm btn-primary"
+                                    >
+                                        <i className="fas fa-external-link-alt me-1"></i>
+                                        Open File
+                                    </a>
+                                </div>
+                            ) : (
+                                <p className="text-muted">No PDF file available</p>
+                            )}
+                        </div>
                     </div>
-                    <div className="col-md-6">
-                      <p><strong>File:</strong></p>
-                      <div className="d-flex align-items-center">
-                        <i className="fas fa-file-pdf text-danger me-2"></i>
-                        <span className="me-2">research.pdf</span>
-                        <a 
-                          href={`https://drive.google.com/file/d/${selectedResearch.driveFileId}/view`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-sm btn-primary"
-                        >
-                          <i className="fas fa-external-link-alt me-1"></i>
-                          Open File
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="row mb-3">
-                    <div className="col-md-6">
-                      <p><strong>Student:</strong> {selectedResearch.studentName}</p>
-                      <p><strong>Student ID:</strong> {selectedResearch.studentId}</p>
-                    </div>
-                    <div className="col-md-6">
-                      <p><strong>Section:</strong> {selectedResearch.section}</p>
-                      <p><strong>Email:</strong> {selectedResearch.studentEmail}</p>
-                    </div>
-                  </div>
-
-                  {selectedResearch.status === 'Pending' && (
-                    <div className="mt-4 border-top pt-3">
-                      <h6 className="mb-3">Update Status</h6>
-                      <div className="d-flex gap-2">
-                        <button 
-                          className="btn btn-success"
-                          onClick={() => handleStatusUpdate(selectedResearch._id, 'Accepted')}
-                        >
-                          <i className="fas fa-check me-2"></i>Accept
-                        </button>
-                        <button 
-                          className="btn btn-warning"
-                          onClick={() => handleStatusUpdate(selectedResearch._id, 'Revision')}
-                        >
-                          <i className="fas fa-edit me-2"></i>Request Revision
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                    {selectedResearch.status === 'Pending' && (
+                        <div className="mt-4 border-top pt-3">
+                            <h6 className="mb-3">Update Status</h6>
+                            <div className="d-flex gap-2">
+                                <button 
+                                    className="btn btn-success"
+                                    onClick={() => handleStatusUpdate(selectedResearch._id, 'Accepted')}
+                                >
+                                    <i className="fas fa-check me-2"></i>Accept
+                                </button>
+                                <button 
+                                    className="btn btn-warning"
+                                    onClick={() => handleStatusUpdate(selectedResearch._id, 'Revision')}
+                                >
+                                    <i className="fas fa-edit me-2"></i>Request Revision
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
               )}
             </div>

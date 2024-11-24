@@ -555,6 +555,7 @@ const MyResearch = () => {
                               <thead>
                                 <tr>
                                   <th>Title</th>
+                                  <th>Version</th>
                                   <th>Authors</th>
                                   <th>Keywords</th>
                                   <th>File</th>
@@ -577,6 +578,7 @@ const MyResearch = () => {
                                     .map((research, index) => (
                                       <tr key={index}>
                                         <td>{research.title}</td>
+                                        <td>v{research.version || 1}</td>
                                         <td>{research.authors}</td>
                                         <td>{research.keywords}</td>
                                         <td>
