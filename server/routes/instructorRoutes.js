@@ -110,14 +110,41 @@ instructorRoutes.put('/submissions/:id/status', authenticateToken, async (req, r
   try {
     const { id } = req.params;
     const { status, note } = req.body;
-    const submission = await Research.findById(id);
-    if (!submission) {
-      return res.status(404).json({ message: 'Submission not found' });
+    const instructorId = req.user.userId;
+
+    const research = await Research.findById(id)
+      .populate('mongoId')
+      .populate('teamMembers');
+    
+    if (!research) {
+      return res.status(404).json({ message: 'Research not found' });
     }
-    submission.status = status;
-    if (note) submission.note = note;
-    await submission.save();
-    res.json({ message: 'Status updated successfully', submission });
+
+    research.status = status;
+    if (note) research.note = note;
+    await research.save();
+
+    // Create notification for revision
+    if (status === 'Revision') {
+      const allTeamMembers = [research.mongoId._id, ...research.teamMembers.map(member => member._id)];
+      
+      const notifications = allTeamMembers.map(memberId => ({
+        recipient: memberId,
+        recipientModel: 'Student',
+        type: 'RESEARCH_SUBMISSION',
+        message: `Your research "${research.title}" needs revision`,
+        status: 'UNREAD',
+        relatedData: {
+          researchId: research._id,
+          title: research.title,
+          revisionNote: note
+        }
+      }));
+
+      await Notification.insertMany(notifications);
+    }
+
+    res.json({ message: 'Status updated successfully', research });
   } catch (error) {
     console.error('Error updating submission status:', error);
     res.status(500).json({ message: 'Error updating submission status' });

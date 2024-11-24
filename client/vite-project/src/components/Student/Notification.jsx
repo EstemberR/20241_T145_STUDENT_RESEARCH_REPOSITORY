@@ -144,10 +144,13 @@ const Notification = () => {
                           </small>
                           {notification.type === 'RESEARCH_SUBMISSION' && notification.relatedData && (
                             <div className="mt-2 p-2 bg-light rounded">
-                              <small className="text-muted">
-                                <i className="fas fa-file-alt me-1"></i>
-                                {notification.relatedData.title}
-                              </small>
+                              <p className="mb-1"><strong>Research:</strong> {notification.relatedData.title}</p>
+                              {notification.relatedData.revisionNote && (
+                                <div className="mt-2">
+                                  <strong>Revision Instructions:</strong>
+                                  <p className="text-muted mb-0">{notification.relatedData.revisionNote}</p>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

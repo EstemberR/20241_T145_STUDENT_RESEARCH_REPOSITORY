@@ -79,6 +79,11 @@ const researchSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Student',
       required: true
+  },
+  note: {
+      type: String,
+      trim: true,
+      default: null
   }
 }, { 
     timestamps: true,

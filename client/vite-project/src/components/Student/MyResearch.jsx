@@ -783,6 +783,17 @@ const MyResearch = () => {
                             </div>
                           </div>
 
+                          {selectedResearch.status === RESEARCH_STATUS.REVISE && selectedResearch.note && (
+                            <div className="row mb-3">
+                              <div className="col-12">
+                                <div className="alert alert-info">
+                                  <h6 className="mb-2"><i className="fas fa-comment-dots me-2"></i>Revision Instructions:</h6>
+                                  <p className="mb-0">{selectedResearch.note}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           <div className="row mb-3">
                             <div className="col-md-6">
                               <p><strong>Authors:</strong></p>

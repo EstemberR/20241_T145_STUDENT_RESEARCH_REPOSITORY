@@ -17,6 +17,9 @@ const InstructorSubmissions = () => {
   const [activeTab, setActiveTab] = useState('Pending');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [revisionComment, setRevisionComment] = useState('');
+  const [showRevisionModal, setShowRevisionModal] = useState(false);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
 
   useEffect(() => {
     const fetchUserAndSubmissions = async () => {
@@ -73,15 +76,24 @@ const InstructorSubmissions = () => {
         },
         body: JSON.stringify({
           status: newStatus,
-          note: note
+          note: note,
+          notificationType: newStatus === 'Revision' ? 'REVISION_REQUEST' : 'STATUS_UPDATE'
         })
       });
+
       if (!response.ok) {
         throw new Error('Failed to update status');
       }
+
+      // Update local state
       setSubmissions(submissions.map(sub => 
-        sub._id === submissionId ? { ...sub, status: newStatus } : sub
+        sub._id === submissionId ? { ...sub, status: newStatus, note: note } : sub
       ));
+
+      // Reset states
+      setRevisionComment('');
+      setSelectedSubmissionId(null);
+
       alert(`Research ${newStatus.toLowerCase()} successfully`);
     } catch (error) {
       console.error('Error updating status:', error);
@@ -203,15 +215,14 @@ const InstructorSubmissions = () => {
                             </button>
                             <button 
                               className="btn btn-warning btn-sm ms-2"
-                              onClick={() => handleStatusUpdate(submission._id, 'Revision')}
+                              onClick={() => {
+                                setSelectedSubmissionId(submission._id);
+                                setRevisionComment('');
+                                const modal = new bootstrap.Modal(document.getElementById('revisionModal'));
+                                modal.show();
+                              }}
                             >
                               <i className="fas fa-edit"></i> Revise
-                            </button>
-                            <button 
-                              className="btn btn-danger btn-sm ms-2"
-                              onClick={() => handleStatusUpdate(submission._id, 'Rejected')}
-                            >
-                              <i className="fas fa-times"></i> Reject
                             </button>
                           </>
                         )}
@@ -326,12 +337,6 @@ const InstructorSubmissions = () => {
                         >
                           <i className="fas fa-edit me-2"></i>Request Revision
                         </button>
-                        <button 
-                          className="btn btn-danger"
-                          onClick={() => handleStatusUpdate(selectedResearch._id, 'Rejected')}
-                        >
-                          <i className="fas fa-times me-2"></i>Reject
-                        </button>
                       </div>
                     </div>
                   )}
@@ -340,6 +345,46 @@ const InstructorSubmissions = () => {
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="modal fade" id="revisionModal" tabIndex="-1">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Request Revision</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Revision Instructions:</label>
+                <textarea 
+                  className="form-control"
+                  rows="4"
+                  value={revisionComment}
+                  onChange={(e) => setRevisionComment(e.target.value)}
+                  placeholder="Enter specific instructions for the revision..."
+                  required
+                ></textarea>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button 
+                type="button" 
+                className="btn btn-warning"
+                onClick={() => {
+                  if (revisionComment.trim()) {
+                    handleStatusUpdate(selectedSubmissionId, 'Revision', revisionComment);
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('revisionModal'));
+                    modal.hide();
+                  }
+                }}
+                disabled={!revisionComment.trim()}
+              >
+                Submit Revision Request
+              </button>
             </div>
           </div>
         </div>
