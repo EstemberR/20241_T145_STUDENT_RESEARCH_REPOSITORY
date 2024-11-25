@@ -199,18 +199,28 @@ studentRoutes.get('/research', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: 'Student not found' });
         }
 
-        // Find research where student is either submitter, leader, or team member
-        const research = await Research.find({ 
+        // Find latest versions of research where student is either submitter, leader, or team member
+        const allResearch = await Research.find({ 
             $or: [
                 { mongoId: mongoId },
                 { teamMembers: mongoId }
             ]
-        })
-        .populate('submittedBy', 'name')  // Populate submitter's name
-        .populate('teamMembers', 'name')   // Populate team members' names
-        .sort({ uploadDate: -1 });
+        });
+
+        // Group by original research (using parentId) and get only the latest versions
+        const latestVersions = allResearch.reduce((acc, research) => {
+            const groupId = research.parentId || research._id;
+            if (!acc[groupId] || acc[groupId].version < research.version) {
+                acc[groupId] = research;
+            }
+            return acc;
+        }, {});
+
+        // Convert back to array and sort
+        const research = Object.values(latestVersions)
+            .sort((a, b) => b.uploadDate - a.uploadDate);
         
-        console.log('Found research entries:', research.length);
+        console.log('Found latest research versions:', research.length);
         res.json(research);
     } catch (error) {
         console.error('Error fetching research:', error);
@@ -700,25 +710,26 @@ studentRoutes.put('/resubmit-research', authenticateToken, async (req, res) => {
     const mongoId = req.user.userId;
     const { researchId, fileUrl, driveFileId, version } = req.body;
 
-    // Find the research and populate necessary fields
-    const research = await Research.findById(researchId)
-      .populate('mongoId')
-      .populate('teamMembers')
-      .populate('adviser');
-
-    if (!research) {
+    // Find the original research
+    const originalResearch = await Research.findById(researchId);
+    if (!originalResearch) {
       return res.status(404).json({ message: 'Research not found' });
     }
 
-    // Update research document while preserving team info
-    research.status = 'Pending';
-    research.fileUrl = fileUrl;
-    research.driveFileId = driveFileId;
-    research.version = parseInt(version);
-    research.uploadDate = new Date();
-    research.submittedBy = mongoId;
+    // Create new research document with parentId
+    const newResearch = new Research({
+      ...originalResearch.toObject(),
+      _id: undefined,  // Let MongoDB generate a new ID
+      status: 'Pending',
+      fileUrl: fileUrl,
+      driveFileId: driveFileId,
+      version: parseInt(version),
+      uploadDate: new Date(),
+      submittedBy: mongoId,
+      parentId: originalResearch.parentId || originalResearch._id  // Link to original
+    });
 
-    await research.save();
+    const savedResearch = await newResearch.save();
 
     // Create notifications for team members and instructor
     const notificationPromises = [
@@ -727,28 +738,28 @@ studentRoutes.put('/resubmit-research', authenticateToken, async (req, res) => {
         recipient: mongoId,
         recipientModel: 'Student',
         type: 'RESEARCH_SUBMISSION',
-        message: `You have resubmitted the research paper: "${research.title}" (Version ${version})`,
+        message: `You have resubmitted the research paper: "${savedResearch.title}" (Version ${version})`,
         status: 'UNREAD',
         relatedData: {
-          researchId: research._id,
-          title: research.title,
+          researchId: savedResearch._id,
+          title: savedResearch.title,
           version: version
         }
       }).save(),
 
       // Notifications for other team members
-      ...research.teamMembers
+      ...savedResearch.teamMembers
         .filter(member => member._id.toString() !== mongoId.toString())
         .map(member => 
           new Notification({
             recipient: member._id,
             recipientModel: 'Student',
             type: 'RESEARCH_SUBMISSION',
-            message: `Research paper "${research.title}" has been resubmitted (Version ${version})`,
+            message: `Research paper "${savedResearch.title}" has been resubmitted (Version ${version})`,
             status: 'UNREAD',
             relatedData: {
-              researchId: research._id,
-              title: research.title,
+              researchId: savedResearch._id,
+              title: savedResearch.title,
               version: version
             }
           }).save()
@@ -756,14 +767,14 @@ studentRoutes.put('/resubmit-research', authenticateToken, async (req, res) => {
 
       // Notification for instructor
       new Notification({
-        recipient: research.adviser._id,
+        recipient: savedResearch.adviser._id,
         recipientModel: 'Instructor',
         type: 'RESEARCH_SUBMISSION',
-        message: `Revised research submitted: "${research.title}" (Version ${version})`,
+        message: `Revised research submitted: "${savedResearch.title}" (Version ${version})`,
         status: 'UNREAD',
         relatedData: {
-          researchId: research._id,
-          title: research.title,
+          researchId: savedResearch._id,
+          title: savedResearch.title,
           version: version
         }
       }).save()
@@ -771,10 +782,39 @@ studentRoutes.put('/resubmit-research', authenticateToken, async (req, res) => {
 
     await Promise.all(notificationPromises);
 
-    res.json({ message: 'Research resubmitted successfully', research });
+    res.json({ message: 'Research resubmitted successfully', research: savedResearch });
   } catch (error) {
     console.error('Error resubmitting research:', error);
     res.status(500).json({ message: 'Error resubmitting research' });
+  }
+});
+
+// Add this new route
+studentRoutes.get('/research/:id/versions', authenticateToken, async (req, res) => {
+  try {
+    const research = await Research.findById(req.params.id);
+    if (!research) {
+      return res.status(404).json({ message: 'Research not found' });
+    }
+
+    // Find the original research (parent) if this is a revision
+    const parentId = research.parentId || research._id;
+
+    // Find all versions including the original and its revisions
+    const versions = await Research.find({
+      $or: [
+        { _id: parentId },  // Include original
+        { parentId: parentId }  // Include all revisions
+      ]
+    })
+    .sort({ version: -1, uploadDate: -1 })
+    .select('version uploadDate status driveFileId note title');
+
+    console.log('Found versions:', versions); // Debug log
+    res.json(versions);
+  } catch (error) {
+    console.error('Error fetching research versions:', error);
+    res.status(500).json({ message: 'Error fetching research versions' });
   }
 });
 

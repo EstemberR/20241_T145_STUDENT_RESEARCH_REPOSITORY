@@ -88,7 +88,12 @@ const researchSchema = new mongoose.Schema({
   version: {
       type: Number,
       default: 1
-  }
+  },
+  parentId: {  // Add this new field
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Research',
+    default: null
+}
 }, { 
     timestamps: true,
     toJSON: { virtuals: true },

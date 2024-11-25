@@ -46,6 +46,7 @@ const MyResearch = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasTeam, setHasTeam] = useState(false);
   const [fileVersion, setFileVersion] = useState(1);
+  const [versionHistory, setVersionHistory] = useState([]);
 
   const fetchResearchEntries = async () => {
     try {
@@ -446,6 +447,27 @@ const MyResearch = () => {
     }
   };
 
+  const fetchVersionHistory = async (researchId) => {
+    try {
+      const token = getToken();
+      const response = await fetch(`http://localhost:8000/student/research/${researchId}/versions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch version history');
+      }
+
+      const data = await response.json();
+      setVersionHistory(data);
+    } catch (error) {
+      console.error('Error fetching version history:', error);
+      showAlertMessage('Failed to fetch version history', 'danger');
+    }
+  };
+
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
@@ -620,6 +642,17 @@ const MyResearch = () => {
                                             >
                                               <i className="fas fa-eye"></i> View
                                             </button>
+                                          <button 
+                                            className="btn btn-sm btn-info ms-2"
+                                            onClick={async () => {
+                                              setSelectedResearch(research);
+                                              await fetchVersionHistory(research._id);
+                                              const modal = new bootstrap.Modal(document.getElementById('versionHistoryModal'));
+                                              modal.show();
+                                            }}
+                                          >
+                                            <i className="fas fa-history"></i> Versions
+                                          </button>
                                         </td>
                                         <td>
                                           <button 
@@ -1067,6 +1100,78 @@ const MyResearch = () => {
                       >
                         Resubmit Research
                       </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Version History Modal */}
+              <div className="modal fade" id="versionHistoryModal" tabIndex="-1">
+                <div className="modal-dialog modal-lg">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">Version History</h5>
+                      <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div className="modal-body">
+                      {selectedResearch && (
+                        <>
+                          <h6 className="mb-3">Research Title: {selectedResearch.title}</h6>
+                          <div className="table-responsive">
+                            <table className="table table-hover">
+                              <thead>
+                                <tr>
+                                  <th>Version</th>
+                                  <th>Upload Date</th>
+                                  <th>Status</th>
+                                  <th>Notes</th>
+                                  <th>File</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {versionHistory.map((version) => (
+                                  <tr key={version._id}>
+                                    <td>v{version.version || 1}</td>
+                                    <td>
+                                      {new Date(version.uploadDate).toLocaleDateString('en-US', {
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        year: 'numeric'
+                                      })}
+                                    </td>
+                                    <td>
+                                      <span className={`badge bg-${
+                                        version.status === 'Accepted' ? 'success' :
+                                        version.status === 'Pending' ? 'warning' :
+                                        version.status === 'Revision' ? 'info' : 'danger'
+                                      }`}>
+                                        {version.status}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      {version.note || '-'}
+                                    </td>
+                                    <td>
+                                      <a 
+                                        href={`https://drive.google.com/file/d/${version.driveFileId}/view`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn btn-sm btn-primary"
+                                      >
+                                        <i className="fas fa-external-link-alt me-1"></i>
+                                        View File
+                                      </a>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                   </div>
                 </div>
