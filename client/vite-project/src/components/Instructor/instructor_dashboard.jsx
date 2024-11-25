@@ -240,7 +240,7 @@ const InstructorDashboard = () => {
                     )}
                   </div>
                   <div className="text-center mt-3">
-                    <Link to="/instructor/notification" className="btn btn-sm btn-outline-primary">
+                    <Link to="/instructor/notifications" className="btn btn-sm btn-outline-primary">
                       View All Notifications
                     </Link>
                   </div>
@@ -312,7 +312,7 @@ const InstructorDashboard = () => {
                         </tbody>
                       </table>
                       <div className="text-center mt-3">
-                        <Link to="/instructor/request" className="btn btn-sm btn-outline-success">
+                        <Link to="/instructor/requesting" className="btn btn-sm btn-outline-success">
                           View All Requests
                         </Link>
                       </div>
