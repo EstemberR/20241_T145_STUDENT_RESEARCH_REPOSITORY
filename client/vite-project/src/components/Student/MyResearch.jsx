@@ -47,6 +47,7 @@ const MyResearch = () => {
   const [hasTeam, setHasTeam] = useState(false);
   const [fileVersion, setFileVersion] = useState(1);
   const [versionHistory, setVersionHistory] = useState([]);
+  const [isResubmitting, setIsResubmitting] = useState(false);
 
   const fetchResearchEntries = async () => {
     try {
@@ -394,22 +395,17 @@ const MyResearch = () => {
 
   const handleResubmit = async (e) => {
     e.preventDefault();
-    try {
-      const token = getToken();
-      const newVersion = (selectedResearch.version || 1) + 1;
-      
-      // Create form data with all necessary fields
-      const formDataToSubmit = new FormData();
-      formDataToSubmit.append('file', file);
-      formDataToSubmit.append('title', selectedResearch.title);
-      formDataToSubmit.append('course', selectedResearch.course);
-      formDataToSubmit.append('status', 'Pending');
-      formDataToSubmit.append('uploadDate', new Date().toISOString());
+    if (!file || isResubmitting) return;
 
-      // Use the existing Google Drive upload endpoint
+    setIsResubmitting(true); // Disable the button
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload file to Google Drive
       const fileUploadResponse = await fetch('http://localhost:8000/api/auth/google-drive', {
         method: 'POST',
-        body: formDataToSubmit,
+        body: formData,
       });
 
       if (!fileUploadResponse.ok) {
@@ -417,33 +413,41 @@ const MyResearch = () => {
       }
 
       const fileResult = await fileUploadResponse.json();
+      const token = getToken();
 
-      // Now resubmit the research with the new file info
+      // Resubmit research with new file
       const response = await fetch('http://localhost:8000/student/resubmit-research', {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           researchId: selectedResearch._id,
           fileUrl: `https://drive.google.com/file/d/${fileResult.fileId}/view`,
           driveFileId: fileResult.fileId,
-          version: newVersion
+          version: (selectedResearch.version || 1) + 1
         })
       });
 
-      if (!response.ok) throw new Error('Failed to resubmit research');
+      if (!response.ok) {
+        throw new Error('Failed to resubmit research');
+      }
 
-      // Close modal and refresh
+      showAlertMessage('Research resubmitted successfully', 'success');
+      fetchResearchEntries(); // Refresh the list
+      
+      // Close the modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('resubmitModal'));
       modal.hide();
-      fetchResearchEntries();
-      showAlertMessage('Research resubmitted successfully!', 'success');
       
+      // Reset file input
+      setFile(null);
     } catch (error) {
       console.error('Error resubmitting research:', error);
-      showAlertMessage('Failed to resubmit research', 'danger');
+      showAlertMessage('Error resubmitting research', 'danger');
+    } finally {
+      setIsResubmitting(false); // Re-enable the button
     }
   };
 
@@ -1097,8 +1101,16 @@ const MyResearch = () => {
                         type="button" 
                         className="btn btn-primary"
                         onClick={handleResubmit}
+                        disabled={isResubmitting || !file}
                       >
-                        Resubmit Research
+                        {isResubmitting ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Resubmitting...
+                          </>
+                        ) : (
+                          'Resubmit Research'
+                        )}
                       </button>
                     </div>
                   </div>

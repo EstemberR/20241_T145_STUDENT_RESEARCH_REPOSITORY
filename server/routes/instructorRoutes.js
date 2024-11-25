@@ -63,7 +63,7 @@ instructorRoutes.get('/submissions', authenticateToken, async (req, res) => {
         const managedStudentIds = managedStudents.map(student => student._id);
 
         // Get all submissions from these students
-        const submissions = await Research.find({
+        const allSubmissions = await Research.find({
             $or: [
                 { mongoId: { $in: managedStudentIds } },
                 { teamMembers: { $in: managedStudentIds } }
@@ -71,11 +71,20 @@ instructorRoutes.get('/submissions', authenticateToken, async (req, res) => {
         })
         .populate('mongoId', 'name email studentId section')
         .populate('teamMembers', 'name email studentId')
-        .select('title status uploadDate studentId mongoId teamMembers version authors abstract keywords driveFileId fileUrl')
+        .select('title status uploadDate studentId mongoId teamMembers version authors abstract keywords driveFileId fileUrl parentId')
         .sort({ uploadDate: -1 });
 
+        // Group by original research and get only the latest versions
+        const latestVersions = allSubmissions.reduce((acc, submission) => {
+            const groupId = submission.parentId || submission._id;
+            if (!acc[groupId] || acc[groupId].version < submission.version) {
+                acc[groupId] = submission;
+            }
+            return acc;
+        }, {});
+
         // Transform the data to include student name and version
-        const transformedSubmissions = submissions.map(submission => ({
+        const transformedSubmissions = Object.values(latestVersions).map(submission => ({
             _id: submission._id,
             title: submission.title,
             authors: submission.authors,
