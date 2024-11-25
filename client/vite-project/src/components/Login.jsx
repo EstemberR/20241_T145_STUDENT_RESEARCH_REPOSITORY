@@ -190,11 +190,9 @@ const Login = () => {
                     showAlertMessage(`Invalid user role: ${userRole}`, 'danger');
                 }
             } else {
-                console.error('Authentication failed:', data.error || 'Unknown error');
-                showAlertMessage(data.error || 'Authentication failed', 'danger');
+                showAlertMessage(data.error || 'Your account is archived. Please contact the Admin to restore your account.', 'danger');
             }
         } catch (error) {
-            console.error('Error during Google sign-in:', error);
             showAlertMessage('Error during Google sign-in. Please try again.', 'danger');
         } finally {
             setIsGoogleLoading(false);

@@ -24,18 +24,8 @@ const Sidebar = () => {
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/repositoryTable' ? 'active' : ''}`} to="/admin/repositoryTable">
-              <i className="fas fa-book search zx"></i> Repository Table
-            </Link>
-          </li>
-          <li className="nav-item">
             <Link className={`nav-link ${location.pathname === '/admin/accounts' ? 'active' : ''}`} to="/admin/accounts">
               <i className="fas fa-user search zx"></i> Manage Accounts
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/request' ? 'active' : ''}`} to="/admin/request">
-              <i className="fas fa-folder-open search zx"></i> Role Requests
             </Link>
           </li>
           <li className="nav-item">
