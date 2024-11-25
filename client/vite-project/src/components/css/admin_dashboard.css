@@ -19,6 +19,46 @@
     justify-content: center; 
     height: 100%;
   }
+    .table { 
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .table thead th {
+      background-color: #f8f9fa;
+      border-bottom: 2px solid #dee2e6;
+      color: #495057;
+      font-weight: 600;
+    }
+
+    .table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .nav-tabs .nav-link {
+      color: #495057;
+      border: none;
+      padding: 0.5rem 1rem;
+      margin-right: 0.5rem;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .nav-tabs .nav-link.active {
+      color: #007bff;
+      border-bottom: 2px solid #007bff;
+      background-color: transparent;
+    }
+
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .badge {
+      font-weight: 500;
+      padding: 0.35em 0.65em;
+    }
   .repoData {
     color: black;
     font-weight: bold;

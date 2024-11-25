@@ -30,6 +30,11 @@ const InstructorSubmissions = () => {
   const [revisionComment, setRevisionComment] = useState('');
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState(null);
 
   useEffect(() => {
     const fetchUserAndSubmissions = async () => {
@@ -75,8 +80,17 @@ const InstructorSubmissions = () => {
 
     fetchUserAndSubmissions();
   }, [navigate]);
+
+  const showAlertMessage = (message, type) => {
+    setAlertMessage(message);
+    setAlertType(type);
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 5000); // Hide after 5 seconds
+  };
+
   const handleStatusUpdate = async (submissionId, newStatus, note = '') => {
     try {
+      setIsProcessing(true);
       const token = getToken();
       const response = await fetch(`http://localhost:8000/instructor/submissions/${submissionId}/status`, {
         method: 'PUT',
@@ -103,11 +117,20 @@ const InstructorSubmissions = () => {
       // Reset states
       setRevisionComment('');
       setSelectedSubmissionId(null);
+      setConfirmationAction(null);
 
-      alert(`Research ${newStatus.toLowerCase()} successfully`);
+      // Close modals
+      const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+      const revisionModal = bootstrap.Modal.getInstance(document.getElementById('revisionModal'));
+      if (confirmModal) confirmModal.hide();
+      if (revisionModal) revisionModal.hide();
+
+      showAlertMessage(`Research ${newStatus.toLowerCase()} successfully`, 'success');
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('Failed to update status');
+      showAlertMessage('Failed to update status', 'danger');
+    } finally {
+      setIsProcessing(false);
     }
   };
   const filteredData = submissions.filter((submission) => submission.status === activeTab);
@@ -125,10 +148,10 @@ const InstructorSubmissions = () => {
 
         <main className="main-content">
             <h4 className="my-3">STUDENT SUBMISSIONS</h4>
-            <ul className="nav nav-tabs">
-              <li className="nav-item pending">
+            <ul className="nav nav-tabs mb-4">
+              <li className="nav-item">
                 <button
-                  className={`nav-link ${activeTab === 'Pending' ? 'active' : ''} x`}
+                  className={`nav-link ${activeTab === 'Pending' ? 'active' : ''}`}
                   onClick={() => setActiveTab('Pending')}
                 >
                   Pending
@@ -137,9 +160,9 @@ const InstructorSubmissions = () => {
                   </span>
                 </button>
               </li>
-              <li className="nav-item accepted">
+              <li className="nav-item">
                 <button
-                  className={`nav-link ${activeTab === 'Accepted' ? 'active' : ''} x`}
+                  className={`nav-link ${activeTab === 'Accepted' ? 'active' : ''}`}
                   onClick={() => setActiveTab('Accepted')}
                 >
                   Accepted
@@ -148,9 +171,9 @@ const InstructorSubmissions = () => {
                   </span>
                 </button>
               </li>
-              <li className="nav-item revision">
+              <li className="nav-item">
                 <button
-                  className={`nav-link ${activeTab === 'Revision' ? 'active' : ''} x`}
+                  className={`nav-link ${activeTab === 'Revision' ? 'active' : ''}`}
                   onClick={() => setActiveTab('Revision')}
                 >
                   Revision
@@ -159,9 +182,9 @@ const InstructorSubmissions = () => {
                   </span>
                 </button>
               </li>
-              <li className="nav-item rejected">
+              <li className="nav-item">
                 <button
-                  className={`nav-link ${activeTab === 'Rejected' ? 'active' : ''} x`}
+                  className={`nav-link ${activeTab === 'Rejected' ? 'active' : ''}`}
                   onClick={() => setActiveTab('Rejected')}
                 >
                   Rejected
@@ -171,87 +194,106 @@ const InstructorSubmissions = () => {
                 </button>
               </li>
             </ul>
-            {loading ? (
-              <div>Loading submissions...</div>
-            ) : error ? (
-              <div className="alert alert-danger">{error}</div>
-            ) : (
-              <table className="table table-green-theme table-striped table-bordered mt-3">
-                <thead className="table-primary">
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
                   <tr>
-                    <th className="centering">ID</th>
-                    <th className="centering">Title</th>
-                    <th className="centering">Version</th>
-                    <th className="centering">Student</th>
-                    <th className="centering">Date Submitted</th>
-                    <th className="centering">Status</th>
-                    <th className="centering">View</th>
-                    <th className="centering">Actions</th>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Version</th>
+                    <th>Student</th>
+                    <th>Date Submitted</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredData.map((submission) => (
                     <tr key={submission._id}>
-                      <td className="centering">{submission.studentId}</td>
-                      <td className="centering">{submission.title}</td>
-                      <td className="centering">v{submission.version || 1}</td>
-                      <td className="centering">{submission.studentName}</td>
-                      <td className="centering">
-                        {new Date(submission.uploadDate).toLocaleDateString()}
+                      <td>{submission.studentId}</td>
+                      <td>{submission.title}</td>
+                      <td>v{submission.version || 1}</td>
+                      <td>{submission.studentName}</td>
+                      <td>
+                        {new Date(submission.uploadDate).toLocaleDateString('en-US', {
+                          month: '2-digit',
+                          day: '2-digit',
+                          year: 'numeric'
+                        })}
                       </td>
-                      <td className="centering">
+                      <td>
                         <span className={`badge bg-${
                           submission.status === 'Accepted' ? 'success' :
                           submission.status === 'Pending' ? 'warning' :
-                          submission.status === 'Revision' ? 'info' :
-                          'danger'
+                          submission.status === 'Revision' ? 'info' : 'danger'
                         }`}>
                           {submission.status}
                         </span>
                       </td>
-                      <td className="centering">
-                        <button
-                          className="btn btn-info btn-sm"
-                          onClick={() => handleViewClick(submission)}>
-                          <i className="fas fa-eye"></i> View
-                        </button>
-                      </td>
-                      <td className="centering">
-                        {submission.status === 'Pending' && (
-                          <>
+                      <td>
+                        <div className="d-flex gap-2">
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => handleViewClick(submission)}
+                          >
+                            <i className="fas fa-eye"></i> View
+                          </button>
+                          
+                          {submission.status === 'Pending' && (
+                            <>
+                              <button 
+                                className="btn btn-sm btn-success"
+                                onClick={() => {
+                                  setConfirmationAction({
+                                    type: 'accept',
+                                    id: submission._id,
+                                    title: submission.title
+                                  });
+                                  const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+                                  modal.show();
+                                }}
+                                disabled={isProcessing}
+                              >
+                                <i className="fas fa-check"></i> Accept
+                              </button>
+                              <button 
+                                className="btn btn-sm btn-warning"
+                                onClick={() => {
+                                  setSelectedSubmissionId(submission._id);
+                                  setRevisionComment('');
+                                  const modal = new bootstrap.Modal(document.getElementById('revisionModal'));
+                                  modal.show();
+                                }}
+                                disabled={isProcessing}
+                              >
+                                <i className="fas fa-edit"></i> Revise
+                              </button>
+                            </>
+                          )}
+                          {submission.status === 'Revision' && (
                             <button 
-                              className="btn btn-success btn-sm ms-2"
-                              onClick={() => handleStatusUpdate(submission._id, 'Accepted')}
+                              className="btn btn-sm btn-success"
+                              onClick={() => {
+                                setConfirmationAction({
+                                  type: 'accept',
+                                  id: submission._id,
+                                  title: submission.title
+                                });
+                                const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+                                modal.show();
+                              }}
+                              disabled={isProcessing}
                             >
                               <i className="fas fa-check"></i> Accept
                             </button>
-                            <button 
-                              className="btn btn-warning btn-sm ms-2"
-                              onClick={() => {
-                                setSelectedSubmissionId(submission._id);
-                                setRevisionComment('');
-                                const modal = new bootstrap.Modal(document.getElementById('revisionModal'));
-                                modal.show();
-                              }}
-                            >
-                              <i className="fas fa-edit"></i> Revise
-                            </button>
-                          </>
-                        )}
-                        {submission.status === 'Revision' && (
-                          <button 
-                            className="btn btn-success btn-sm ms-2"
-                            onClick={() => handleStatusUpdate(submission._id, 'Accepted')}
-                          >
-                            <i className="fas fa-check"></i> Accept Revision
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            )}
+            </div>
         </main>
       </div>
       <div className="modal fade" id="viewResearchModal" tabIndex="-1" aria-hidden="true">
@@ -372,25 +414,85 @@ const InstructorSubmissions = () => {
               </div>
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                data-bs-dismiss="modal"
+                disabled={isProcessing}
+              >
+                Cancel
+              </button>
               <button 
                 type="button" 
                 className="btn btn-warning"
                 onClick={() => {
                   if (revisionComment.trim()) {
                     handleStatusUpdate(selectedSubmissionId, 'Revision', revisionComment);
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('revisionModal'));
-                    modal.hide();
                   }
                 }}
-                disabled={!revisionComment.trim()}
+                disabled={!revisionComment.trim() || isProcessing}
               >
-                Submit Revision Request
+                {isProcessing ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Processing...
+                  </>
+                ) : (
+                  'Submit Revision Request'
+                )}
               </button>
             </div>
           </div>
         </div>
       </div>
+      <div className="modal fade" id="confirmationModal" tabIndex="-1">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Confirm Action</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div className="modal-body">
+              {confirmationAction && (
+                <p>
+                  Are you sure you want to {confirmationAction.type} the research paper "{confirmationAction.title}"?
+                </p>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                data-bs-dismiss="modal"
+                disabled={isProcessing}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className={`btn btn-${confirmationAction?.type === 'accept' ? 'success' : 'warning'}`}
+                onClick={() => handleStatusUpdate(confirmationAction?.id, 'Accepted')}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Processing...
+                  </>
+                ) : (
+                  'Confirm'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {showAlert && (
+        <div className={`alert alert-${alertType} alert-dismissible fade show m-3`} role="alert">
+          {alertMessage}
+          <button type="button" className="btn-close" onClick={() => setShowAlert(false)}></button>
+        </div>
+      )}
     </div>
   );
 };
