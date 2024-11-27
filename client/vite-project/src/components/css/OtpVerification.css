@@ -1,0 +1,70 @@
+/* OTPVerification.css */
+
+.otp-verification-container {
+  position: fixed; 
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('../../assets/cas_building.jpg');  
+  background-size: cover; 
+  background-position: center;  
+  display: flex;
+  justify-content: center;  
+  align-items: center;  
+  z-index: 1000;  
+}
+
+.otp-verification-content {
+  background-color: rgba(255, 255, 255, 0.9);  
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 90%;  
+  max-width: 400px; 
+  text-align: center;
+}
+
+h2 {
+  color: #4CAF50; 
+  margin-bottom: 10px;  
+}
+
+.otp-input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #4CAF50;  
+  border-radius: 4px;
+  font-size: 16px;  
+}
+
+.otp-button {
+  background-color: #4CAF50; 
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 16px;  
+  transition: background-color 0.3s ease;  
+}
+
+.otp-button:hover {
+  background-color: #45a049;  
+}
+
+.otp-message {
+  margin-top: 10px;
+  color: #f44336;  
+}
+
+.otp-close-button {
+  background-color: transparent;
+  color: #4CAF50; 
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+  font-size: 16px;  
+}

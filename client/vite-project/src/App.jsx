@@ -30,6 +30,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 {/*LANDING PAGE*/ }
 import LandingPage from './components/landingPage';
 import SuperAdminDashboard from './components/SuperAdmin/Dashboard';
+import OTPVerification from './components/OTPVerification';
 
 
 function App() {
@@ -38,6 +39,9 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
+          {/* Other routes */}
+          <Route path="/otp-verification" element={<OTPVerification />} />
+
         {/* Student Protected Routes */}
         <Route element={<ProtectedRoute allowedRole="student" />}>
           <Route path="/student/dashboard" element={<StudentDashboard />} />
