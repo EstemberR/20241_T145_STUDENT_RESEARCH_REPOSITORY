@@ -62,6 +62,7 @@ app.use('/api/superadmin', superAdminRoutes);
 app.use('/student', studentRoutes);
 //GOOGLE DRIVE
 app.use('/api/auth/google-drive', driveRoutes);
+
 app.use('/instructor', instructorRoutes);
 app.use('/admin', adminRoutes);
 

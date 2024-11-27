@@ -5,8 +5,127 @@ import Instructor from '../model/Instructor.js';
 import authenticateToken from '../middleware/authenticateToken.js';
 import AdviserRequest from '../model/AdviserRequest.js';
 import Research from '../model/Research.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import Admin from '../model/Admin.js';
 
 const adminRoutes = express.Router();
+
+adminRoutes.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        console.log('Admin login attempt:', email);
+
+        // Check for superadmin credentials
+        if (email === 'superadmin@buksu.edu.ph' && 
+            password === 'BuksuSuperAdmin2024') {
+            const token = jwt.sign(
+                { 
+                    role: 'superadmin',
+                    email: email 
+                },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+
+            return res.status(200).json({
+                success: true,
+                token,
+                role: 'superadmin',
+                name: 'Super Administrator',
+                message: 'Superadmin login successful'
+            });
+        }
+
+        // Regular admin login
+        const admin = await Admin.findOne({ email });
+        
+        if (!admin) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
+        }
+
+        // Verify password using bcrypt
+        const isValidPassword = await bcrypt.compare(password, admin.password);
+        
+        if (!isValidPassword) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
+        }
+
+        // Update last login
+        admin.lastLogin = new Date();
+        await admin.save();
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { 
+                id: admin._id,
+                role: admin.role,
+                email: admin.email,
+                permissions: admin.permissions
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(200).json({
+            success: true,
+            token,
+            role: admin.role,
+            name: admin.name,
+            permissions: admin.permissions,
+            message: 'Login successful'
+        });
+
+    } catch (error) {
+        console.error('Admin login error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+});
+
+adminRoutes.post('/create-initial-admin', async (req, res) => {
+    try {
+        const adminExists = await Admin.findOne({ email: process.env.INITIAL_ADMIN_EMAIL });
+        
+        if (adminExists) {
+            return res.status(400).json({
+                success: false,
+                message: 'Admin already exists'
+            });
+        }
+
+        const admin = new Admin({
+            name: 'Administrator',
+            email: process.env.INITIAL_ADMIN_EMAIL,
+            password: process.env.INITIAL_ADMIN_PASSWORD,
+            uid: Date.now().toString(), // Generate a unique ID
+            role: 'admin'
+        });
+
+        await admin.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Initial admin account created successfully'
+        });
+
+    } catch (error) {
+        console.error('Error creating initial admin:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creating admin account'
+        });
+    }
+});
 
 adminRoutes.get('/accounts/students', authenticateToken, async (req, res) => {
   try {

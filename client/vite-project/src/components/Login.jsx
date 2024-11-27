@@ -72,24 +72,8 @@ const Login = () => {
         setIsSubmitting(true);
 
         try {
-            // Check for superadmin first
-            if (credentials.email === 'superadmin@buksu.edu.ph' && 
-                credentials.password === 'BuksuSuperAdmin2024') {
-                
-                console.log('Superadmin credentials matched');
-                
-                // Always use localStorage for admin, regardless of remember me
-                localStorage.setItem('token', 'superadmin-token');
-                localStorage.setItem('userName', 'Super Administrator');
-                localStorage.setItem('userRole', 'superadmin');
-                
-                navigateWithTransition('/superadmin/dashboard', 'Super Admin login successful', 'success');
-                return;
-            }
-
-            console.log('Attempting admin login with:', credentials.email); // Debug log
-
-            const response = await fetch('http://localhost:8000/api/auth/admin-login', {
+            // Updated URL to match the backend route
+            const response = await fetch('http://localhost:8000/admin/login', {  // Changed from /api/auth/admin
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -97,27 +81,40 @@ const Login = () => {
                 body: JSON.stringify({ 
                     email: credentials.email, 
                     password: credentials.password,
-                    recaptchaToken: recaptchaToken
+                    recaptchaToken
                 }),
             });
 
-            const data = await response.json();
-            console.log('Login response:', data); // Debug log
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
-            if (response.ok) {
+            const data = await response.json();
+            console.log('Login response:', data);
+
+            if (data.success) {
                 // Store admin data
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('userName', data.name || 'Administrator');
-                localStorage.setItem('userRole', 'admin');
+                localStorage.setItem('userName', data.name);
+                localStorage.setItem('userRole', data.role);
+                localStorage.setItem('userPermissions', JSON.stringify(data.permissions));
 
                 showAlertMessage('Login successful', 'success');
-                navigate('/admin/admin_dashboard');
+                
+                // Navigate based on role
+                if (data.role === 'superadmin') {
+                    navigate('/superadmin/dashboard');
+                } else {
+                    navigate('/admin/admin_dashboard');
+                }
             } else {
                 showAlertMessage(data.message || 'Invalid credentials', 'danger');
             }
         } catch (error) {
             console.error('Login error:', error);
-            showAlertMessage('An error occurred during login', 'danger');
+            showAlertMessage('An error occurred during login. Please try again.', 'danger');
         } finally {
             setIsSubmitting(false);
         }
