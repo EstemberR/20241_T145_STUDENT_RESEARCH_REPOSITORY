@@ -5,6 +5,7 @@ import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
+import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 
 const AdminReports = () => {

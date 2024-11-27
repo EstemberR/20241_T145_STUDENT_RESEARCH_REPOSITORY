@@ -18,8 +18,8 @@ const Header = ({ userName }) => (
         style={{ width: '50px', height: '50px' }}
       />
       <div className="user-details">
-        <p className="user-name">Admin</p>
-        <p className="user-role">Admin</p>
+        <p className="user-name">Super Admin</p>
+        <p className="user-role">Super  Admin</p>
       </div>
     </div>
   </div>

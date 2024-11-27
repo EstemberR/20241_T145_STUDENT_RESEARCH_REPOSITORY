@@ -105,7 +105,7 @@ const Login = () => {
                 
                 // Navigate based on role
                 if (data.role === 'superadmin') {
-                    navigate('/superadmin/dashboard');
+                    navigate('/superadmin/superAdmin_dashboard');
                 } else {
                     navigate('/admin/admin_dashboard');
                 }

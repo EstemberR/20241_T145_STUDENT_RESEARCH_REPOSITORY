@@ -27,8 +27,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 {/*LANDING PAGE*/ }
 import LandingPage from './components/landingPage';
-import SuperAdminDashboard from './components/SuperAdmin/Dashboard';
 import OTPVerification from './components/OTPVerification';
+
+{/*SUPER ADMIN*/}
+import SuperAdminAccounts from './components/SuperAdmin/superAdmin_accounts';
+import SuperAdminActivity from './components/SuperAdmin/superAdmin_acitivty';
+import SuperAdminReports from './components/SuperAdmin/superAdmin_reports';
+import SuperAdminDashboard from './components/SuperAdmin/superAdmin_dashboard';
 
 
 function App() {
@@ -75,7 +80,11 @@ function App() {
 
       {/*Super Admin Protected Routes*/}
       <Route element={<ProtectedRoute allowedRole="superadmin" />}>
-          <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
+          <Route path="/superadmin/superAdmin_dashboard" element={<SuperAdminDashboard />} />
+          <Route path="/superadmin/superAdmin_accounts" element={<SuperAdminAccounts />} />
+          <Route path="/superadmin/superAdmin_activity" element={<SuperAdminActivity />} />
+          <Route path="/superadmin/superAdmin_reports" element={<SuperAdminReports />} />
+          <Route path="/superadmin/logout" element={<Navigate to="/" replace />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

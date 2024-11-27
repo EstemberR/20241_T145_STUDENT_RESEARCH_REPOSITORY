@@ -19,13 +19,8 @@ const Sidebar = () => {
         <h3 className="text-center x">STUDENT RESEARCH REPOSITORY</h3>
         <ul className="nav flex-column">
           <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/admin/admin_dashboard' ? 'active' : ''}`} to="/admin/admin_dashboard">
-              <i className="fas fa-tachometer-alt search zx"></i> Admin Dashboard
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/repositoryTable' ? 'active' : ''}`} to="/admin/repositoryTable">
-              <i className="fas fa-book search zx"></i> Repository Table
+          <Link className={`nav-link ${location.pathname === '/superAdmin/superAdmin_dashboard' ? 'active' : ''}`} to="/admin/admin_dashboard">
+              <i className="fas fa-tachometer-alt search zx"></i> Dashboard
             </Link>
           </li>
           <li className="nav-item">
@@ -34,17 +29,12 @@ const Sidebar = () => {
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/request' ? 'active' : ''}`} to="/admin/request">
+            <Link className={`nav-link ${location.pathname === '/superAdmin/superAdmin_roleRequest' ? 'active' : ''}`} to="/admin/request">
               <i className="fas fa-folder-open search zx"></i> Role Requests
             </Link>
           </li>
           <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/admin/activity' ? 'active' : ''}`} to="/admin/activity">
-          <i className="fas fa-robot search zx"></i> User Activity
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/report' ? 'active' : ''}`} to="/admin/report">
+            <Link className={`nav-link ${location.pathname === '/superAdmin/superAdmin_reports' ? 'active' : ''}`} to="/admin/report">
               <i className="fas fa-bell search zx"></i> Generate Report
             </Link>
           </li>
