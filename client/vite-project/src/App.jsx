@@ -21,9 +21,7 @@ import InstructorSubmissions from './components/Instructor/instructor_submission
 import AdminDashboard from './components/Admin/admin_dashboard';
 import AdminAccounts from './components/Admin/admin_accounts';
 import AdminActivity from './components/Admin/admin_acitivty';
-import AdminRepo from './components/Admin/admin_repositoryTable';
 import AdminReports from './components/Admin/admin_reports';
-import AdminRequest from './components/Admin/admin_request';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -71,9 +69,7 @@ function App() {
           <Route path="/admin/admin_dashboard" element={<AdminDashboard />} />
           <Route path="/admin/accounts" element={<AdminAccounts />} />
           <Route path="/admin/activity" element={<AdminActivity />} />
-          <Route path="/admin/repositoryTable" element={<AdminRepo />} />
           <Route path="/admin/report" element={<AdminReports />} />
-          <Route path="/admin/request" element={<AdminRequest />} />
           <Route path="/admin/logout" element={<Navigate to="/" replace />} />
         </Route>
 

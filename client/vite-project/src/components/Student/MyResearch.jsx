@@ -437,7 +437,6 @@ const MyResearch = () => {
       showAlertMessage('Research resubmitted successfully', 'success');
       fetchResearchEntries(); // Refresh the list
       
-      // Close the modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('resubmitModal'));
       modal.hide();
       

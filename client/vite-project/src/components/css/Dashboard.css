@@ -325,4 +325,26 @@ body, .dashboard-container {
         transform: translateY(0);
     }
 }
+
+.notification-message {
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.notification-icon {
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item:last-child {
+  border-bottom: none !important;
+}
   
