@@ -7,7 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/admin_dashboard.css';
 
-const AdminAccounts = () => {
+const superAdminAccounts = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
   const [students, setStudents] = useState([]);
@@ -396,4 +396,4 @@ const AdminAccounts = () => {
   );
 };
 
-export default AdminAccounts;
+export default superAdminAccounts;

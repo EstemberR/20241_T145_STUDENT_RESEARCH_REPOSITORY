@@ -8,7 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../components/css/Dashboard.css';
 import '../css/admin_dashboard.css';
 
-const AdminActivity = () => {
+const superAdminActivity = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
   const [userCounts, setUserCounts] = useState({
@@ -135,4 +135,4 @@ const AdminActivity = () => {
   );
 };
 
-export default AdminActivity;
+export default superAdminActivity;

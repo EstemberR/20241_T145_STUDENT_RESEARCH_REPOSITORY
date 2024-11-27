@@ -34,6 +34,7 @@ import SuperAdminAccounts from './components/SuperAdmin/superAdmin_accounts';
 import SuperAdminActivity from './components/SuperAdmin/superAdmin_acitivty';
 import SuperAdminReports from './components/SuperAdmin/superAdmin_reports';
 import SuperAdminDashboard from './components/SuperAdmin/superAdmin_dashboard';
+import SuperAdminRoleRequests from './components/SuperAdmin/superAdmin_roleRequest';
 
 
 function App() {
@@ -84,6 +85,7 @@ function App() {
           <Route path="/superadmin/superAdmin_accounts" element={<SuperAdminAccounts />} />
           <Route path="/superadmin/superAdmin_activity" element={<SuperAdminActivity />} />
           <Route path="/superadmin/superAdmin_reports" element={<SuperAdminReports />} />
+          <Route path="/superadmin/superAdmin_role-requests" element={<SuperAdminRoleRequests />} />
           <Route path="/superadmin/logout" element={<Navigate to="/" replace />} />
         </Route>
 

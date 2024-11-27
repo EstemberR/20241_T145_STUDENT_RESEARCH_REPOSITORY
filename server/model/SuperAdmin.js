@@ -46,4 +46,5 @@ superAdminSchema.pre('save', async function(next) {
     }
 });
 
-export const SuperAdmin = mongoose.model('SuperAdmin', superAdminSchema); 
+const SuperAdmin = mongoose.model('SuperAdmin', superAdminSchema);
+export default SuperAdmin; 

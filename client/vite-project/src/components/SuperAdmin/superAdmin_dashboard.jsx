@@ -8,7 +8,7 @@ import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 
-const AdminDashboard = () => {
+const superAdminDashboard = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
 
@@ -69,4 +69,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default superAdminDashboard;

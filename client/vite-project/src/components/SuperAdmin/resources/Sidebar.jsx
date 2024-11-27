@@ -14,37 +14,50 @@ const Sidebar = () => {
       handleLogout(navigate);
     };
   
-  return (
+    return (
       <nav className="col-2 sidebar">
         <h3 className="text-center x">STUDENT RESEARCH REPOSITORY</h3>
         <ul className="nav flex-column">
           <li className="nav-item">
-          <Link className={`nav-link ${location.pathname === '/superAdmin/superAdmin_dashboard' ? 'active' : ''}`} to="/admin/admin_dashboard">
+            <Link 
+              className={`nav-link ${location.pathname === '/superadmin/dashboard' ? 'active' : ''}`} 
+              to="/superadmin/superAdmin_dashboard"
+            >
               <i className="fas fa-tachometer-alt search zx"></i> Dashboard
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/admin/accounts' ? 'active' : ''}`} to="/admin/accounts">
+            <Link 
+              className={`nav-link ${location.pathname === '/superadmin/accounts' ? 'active' : ''}`} 
+              to="/superadmin/superAdmin_accounts"
+            >
               <i className="fas fa-user search zx"></i> Manage Accounts
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/superAdmin/superAdmin_roleRequest' ? 'active' : ''}`} to="/admin/request">
+            <Link 
+              className={`nav-link ${location.pathname === '/superadmin/superAdmin_role-requests' ? 'active' : ''}`} 
+              to="/superadmin/superAdmin_role-requests"
+              >
               <i className="fas fa-folder-open search zx"></i> Role Requests
             </Link>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${location.pathname === '/superAdmin/superAdmin_reports' ? 'active' : ''}`} to="/admin/report">
+            <Link 
+              className={`nav-link ${location.pathname === '/superadmin/reports' ? 'active' : ''}`} 
+              to="/superadmin/reports"
+             >
               <i className="fas fa-bell search zx"></i> Generate Report
             </Link>
           </li>
           <li className="nav-item">
-          <span className="nav-link" onClick={handleLogoutClick} to="/">
-            <i className="fas fa-sign-out-alt logout zx"></i> Logout
-          </span>
-        </li>
+            <span className="nav-link" onClick={handleLogoutClick}>
+              <i className="fas fa-sign-out-alt logout zx"></i> Logout
+            </span>
+          </li>
         </ul>
       </nav>
-  )
+    );
 };
+
 export default Sidebar;

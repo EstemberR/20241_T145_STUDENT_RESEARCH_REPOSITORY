@@ -8,7 +8,7 @@ import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 
-const AdminReports = () => {
+const superAdminReports = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
 
@@ -35,4 +35,5 @@ const AdminReports = () => {
   );
 };
 
-export default AdminReports;
+export default superAdminReports;
+;
