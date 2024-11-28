@@ -20,7 +20,7 @@ const Sidebar = () => {
         <ul className="nav flex-column">
           <li className="nav-item">
             <Link 
-              className={`nav-link ${location.pathname === '/superadmin/accounts' ? 'active' : ''}`} 
+              className={`nav-link ${location.pathname === '/superadmin/superAdmin_accounts' ? 'active' : ''}`} 
               to="/superadmin/superAdmin_accounts"
             >
               <i className="fas fa-user search zx"></i> Manage Accounts
@@ -36,8 +36,8 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <Link 
-              className={`nav-link ${location.pathname === '/superadmin/reports' ? 'active' : ''}`} 
-              to="/superadmin/reports"
+              className={`nav-link ${location.pathname === '/superadmin/superAdmin_reports' ? 'active' : ''}`} 
+              to="/superadmin/superAdmin_reports"
              >
               <i className="fas fa-bell search zx"></i> Generate Report
             </Link>
