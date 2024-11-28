@@ -20,14 +20,6 @@ const Sidebar = () => {
         <ul className="nav flex-column">
           <li className="nav-item">
             <Link 
-              className={`nav-link ${location.pathname === '/superadmin/dashboard' ? 'active' : ''}`} 
-              to="/superadmin/superAdmin_dashboard"
-            >
-              <i className="fas fa-tachometer-alt search zx"></i> Dashboard
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link 
               className={`nav-link ${location.pathname === '/superadmin/accounts' ? 'active' : ''}`} 
               to="/superadmin/superAdmin_accounts"
             >

@@ -8,8 +8,12 @@ import Research from '../model/Research.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import Admin from '../model/Admin.js';
+import { io } from '../src/app.js'; // Import io instance
 
 const adminRoutes = express.Router();
+
+// Add state for tracking edit mode
+let currentEditor = null;
 
 adminRoutes.post('/login', async (req, res) => {
     try {
@@ -17,7 +21,7 @@ adminRoutes.post('/login', async (req, res) => {
         
         console.log('Admin login attempt:', email);
 
-        // Check for superadmin credentials
+        // Check for superadmin credentials 
         if (email === 'superadmin@buksu.edu.ph' && 
             password === 'BuksuSuperAdmin2024') {
             const token = jwt.sign(
@@ -369,6 +373,51 @@ adminRoutes.get('/user-counts', authenticateToken, async (req, res) => {
     console.error('Error fetching user counts:', error);
     res.status(500).json({ message: 'Error fetching user counts' });
   }
+});
+
+// Add new endpoints for edit mode management
+adminRoutes.post('/edit-mode', authenticateToken, async (req, res) => {
+  try {
+    const { isEditing, editor } = req.body;
+    
+    // If someone wants to enter edit mode but someone else is already editing
+    if (isEditing && currentEditor && currentEditor !== editor) {
+      return res.status(403).json({ 
+        success: false,
+        message: `Another admin (${currentEditor}) is currently editing` 
+      });
+    }
+
+    // Update editor state
+    if (isEditing) {
+      currentEditor = editor;
+    } else if (currentEditor === editor) {
+      currentEditor = null;
+    }
+
+    // Broadcast the change through Socket.IO
+    io.emit('editModeChange', { isEditing, editor });
+
+    res.json({ 
+      success: true, 
+      currentEditor,
+      message: isEditing ? 'Edit mode enabled' : 'Edit mode disabled'
+    });
+  } catch (error) {
+    console.error('Error updating edit mode:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Internal server error' 
+    });
+  }
+});
+
+// Add endpoint to check current editor
+adminRoutes.get('/edit-mode', authenticateToken, async (req, res) => {
+  res.json({ 
+    success: true,
+    currentEditor 
+  });
 });
 
 export default adminRoutes;

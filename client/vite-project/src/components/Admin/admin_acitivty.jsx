@@ -14,8 +14,7 @@ const AdminActivity = () => {
   const [userName] = useState(getUserName());
   const [userCounts, setUserCounts] = useState({
     students: 0,
-    instructors: 0,
-    advisers: 0
+    instructors: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -109,21 +108,6 @@ const AdminActivity = () => {
                     <div>
                       <h6 className="card-title text-muted mb-0">Total Instructors</h6>
                       <h2 className="mt-2 mb-0">{userCounts.instructors}</h2>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Advisers Card */}
-              <div className="col-md-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body d-flex align-items-center">
-                    <div className="rounded-circle p-3 bg-warning bg-opacity-10 me-3">
-                      <FaUserTie size={30} className="text-warning" />
-                    </div>
-                    <div>
-                      <h6 className="card-title text-muted mb-0">Total Advisers</h6>
-                      <h2 className="mt-2 mb-0">{userCounts.advisers}</h2>
                     </div>
                   </div>
                 </div>

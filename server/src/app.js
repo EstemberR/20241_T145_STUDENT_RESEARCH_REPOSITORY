@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
+import { Server } from 'socket.io';
+import { createServer } from 'http';
 
 import './firebaseAdminConfig.js';
 
@@ -15,15 +17,47 @@ import Admin from '../model/Admin.js';
 import Instructor from '../model/Instructor.js';
 import Student from '../model/Student.js'
 import driveRoutes from '../routes/driveRoutes.js';
-
 //SUPER ADMIN
 import superAdminRoutes from '../routes/superAdminRoutes.js';
 
-
-
-//MIDDLEWARE
 dotenv.config(); 
 const app = express();
+const server = createServer(app); // Create HTTP server
+
+// Initialize Socket.IO with CORS configuration
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:3000',
+    methods: ["GET", "POST"],
+    credentials: true,
+  }
+});
+
+// Store current editor state
+let currentEditor = null;
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('Client connected');
+
+  // Send current editor state when client connects
+  socket.emit('editModeState', { editor: currentEditor });
+
+  socket.on('editModeChange', (data) => {
+    if (data.isEditing) {
+      currentEditor = data.editor;
+    } else if (currentEditor === data.editor) {
+      currentEditor = null;
+    }
+    // Broadcast the change to all clients
+    io.emit('editModeChange', { isEditing: data.isEditing, editor: data.editor });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+});
+
 app.use(express.json());
 const PORT = process.env.PORT || 6000; 
 
@@ -37,7 +71,6 @@ app.use(bodyParser.json());
 app.locals.userModel = Admin;
 app.locals.userModel = Instructor;
 app.locals.userModel = Student;
-
 
 const connect = async () => {
     try {
@@ -69,14 +102,16 @@ app.use('/admin', adminRoutes);
 //EMAIL VERIFICATION
 app.use('/api/auth', authRoutes); // Use the email routes under the /api/email path
 
-app.listen(PORT, () => {
+// Change app.listen to server.listen
+server.listen(PORT, () => {
     connect(); 
     console.log(`Listening on PORT ${PORT}`);
     app._router.stack.forEach(function(r){
         if (r.route && r.route.path){
           console.log(`${Object.keys(r.route.methods)} ${r.route.path}`);
         }
-      });
+    });
 });
 
+export { io }; // Export io for use in routes
 export default app;

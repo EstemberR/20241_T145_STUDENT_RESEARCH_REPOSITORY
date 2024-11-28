@@ -105,9 +105,9 @@ const Login = () => {
                 
                 // Navigate based on role
                 if (data.role === 'superadmin') {
-                    navigate('/superadmin/superAdmin_dashboard');
+                    navigate('/superadmin/superAdmin_accounts');
                 } else {
-                    navigate('/admin/admin_dashboard');
+                    navigate('/admin/accounts');
                 }
             } else {
                 showAlertMessage(data.message || 'Invalid credentials', 'danger');

@@ -18,7 +18,6 @@ import InstructorRequest from './components/Instructor/instructor_request';
 import InstructorStudents from './components/Instructor/instructor_students';
 import InstructorSubmissions from './components/Instructor/instructor_submissions';
 
-import AdminDashboard from './components/Admin/admin_dashboard';
 import AdminAccounts from './components/Admin/admin_accounts';
 import AdminActivity from './components/Admin/admin_acitivty';
 import AdminReports from './components/Admin/admin_reports';
@@ -33,7 +32,6 @@ import OTPVerification from './components/OTPVerification';
 import SuperAdminAccounts from './components/SuperAdmin/superAdmin_accounts';
 import SuperAdminActivity from './components/SuperAdmin/superAdmin_acitivty';
 import SuperAdminReports from './components/SuperAdmin/superAdmin_reports';
-import SuperAdminDashboard from './components/SuperAdmin/superAdmin_dashboard';
 import SuperAdminRoleRequests from './components/SuperAdmin/superAdmin_roleRequest';
 
 
@@ -72,7 +70,6 @@ function App() {
 
           {/* Admin Protected Routes */}
         <Route element={<ProtectedRoute allowedRole="admin" />}>
-          <Route path="/admin/admin_dashboard" element={<AdminDashboard />} />
           <Route path="/admin/accounts" element={<AdminAccounts />} />
           <Route path="/admin/activity" element={<AdminActivity />} />
           <Route path="/admin/report" element={<AdminReports />} />
@@ -81,7 +78,6 @@ function App() {
 
       {/*Super Admin Protected Routes*/}
       <Route element={<ProtectedRoute allowedRole="superadmin" />}>
-          <Route path="/superadmin/superAdmin_dashboard" element={<SuperAdminDashboard />} />
           <Route path="/superadmin/superAdmin_accounts" element={<SuperAdminAccounts />} />
           <Route path="/superadmin/superAdmin_activity" element={<SuperAdminActivity />} />
           <Route path="/superadmin/superAdmin_reports" element={<SuperAdminReports />} />
