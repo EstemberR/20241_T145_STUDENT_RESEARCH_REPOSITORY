@@ -7,7 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
-import io from 'socket.io-client';
+import {io} from 'socket.io-client';
 
 const AdminAccounts = () => {
   const navigate = useNavigate();
