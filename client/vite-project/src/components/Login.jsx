@@ -12,6 +12,22 @@ import OTPVerification from './OTPVerification'; // Import the OTP modal compone
 // Generate a unique UID function
 export const generateUniqueUid = () => uuidv4(); // Generate UID here if you're not using a separate utils file
 
+const determineUserRole = (email) => {
+    // Special cases for specific gmail accounts that should be students
+    const studentGmailAccounts = [
+        'midnight.rain32145@gmail.com',
+        'nezerazami@gmail.com',
+        'undefeatable.idiot@gmail.com'
+    ];
+
+    if (email.endsWith('@student.buksu.edu.ph') || studentGmailAccounts.includes(email.toLowerCase())) {
+        return 'student';
+    } else if (email.endsWith('@gmail.com')) {
+        return 'instructor';
+    }
+    return null; // For any other email domains
+};
+
 const Login = () => {
     const [credentials, setCredentials] = useState({
         email: '',
@@ -72,8 +88,7 @@ const Login = () => {
         setIsSubmitting(true);
 
         try {
-            // Updated URL to match the backend route
-            const response = await fetch('http://localhost:8000/admin/login', {  // Changed from /api/auth/admin
+            const response = await fetch('http://localhost:8000/admin/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -85,13 +100,17 @@ const Login = () => {
                 }),
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Server response:', errorText);
-                throw new Error(`HTTP error! status: ${response.status}`);
+                if (response.status === 403 && data.message.includes('archived')) {
+                    showAlertMessage(data.message, 'danger');
+                } else {
+                    showAlertMessage(data.message || 'Login failed', 'danger');
+                }
+                return;
             }
 
-            const data = await response.json();
             console.log('Login response:', data);
 
             if (data.success) {
@@ -114,7 +133,7 @@ const Login = () => {
             }
         } catch (error) {
             console.error('Login error:', error);
-            showAlertMessage('An error occurred during login. Please try again.', 'danger');
+            showAlertMessage('An error occurred during login', 'danger');
         } finally {
             setIsSubmitting(false);
         }
@@ -139,9 +158,14 @@ const Login = () => {
                 return;
             }
 
-            // Check if email is a student email
-            const isStudentEmail = user.email.endsWith('@student.buksu.edu.ph');
-            const userRole = isStudentEmail ? 'student' : 'instructor';
+            // Use the new role determination function
+            const userRole = determineUserRole(user.email);
+            
+            if (!userRole) {
+                showAlertMessage('Invalid email domain. Please use a valid email address.', 'danger');
+                setIsGoogleLoading(false);
+                return;
+            }
 
             const response = await fetch('http://localhost:8000/api/auth/google', {
                 method: 'POST',
@@ -153,7 +177,7 @@ const Login = () => {
                     email: user.email,
                     uid: user.uid,
                     photoURL: user.photoURL,
-                    role: userRole  // Send role to backend
+                    role: userRole
                 }),
             });
 
@@ -165,12 +189,12 @@ const Login = () => {
                     // Store user data in localStorage
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('userName', user.displayName);
-                    localStorage.setItem('userRole', userRole); // Use the determined role
+                    localStorage.setItem('userRole', userRole);
                     localStorage.setItem('isGoogleUser', 'true');
                     localStorage.setItem('userEmail', user.email);
                     localStorage.setItem('userPhoto', user.photoURL);
 
-                    console.log('User role set to:', userRole); // Debug log
+                    console.log('User role set to:', userRole);
 
                     // Navigate based on role
                     if (userRole === 'student') {
@@ -186,9 +210,10 @@ const Login = () => {
                     setShowOTPVerification(true);
                 }
             } else {
-                showAlertMessage(data.error || 'Your account is archived. Please contact the Admin to restore your account.', 'danger');
+                showAlertMessage(data.message || 'Your account is archived. Please contact the Admin to restore your account.', 'danger');
             }
         } catch (error) {
+            console.error('Google sign-in error:', error);
             showAlertMessage('Error during Google sign-in. Please try again.', 'danger');
         } finally {
             setIsGoogleLoading(false);

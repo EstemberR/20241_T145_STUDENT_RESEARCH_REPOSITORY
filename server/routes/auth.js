@@ -14,15 +14,37 @@ const router = express.Router();
 
 // In-memory store for OTPs with timestamp
 const otpStore = new Map();
+const determineUserRole = (email) => {
+    // Special cases for specific gmail accounts that should be students
+    const studentGmailAccounts = [
+        'midnight.rain32145@gmail.com',
+        'nezerazami@gmail.com',
+        'undefeatable.idiot@gmail.com'
+    ];
+
+    if (email.endsWith('@student.buksu.edu.ph') || studentGmailAccounts.includes(email.toLowerCase())) {
+        return 'student';
+    } else if (email.endsWith('@gmail.com')) {
+        return 'instructor';
+    }
+    return null; // For any other email domains
+};
 
 // Route to send OTP
 router.post('/send-otp', async (req, res) => {
     const { email } = req.body;
-    const isStudentEmail = email.endsWith('@student.buksu.edu.ph');
+    const userRole = determineUserRole(email);
 
     if (!email) {
         console.log('[ERROR] No email provided');
         return res.status(400).json({ message: 'Email is required' });
+    }
+
+    if (!userRole) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid email domain. Please use a valid email address.'
+        });
     }
 
     console.log(`[INFO] Request to send OTP to: ${email}`);
@@ -39,29 +61,30 @@ router.post('/send-otp', async (req, res) => {
             }
         }
 
-        const Model = isStudentEmail ? Student : Instructor;
-        
-        // Find user and update their verification token
+        const Model = userRole === 'student' ? Student : Instructor;
         const user = await Model.findOne({ email });
         
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        if (user.archived) {
+            return res.status(403).json({
+                success: false,
+                message: 'This account has been archived. Please contact an administrator.'
+            });
+        }
+
         const otp = generateOTP();
-        
-        // Store OTP in memory
         otpStore.set(email, {
             otp: otp,
             timestamp: Date.now()
         });
 
-        // Update user's verification token
         user.verificationToken = otp;
         await user.save();
-
-        // Send OTP email
         await sendOTPEmail(email, otp);
+        
         console.log(`[INFO] OTP sent to: ${email} | OTP: ${otp}`);
         res.status(200).json({ message: 'OTP sent successfully.' });
     } catch (error) {
@@ -73,17 +96,23 @@ router.post('/send-otp', async (req, res) => {
 // Route to verify OTP
 router.post('/verify-otp', async (req, res) => {
     const { email, otp } = req.body;
-    const isStudentEmail = email.endsWith('@student.buksu.edu.ph');
+    const userRole = determineUserRole(email);
+
+    if (!userRole) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid email domain. Please use a valid email address.'
+        });
+    }
 
     try {
-        const Model = isStudentEmail ? Student : Instructor;
+        const Model = userRole === 'student' ? Student : Instructor;
         const user = await Model.findOne({ email });
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Check if user is archived
         if (user.archived) {
             return res.status(403).json({
                 success: false,
@@ -91,7 +120,6 @@ router.post('/verify-otp', async (req, res) => {
             });
         }
 
-        // Check stored OTP
         const storedOTPData = otpStore.get(email);
         if (!storedOTPData) {
             console.log('No stored OTP found for:', email);
@@ -100,7 +128,6 @@ router.post('/verify-otp', async (req, res) => {
             });
         }
 
-        // Check if OTP is expired (5 minutes)
         if (Date.now() - storedOTPData.timestamp > 300000) {
             console.log('OTP expired for:', email);
             otpStore.delete(email);
@@ -109,31 +136,23 @@ router.post('/verify-otp', async (req, res) => {
             });
         }
 
-        // Verify OTP matches
         if (storedOTPData.otp.toString() !== otp.toString()) {
             console.log('Invalid OTP attempt:', { 
                 email, 
                 providedOTP: otp, 
-                storedOTP: storedOTPData.otp,
-                providedOTPType: typeof otp,
-                storedOTPType: typeof storedOTPData.otp
+                storedOTP: storedOTPData.otp
             });
             return res.status(400).json({ 
                 message: 'Invalid OTP. Please try again.' 
             });
         }
 
-        // Clear OTP from memory
         otpStore.delete(email);
-
-        // Update user verification status
         user.isVerified = true;
         user.verificationToken = null;
         await user.save();
 
-        // Generate JWT token
         const token = generateToken(user);
-
         console.log('User verified successfully:', email);
         
         return res.status(200).json({
@@ -154,18 +173,22 @@ router.post('/verify-otp', async (req, res) => {
 // Google Auth callback route
 router.post('/google', async (req, res) => {
     const { name, email, uid, photoURL } = req.body;
-    const isStudentEmail = email.endsWith('@student.buksu.edu.ph');
+    const userRole = determineUserRole(email);
     
+    if (!userRole) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid email domain. Please use a valid email address.'
+        });
+    }
+
     try {
-        // Check if user exists in the appropriate collection
-        const Model = isStudentEmail ? Student : Instructor;
+        const Model = userRole === 'student' ? Student : Instructor;
         let user = await Model.findOne({ email });
 
-        // If user exists (not a new user), check if archived before authenticating
         if (user) {
             console.log('Existing user detected:', email);
             
-            // Check if user is archived
             if (user.archived) {
                 return res.status(403).json({
                     success: false,
@@ -174,7 +197,6 @@ router.post('/google', async (req, res) => {
             }
 
             const token = generateToken(user);
-            
             return res.status(200).json({
                 isVerified: true,
                 token,
@@ -185,62 +207,42 @@ router.post('/google', async (req, res) => {
             });
         }
 
-        // Only for new users
         console.log('New user detected:', email);
-        
-        // Generate OTP first
         const otp = generateOTP();
         
-        // Send OTP before creating user
-        await sendOTPEmail(email, otp);
-        console.log(`OTP sent successfully to new ${isStudentEmail ? 'student' : 'instructor'}:`, email);
-
-        // Create new user
-        if (isStudentEmail) {
+        // Create new user based on role
+        if (userRole === 'student') {
             const studentId = email.split('@')[0];
             user = new Student({
-                name: name,
-                email: email,
-                uid: uid,
+                name, email, uid,
                 role: 'student',
-                studentId: studentId,
+                studentId,
                 isVerified: false,
                 verificationToken: otp,
-                archived: false // Explicitly set archived status for new users
+                archived: false
             });
         } else {
             user = new Instructor({
-                name: name,
-                email: email,
-                uid: uid,
+                name, email, uid,
                 role: 'instructor',
                 isVerified: false,
                 verificationToken: otp,
-                archived: false // Explicitly set archived status for new users
+                archived: false
             });
         }
 
-        // Store OTP in memory
         otpStore.set(email, {
             otp: otp,
             timestamp: Date.now()
         });
 
-        try {
-            await sendOTPEmail(email, otp);
-            await user.save();
-            console.log(`OTP sent successfully to ${isStudentEmail ? 'student' : 'instructor'}:`, email);
-            
-            return res.status(200).json({
-                isVerified: false,
-                message: 'OTP sent to your email for verification'
-            });
-        } catch (error) {
-            console.error('Failed to complete registration:', error);
-            return res.status(500).json({
-                error: 'Failed to complete registration process'
-            });
-        }
+        await sendOTPEmail(email, otp);
+        await user.save();
+        
+        return res.status(200).json({
+            isVerified: false,
+            message: 'OTP sent to your email for verification'
+        });
     } catch (error) {
         console.error('Error in Google authentication:', error);
         res.status(500).json({ error: 'Internal server error' });
