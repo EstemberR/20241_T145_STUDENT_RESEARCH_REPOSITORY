@@ -7,9 +7,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
+import io from 'socket.io-client';
+import { useEditMode } from '../Admin/resources/EditModeContext';
 import {io} from 'socket.io-client';
 
-const superAdminAccounts = () => {
+const SuperAdminAccounts = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
   const [students, setStudents] = useState([]);
@@ -19,9 +21,13 @@ const superAdminAccounts = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState(''); // 'success' or 'danger'
   const [showAlert, setShowAlert] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [currentEditor, setCurrentEditor] = useState(null);
-  const [socket, setSocket] = useState(null);
+  const { 
+    isEditMode, 
+    setIsEditMode, 
+    currentEditor, 
+    setCurrentEditor,
+    socket 
+  } = useEditMode();
 
   // Confirmation modal state
   const [showConfirmRestoreModal, setShowConfirmRestoreModal] = useState(false);
@@ -33,21 +39,6 @@ const superAdminAccounts = () => {
 
   const [isLoadingRestore, setIsLoadingRestore] = useState(false);
   const [isLoadingArchive, setIsLoadingArchive] = useState(false);
-
-  // Initialize WebSocket connection
-  useEffect(() => {
-    const newSocket = io('http://localhost:8000');
-    setSocket(newSocket);
-
-    newSocket.on('editModeChange', ({ isEditing, editor }) => {
-      if (editor !== userName) {
-        setIsEditMode(false);
-        setCurrentEditor(isEditing ? editor : null);
-      }
-    });
-
-    return () => newSocket.disconnect();
-  }, [userName]);
 
   useEffect(() => {
     const token = getToken();
@@ -265,6 +256,10 @@ const superAdminAccounts = () => {
     setUserTypeToRestore(null);
     setUserIdToArchive(null);
     setUserTypeToArchive(null);
+  };
+
+  const closeViewModal = () => {
+    setSelectedUser(null);
   };
 
   return (
@@ -545,15 +540,14 @@ const superAdminAccounts = () => {
 
           {/* Modal for viewing selected user details */}
           {selectedUser && (
-            <div className="modal" style={{ display: 'block' }}>
+            <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
               <div className="modal-dialog">
                 <div className="modal-content">
                   <div className="modal-header">
                     <h5 className="modal-title">
                       {selectedUser.role.toUpperCase()} DETAILS
                     </h5>
-                    <button type="button" className="close" onClick={closeModal}>
-                      &times;
+                    <button type="button" className="btn-close" onClick={closeViewModal}>
                     </button>
                   </div>
                   <div className="modal-body">
@@ -563,7 +557,7 @@ const superAdminAccounts = () => {
                     <p><strong>Email:</strong> {selectedUser.email}</p>
                   </div>
                   <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                    <button type="button" className="btn btn-secondary" onClick={closeViewModal}>
                       Close
                     </button>
                   </div>
@@ -577,4 +571,4 @@ const superAdminAccounts = () => {
   );
 };
 
-export default superAdminAccounts;
+export default SuperAdminAccounts;
