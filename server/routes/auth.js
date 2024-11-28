@@ -76,6 +76,21 @@ router.post('/verify-otp', async (req, res) => {
     const isStudentEmail = email.endsWith('@student.buksu.edu.ph');
 
     try {
+        const Model = isStudentEmail ? Student : Instructor;
+        const user = await Model.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Check if user is archived
+        if (user.archived) {
+            return res.status(403).json({
+                success: false,
+                message: 'This account has been archived. Please contact an administrator.'
+            });
+        }
+
         // Check stored OTP
         const storedOTPData = otpStore.get(email);
         if (!storedOTPData) {
@@ -106,13 +121,6 @@ router.post('/verify-otp', async (req, res) => {
             return res.status(400).json({ 
                 message: 'Invalid OTP. Please try again.' 
             });
-        }
-
-        const Model = isStudentEmail ? Student : Instructor;
-        const user = await Model.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
         }
 
         // Clear OTP from memory
@@ -153,9 +161,18 @@ router.post('/google', async (req, res) => {
         const Model = isStudentEmail ? Student : Instructor;
         let user = await Model.findOne({ email });
 
-        // If user exists (not a new user), directly authenticate
+        // If user exists (not a new user), check if archived before authenticating
         if (user) {
             console.log('Existing user detected:', email);
+            
+            // Check if user is archived
+            if (user.archived) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'This account has been archived. Please contact an administrator.'
+                });
+            }
+
             const token = generateToken(user);
             
             return res.status(200).json({
@@ -178,34 +195,36 @@ router.post('/google', async (req, res) => {
         await sendOTPEmail(email, otp);
         console.log(`OTP sent successfully to new ${isStudentEmail ? 'student' : 'instructor'}:`, email);
 
-            // Create new user
-            if (isStudentEmail) {
-                const studentId = email.split('@')[0];
-                user = new Student({
-                    name: name,
-                    email: email,
-                    uid: uid,
-                    role: 'student',
-                    studentId: studentId,
-                    isVerified: false,
-                    verificationToken: otp
-                });
-            } else {
-                user = new Instructor({
-                    name: name,
-                    email: email,
-                    uid: uid,
-                    role: 'instructor',
-                    isVerified: false,
-                    verificationToken: otp
-                });
-            }
-
-            // Store OTP in memory
-            otpStore.set(email, {
-                otp: otp,
-                timestamp: Date.now()
+        // Create new user
+        if (isStudentEmail) {
+            const studentId = email.split('@')[0];
+            user = new Student({
+                name: name,
+                email: email,
+                uid: uid,
+                role: 'student',
+                studentId: studentId,
+                isVerified: false,
+                verificationToken: otp,
+                archived: false // Explicitly set archived status for new users
             });
+        } else {
+            user = new Instructor({
+                name: name,
+                email: email,
+                uid: uid,
+                role: 'instructor',
+                isVerified: false,
+                verificationToken: otp,
+                archived: false // Explicitly set archived status for new users
+            });
+        }
+
+        // Store OTP in memory
+        otpStore.set(email, {
+            otp: otp,
+            timestamp: Date.now()
+        });
 
         try {
             await sendOTPEmail(email, otp);
