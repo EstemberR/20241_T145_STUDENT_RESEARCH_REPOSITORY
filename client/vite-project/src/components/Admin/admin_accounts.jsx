@@ -9,7 +9,6 @@ import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 import io from 'socket.io-client';
 import { useEditMode } from './resources/EditModeContext';
-import {io} from 'socket.io-client';
 
 const AdminAccounts = () => {
   const navigate = useNavigate();
