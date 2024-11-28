@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
-import { Server } from 'socket.io';
 import { createServer } from 'http';
+import { initializeSocket } from './socket.js';
 
 import './firebaseAdminConfig.js';
 
@@ -24,39 +24,8 @@ dotenv.config();
 const app = express();
 const server = createServer(app); // Create HTTP server
 
-// Initialize Socket.IO with CORS configuration
-const io = new Server(server, {
-  cors: {
-    origin: 'http://localhost:3000',
-    methods: ["GET", "POST"],
-    credentials: true,
-  }
-});
-
-// Store current editor state
-let currentEditor = null;
-
-// Socket.IO connection handling
-io.on('connection', (socket) => {
-  console.log('Client connected');
-
-  // Send current editor state when client connects
-  socket.emit('editModeState', { editor: currentEditor });
-
-  socket.on('editModeChange', (data) => {
-    if (data.isEditing) {
-      currentEditor = data.editor;
-    } else if (currentEditor === data.editor) {
-      currentEditor = null;
-    }
-    // Broadcast the change to all clients
-    io.emit('editModeChange', { isEditing: data.isEditing, editor: data.editor });
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
-});
+// Initialize Socket.IO using the consolidated implementation
+const io = initializeSocket(server);
 
 app.use(express.json());
 const PORT = process.env.PORT || 6000; 
@@ -85,6 +54,7 @@ const connect = async () => {
 mongoose.connection.on('disconnected', () => {
     console.log('Disconnected from MONGODB');
 });
+
 //google auth
 app.use('/api/auth', authRoutes);
 //manual login

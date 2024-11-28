@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 
 let io = null;
+let currentEditor = null;
 
 export const initializeSocket = (server) => {
   io = new Server(server, {
@@ -14,14 +15,23 @@ export const initializeSocket = (server) => {
   io.on('connection', (socket) => {
     console.log('Client connected');
 
+    // Send current editor state when client connects
+    socket.emit('editModeState', { editor: currentEditor });
+
     socket.on('accountUpdate', (data) => {
+      console.log('Received account update:', data);
       // Broadcast the update to all clients including the sender
       io.emit('accountUpdate', data);
     });
 
     socket.on('editModeChange', (data) => {
+      if (data.isEditing) {
+        currentEditor = data.editor;
+      } else if (currentEditor === data.editor) {
+        currentEditor = null;
+      }
       // Broadcast edit mode changes to all clients
-      io.emit('editModeChange', data);
+      io.emit('editModeChange', { isEditing: data.isEditing, editor: data.editor });
     });
 
     socket.on('disconnect', () => {

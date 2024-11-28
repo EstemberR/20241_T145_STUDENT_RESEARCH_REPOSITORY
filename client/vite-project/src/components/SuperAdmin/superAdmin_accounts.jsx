@@ -81,6 +81,39 @@ const SuperAdminAccounts = () => {
     fetchAccounts();
   }, [navigate]);
 
+  useEffect(() => {
+    if (socket) {
+      console.log('Setting up socket listeners');
+      
+      socket.on('accountUpdate', ({ action, userType, userData }) => {
+        console.log('Received account update:', { action, userType, userData });
+        
+        if (userType === 'students') {
+          setStudents(prevStudents => {
+            console.log('Updating students state:', prevStudents);
+            const updatedStudents = prevStudents.filter(student => 
+              student._id !== userData._id
+            );
+            return [...updatedStudents, userData];
+          });
+        } else if (userType === 'instructors') {
+          setInstructors(prevInstructors => {
+            console.log('Updating instructors state:', prevInstructors);
+            const updatedInstructors = prevInstructors.filter(instructor => 
+              instructor._id !== userData._id
+            );
+            return [...updatedInstructors, userData];
+          });
+        }
+      });
+
+      return () => {
+        console.log('Cleaning up socket listeners');
+        socket.off('accountUpdate');
+      };
+    }
+  }, [socket]);
+
   const showAlertMessage = (message, type) => {
     setAlertMessage(message);
     setAlertType(type);
@@ -156,7 +189,7 @@ const SuperAdminAccounts = () => {
 
   const confirmArchive = async () => {
     if (userIdToArchive && userTypeToArchive) {
-      setIsLoadingArchive(true); // Set loading state
+      setIsLoadingArchive(true);
       try {
         const token = getToken();
         const response = await fetch(`http://localhost:8000/admin/accounts/${userTypeToArchive}/${userIdToArchive}/archive`, {
@@ -171,19 +204,18 @@ const SuperAdminAccounts = () => {
           throw new Error('Failed to archive user');
         }
 
-        // Refresh the accounts list
-        const updatedResponse = await fetch(`http://localhost:8000/admin/accounts/${userTypeToArchive}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+        const updatedUser = await response.json();
+        console.log('Emitting account update:', {
+          action: 'archive',
+          userType: userTypeToArchive,
+          userData: updatedUser
         });
-        
-        const updatedData = await updatedResponse.json();
-        if (userTypeToArchive === 'students') {
-          setStudents(updatedData);
-        } else {
-          setInstructors(updatedData);
-        }
+
+        socket.emit('accountUpdate', {
+          action: 'archive',
+          userType: userTypeToArchive,
+          userData: updatedUser
+        });
 
         showAlertMessage('User archived successfully', 'success');
       } catch (error) {
@@ -193,7 +225,7 @@ const SuperAdminAccounts = () => {
         setShowConfirmArchiveModal(false);
         setUserIdToArchive(null);
         setUserTypeToArchive(null);
-        setIsLoadingArchive(false); // Reset loading state
+        setIsLoadingArchive(false);
       }
     }
   };
@@ -205,8 +237,8 @@ const SuperAdminAccounts = () => {
   };
 
   const confirmRestore = async () => {
-    setIsLoadingRestore(true); // Reset loading state
     if (userIdToRestore && userTypeToRestore) {
+      setIsLoadingRestore(true);
       try {
         const token = getToken();
         const response = await fetch(`http://localhost:8000/admin/accounts/${userTypeToRestore}/${userIdToRestore}/restore`, {
@@ -221,19 +253,27 @@ const SuperAdminAccounts = () => {
           throw new Error('Failed to restore user');
         }
 
-        // Refresh the accounts list
-        const updatedResponse = await fetch(`http://localhost:8000/admin/accounts/${userTypeToRestore}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        
-        const updatedData = await updatedResponse.json();
+        const updatedUser = await response.json();
+
+        // Update local state first
         if (userTypeToRestore === 'students') {
-          setStudents(updatedData);
+          setStudents(prev => {
+            const updated = prev.filter(s => s._id !== updatedUser._id);
+            return [...updated, updatedUser];
+          });
         } else {
-          setInstructors(updatedData);
+          setInstructors(prev => {
+            const updated = prev.filter(i => i._id !== updatedUser._id);
+            return [...updated, updatedUser];
+          });
         }
+
+        // Then emit to other clients
+        socket.emit('accountUpdate', {
+          action: 'restore',
+          userType: userTypeToRestore,
+          userData: updatedUser
+        });
 
         showAlertMessage('User restored successfully', 'success');
       } catch (error) {
@@ -243,7 +283,7 @@ const SuperAdminAccounts = () => {
         setShowConfirmRestoreModal(false);
         setUserIdToRestore(null);
         setUserTypeToRestore(null);
-        setIsLoadingRestore(false); // Reset loading state
+        setIsLoadingRestore(false);
       }
     }
   };
