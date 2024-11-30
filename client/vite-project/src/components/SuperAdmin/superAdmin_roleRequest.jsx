@@ -7,6 +7,9 @@ import { FaUserPlus, FaUserMinus, FaSpinner } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/admin_dashboard.css';
+import axios from 'axios';
+import '../css/adminCreation.css';
+import { Modal } from 'react-bootstrap';
 
 const SuperAdminManageAdmins = () => {
   const navigate = useNavigate();
@@ -14,12 +17,120 @@ const SuperAdminManageAdmins = () => {
   const [Instructors, setInstructors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState({
-    total: 0,
-    admins: 0,
-    regular: 0
-  });
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
+
+     
+const CreateAdminForm = ({ show, onHide, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.post(
+        'http://localhost:8000/admin/create-admin', 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setFormData({ name: '', email: '', password: '' });
+        alert('Admin created successfully!');
+        if (onSuccess) onSuccess();
+        onHide();
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal
+      show={show}
+      onHide={onHide}
+      centered
+      backdrop="static"
+      keyboard={false}
+      className="admin-modal"
+    >
+      <Modal.Header closeButton>
+        <Modal.Title>Create New Admin Account</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {error && <div className="alert alert-danger">{error}</div>}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label">Username:</label>
+            <input
+              type="text"
+              className="form-control"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Email:</label>
+            <input
+              type="email"
+              className="form-control"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Password:</label>
+            <input
+              type="password"
+              className="form-control"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="d-flex justify-content-end gap-2">
+            <button 
+              type="button" 
+              className="btn create-admin-btn"
+              onClick={onHide}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+              disabled={loading}
+            >
+              {loading ? 'Creating...' : 'Create Admin'}
+            </button>
+          </div>
+        </form>
+      </Modal.Body>
+    </Modal>
+  );
+};
   useEffect(() => {
     const token = getToken();
     if (!token) {
@@ -56,14 +167,6 @@ const SuperAdminManageAdmins = () => {
       
       const activeInstructors = data.filter(instructor => !instructor.archived);
       setInstructors(activeInstructors);
-      
-      // Update stats
-      const adminCount = activeInstructors.filter(instructor => instructor.isAdmin).length;
-      setStats({
-        total: activeInstructors.length,
-        admins: adminCount,
-        regular: activeInstructors.length - adminCount
-      });
 
       setError(null);
     } catch (error) {
@@ -106,42 +209,34 @@ const SuperAdminManageAdmins = () => {
       <div className="main-section col-10 d-flex flex-column">
         <Header userName={userName} />
         <main className="main-content p-4">
-          <h4 className="mb-4">MANAGE ADMINS</h4>
-
-          {/* Stats Cards */}
-          <div className="row mb-4">
-            <div className="col-md-4">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body">
-                  <h6 className="text-muted">Total Instructors</h6>
-                  <h2 className="mb-0 text-primary">{stats.total}</h2>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body">
-                  <h6 className="text-muted">Admin Instructors</h6>
-                  <h2 className="mb-0 text-success">{stats.admins}</h2>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body">
-                  <h6 className="text-muted">Regular Instructors</h6>
-                  <h2 className="mb-0 text-info">{stats.regular}</h2>
-                </div>
-              </div>
-            </div>
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h4>MANAGE ADMINS</h4>
+            <button 
+              className="btn btn-green"
+              onClick={() => setShowCreateForm(true)}
+            >
+              <FaUserPlus className="me-2" />
+              Create New Admin
+            </button>
           </div>
 
+          {/* Create Admin Modal */}
+          <CreateAdminForm 
+            show={showCreateForm}
+            onHide={() => setShowCreateForm(false)}
+            onSuccess={() => {
+              setShowCreateForm(false);
+              fetchInstructors();
+            }}
+          />
+          {/* Error Alert */}
           {error && (
             <div className="alert alert-danger" role="alert">
               {error}
             </div>
           )}
 
+          {/* Loading Spinner and Table */}
           {loading ? (
             <div className="text-center py-5">
               <FaSpinner className="spinner-border" />
@@ -156,7 +251,6 @@ const SuperAdminManageAdmins = () => {
                       <tr>
                         <th>Name</th>
                         <th>Email</th>
-                        <th>Department</th>
                         <th>Admin Status</th>
                         <th>Actions</th>
                       </tr>
@@ -173,7 +267,6 @@ const SuperAdminManageAdmins = () => {
                           <tr key={instructor._id}>
                             <td>{instructor.name}</td>
                             <td>{instructor.email}</td>
-                            <td>{instructor.department}</td>
                             <td>
                               <span className={`badge ${instructor.isAdmin ? 'bg-success' : 'bg-secondary'}`}>
                                 {instructor.isAdmin ? 'Admin' : 'Regular'}
@@ -209,6 +302,95 @@ const SuperAdminManageAdmins = () => {
           )}
         </main>
       </div>
+    </div>
+  );
+};
+
+const CreateAdminForm = ({ onSuccess }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''  // Added password field
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.post(
+        'http://localhost:8000/admin/create-admin', 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setFormData({ name: '', email: '', password: '' });
+        alert('Admin created successfully!');
+        if (onSuccess) onSuccess();
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="create-admin-form">
+      <h5 className="mb-4">Create New Admin Account</h5>
+      {error && <div className="alert alert-danger">{error}</div>}
+      
+      <form onSubmit={handleSubmit}>
+        <div className="mb-3">
+          <label className="form-label">Username:</label>
+          <input
+            type="text"
+            className="form-control"
+            value={formData.name}
+            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Email:</label>
+          <input
+            type="email"
+            className="form-control"
+            value={formData.email}
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Password:</label>
+          <input
+            type="password"
+            className="form-control"
+            value={formData.password}
+            onChange={(e) => setFormData({...formData, password: e.target.value})}
+            required
+          />
+        </div>
+
+        <button 
+          type="submit" 
+          className="btn btn-secondary"
+          disabled={loading}
+        >
+          {loading ? 'Creating...' : 'Create Admin'}
+        </button>
+      </form>
     </div>
   );
 };

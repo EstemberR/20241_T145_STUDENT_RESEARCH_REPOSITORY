@@ -213,7 +213,14 @@ const Login = () => {
                 showAlertMessage(data.message || 'Your account is archived. Please contact the Admin to restore your account.', 'danger');
             }
         } catch (error) {
-            console.error('Google sign-in error:', error);
+            if (error.code === 'auth/popup-closed-by-user') {
+                // User closed the popup, handle gracefully
+                console.log('Sign-in cancelled by user');
+                // Optionally show a user-friendly message
+            } else {
+                // Handle other authentication errors
+                console.error('Authentication error:', error);
+            }
             showAlertMessage('Error during Google sign-in. Please try again.', 'danger');
         } finally {
             setIsGoogleLoading(false);

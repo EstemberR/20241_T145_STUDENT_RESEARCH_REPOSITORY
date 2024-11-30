@@ -420,4 +420,127 @@ adminRoutes.get('/edit-mode', authenticateToken, async (req, res) => {
   });
 });
 
+// Create new admin account (Super Admin only)
+adminRoutes.post('/create-admin', authenticateToken, async (req, res) => {
+    try {
+        // Verify if requester is super admin
+        if (req.user.role !== 'superadmin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Only super admin can create admin accounts'
+            });
+        }
+
+        const { name, email, password, permissions } = req.body;
+
+        // Check if admin already exists
+        const existingAdmin = await Admin.findOne({ email });
+        if (existingAdmin) {
+            return res.status(400).json({
+                success: false,
+                message: 'Admin with this email already exists'
+            });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create new admin
+        const newAdmin = new Admin({
+            name,
+            email,
+            password: hashedPassword,
+            permissions: permissions || [],
+            role: 'admin',
+            uid: Date.now().toString(),
+            createdBy: req.user.email
+        });
+
+        await newAdmin.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Admin account created successfully'
+        });
+
+    } catch (error) {
+        console.error('Error creating admin:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creating admin account'
+        });
+    }
+});
+
+// Get all admin accounts (Super Admin only)
+adminRoutes.get('/admins', authenticateToken, async (req, res) => {
+    try {
+        // Verify if requester is super admin
+        if (req.user.role !== 'superadmin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Only super admin can view admin accounts'
+            });
+        }
+
+        const admins = await Admin.find()
+            .select('-password')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            admins
+        });
+
+    } catch (error) {
+        console.error('Error fetching admins:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching admin accounts'
+        });
+    }
+});
+
+// Update admin status (activate/deactivate)
+adminRoutes.put('/admins/:id/status', authenticateToken, async (req, res) => {
+    try {
+        // Verify if requester is super admin
+        if (req.user.role !== 'superadmin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Only super admin can modify admin accounts'
+            });
+        }
+
+        const { id } = req.params;
+        const { isActive } = req.body;
+
+        const admin = await Admin.findByIdAndUpdate(
+            id,
+            { isActive },
+            { new: true }
+        ).select('-password');
+
+        if (!admin) {
+            return res.status(404).json({
+                success: false,
+                message: 'Admin not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            admin,
+            message: `Admin account ${isActive ? 'activated' : 'deactivated'} successfully`
+        });
+
+    } catch (error) {
+        console.error('Error updating admin status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating admin status'
+        });
+    }
+});
+
 export default adminRoutes;

@@ -1,0 +1,77 @@
+/* Modal Styles */
+.admin-modal .modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.admin-modal .modal-header {
+  border-bottom: 1px solid #e9ecef;
+  padding: 1.5rem;
+}
+
+.admin-modal .modal-title {
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.admin-modal .modal-body {
+  padding: 1.5rem;
+}
+
+.admin-modal .form-control {
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #dee2e6;
+  transition: all 0.2s;
+}
+
+.admin-modal .form-control:focus {
+  border-color: #45a049;
+  box-shadow: 0 0 0 0.2rem rgba(69, 160, 73, 0.25);
+}
+
+.admin-modal .form-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.admin-modal .btn {
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.admin-modal .btn-primary {
+  background-color: #45a049;
+  border: none;
+}
+
+.admin-modal .btn-primary:hover {
+  background-color: #3d8b41;
+}
+
+.admin-modal .btn-secondary {
+  background-color: #6c757d;
+  border: none;
+}
+
+.admin-modal .btn-secondary:hover {
+  background-color: #5a6268;
+}
+.btn-green {
+  background-color: #45a049 !important;
+  color: white !important;
+  border: none !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.create-admin-btn:hover {
+  background-color: #b4b6b4 !important;
+}
+
+/* Add your existing styles here */
