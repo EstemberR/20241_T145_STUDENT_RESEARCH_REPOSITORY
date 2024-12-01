@@ -9,6 +9,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import Admin from '../model/Admin.js';
 import { io } from '../src/app.js'; // Import io instance
+import ExcelJS from 'exceljs';
+import PDFGenerator from '../services/pdfGeneration.js';
 
 const adminRoutes = express.Router();
 
@@ -599,6 +601,205 @@ adminRoutes.put('/research/:id/restore', authenticateToken, async (req, res) => 
   } catch (error) {
     console.error('Error restoring research:', error);
     res.status(500).json({ message: 'Error restoring research' });
+  }
+});
+
+// Get all courses
+adminRoutes.get('/courses', authenticateToken, async (req, res) => {
+  try {
+    // Get unique courses from Student model
+    const courses = await Student.distinct('course');
+    // Format courses into objects
+    const formattedCourses = courses
+      .filter(course => course) // Remove null/empty values
+      .map(course => ({
+        _id: course,
+        name: course
+      }));
+    
+    res.json(formattedCourses);
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    res.status(500).json({ message: 'Error fetching courses' });
+  }
+});
+
+// Generate report
+adminRoutes.get('/generate-report', authenticateToken, async (req, res) => {
+  try {
+    const { startDate, endDate, course, type } = req.query;
+    let query = { status: 'Accepted' };
+
+    if (startDate && endDate) {
+      query.uploadDate = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    let result;
+    switch (type) {
+      case 'submissions':
+        const researches = await Research.find(query)
+          .populate({
+            path: 'mongoId',
+            model: 'Student',
+            select: 'course name',
+            match: course ? { course: course } : {}
+          })
+          .populate('adviser', 'name')
+          .sort({ uploadDate: -1 });
+        
+        // Filter out results where student doesn't match course criteria
+        result = researches.filter(r => r.mongoId);
+        
+        // Format the results
+        result = result.map(r => ({
+          title: r.title,
+          authors: r.authors,
+          course: r.mongoId?.course || 'N/A',
+          status: r.status,
+          uploadDate: r.uploadDate
+        }));
+        break;
+
+      case 'status':
+        result = await Research.aggregate([
+          { $match: query },
+          {
+            $lookup: {
+              from: 'students',
+              localField: 'mongoId',
+              foreignField: '_id',
+              as: 'student'
+            }
+          },
+          {
+            $match: course ? { 'student.course': course } : {}
+          },
+          {
+            $group: {
+              _id: '$status',
+              count: { $sum: 1 },
+              researches: { $push: { title: '$title', date: '$uploadDate' } }
+            }
+          }
+        ]);
+        break;
+
+      case 'course':
+        result = await Research.aggregate([
+          { $match: query },
+          {
+            $lookup: {
+              from: 'students',
+              localField: 'mongoId',
+              foreignField: '_id',
+              as: 'student'
+            }
+          },
+          { $unwind: '$student' },
+          {
+            $match: course ? { 'student.course': course } : {}
+          },
+          {
+            $group: {
+              _id: '$student.course',
+              count: { $sum: 1 },
+              researches: { $push: { title: '$title', date: '$uploadDate' } }
+            }
+          }
+        ]);
+        break;
+
+      default:
+        result = [];
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error generating report:', error);
+    res.status(500).json({ message: 'Error generating report' });
+  }
+});
+
+// Download report
+adminRoutes.get('/download-report', authenticateToken, async (req, res) => {
+  try {
+    const { startDate, endDate, course, format } = req.query;
+    let query = { status: 'Accepted' };
+
+    if (startDate && endDate) {
+      query.uploadDate = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const researches = await Research.find(query)
+      .populate({
+        path: 'mongoId',
+        model: 'Student',
+        select: 'course name',
+        match: course ? { course: course } : {}
+      })
+      .populate('adviser', 'name')
+      .sort({ uploadDate: -1 });
+
+    // Filter out results where student doesn't match course criteria
+    const filteredResearches = researches.filter(r => r.mongoId);
+
+    if (format === 'xlsx') {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Research Report');
+
+      worksheet.columns = [
+        { header: 'Title', key: 'title', width: 40 },
+        { header: 'Authors', key: 'authors', width: 30 },
+        { header: 'Course', key: 'course', width: 20 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Submission Date', key: 'uploadDate', width: 15 }
+      ];
+
+      filteredResearches.forEach(research => {
+        worksheet.addRow({
+          title: research.title,
+          authors: Array.isArray(research.authors) ? research.authors.join(', ') : research.authors,
+          course: research.mongoId?.course || 'N/A',
+          status: research.status,
+          uploadDate: new Date(research.uploadDate).toLocaleDateString()
+        });
+      });
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename=research-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    } else if (format === 'pdf') {
+      const pdfGenerator = new PDFGenerator();
+      const doc = pdfGenerator.generateReport(filteredResearches, startDate, endDate, course);
+
+      // Set response headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=research-report-${new Date().toISOString().split('T')[0]}.pdf`);
+
+      // Create a write stream
+      const chunks = [];
+      doc.on('data', chunk => chunks.push(chunk));
+      doc.on('end', () => {
+        const result = Buffer.concat(chunks);
+        res.end(result);
+      });
+
+      // Finalize the PDF
+      doc.end();
+    } else {
+      return res.status(400).json({ message: 'Invalid format specified' });
+    }
+  } catch (error) {
+    console.error('Error downloading report:', error);
+    res.status(500).json({ message: 'Error downloading report' });
   }
 });
 
