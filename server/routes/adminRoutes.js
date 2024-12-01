@@ -547,4 +547,59 @@ adminRoutes.put('/admins/:id/status', authenticateToken, async (req, res) => {
     }
 });
 
+// Get all researches (both active and archived)
+adminRoutes.get('/all-researches', authenticateToken, async (req, res) => {
+  try {
+    const researches = await Research.find({ status: 'Accepted' })
+      .select('title authors course uploadDate abstract keywords driveFileId archived')
+      .sort({ uploadDate: -1 });
+
+    res.json(researches);
+  } catch (error) {
+    console.error('Error fetching researches:', error);
+    res.status(500).json({ message: 'Error fetching researches' });
+  }
+});
+
+// Archive research
+adminRoutes.put('/research/:id/archive', authenticateToken, async (req, res) => {
+  try {
+    const research = await Research.findByIdAndUpdate(
+      req.params.id,
+      { archived: true },
+      { new: true }
+    );
+
+    if (!research) {
+      return res.status(404).json({ message: 'Research not found' });
+    }
+
+    // Send back the updated research
+    res.json(research);
+  } catch (error) {
+    console.error('Error archiving research:', error);
+    res.status(500).json({ message: 'Error archiving research' });
+  }
+});
+
+// Restore research
+adminRoutes.put('/research/:id/restore', authenticateToken, async (req, res) => {
+  try {
+    const research = await Research.findByIdAndUpdate(
+      req.params.id,
+      { archived: false },
+      { new: true }
+    );
+
+    if (!research) {
+      return res.status(404).json({ message: 'Research not found' });
+    }
+
+    res.json(research);
+  } catch (error) {
+    console.error('Error restoring research:', error);
+    res.status(500).json({ message: 'Error restoring research' });
+  }
+});
+
 export default adminRoutes;

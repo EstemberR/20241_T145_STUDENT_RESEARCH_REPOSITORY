@@ -232,7 +232,8 @@ studentRoutes.get('/research', authenticateToken, async (req, res) => {
 studentRoutes.get('/all-research', authenticateToken, async (req, res) => {
     try {
         const research = await Research.find({ 
-            status: 'Accepted' 
+            status: 'Accepted',
+            archived: false 
         })
         .populate('student', 'name')
         .sort({ uploadDate: -1 });

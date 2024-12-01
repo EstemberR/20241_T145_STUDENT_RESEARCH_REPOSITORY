@@ -24,6 +24,11 @@ const Sidebar = () => {
             </Link>
           </li>
           <li className="nav-item">
+            <Link className={`nav-link ${location.pathname === '/admin/repository' ? 'active' : ''}`} to="/admin/repository">
+              <i className="fas fa-file-alt submission zx"></i> Manage Repository
+            </Link>
+          </li>
+          <li className="nav-item">
           <Link className={`nav-link ${location.pathname === '/admin/activity' ? 'active' : ''}`} to="/admin/activity">
           <i className="fas fa-robot search zx"></i> User Activity
             </Link>

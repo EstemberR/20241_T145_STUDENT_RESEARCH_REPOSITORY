@@ -12,6 +12,10 @@ const researchSchema = new mongoose.Schema({
       ref: 'Student',
       required: true
   },
+  archived: {
+    type: Boolean,
+    default: false
+  },
   title: {
       type: String,
       required: true,

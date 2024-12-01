@@ -21,7 +21,9 @@ import InstructorSubmissions from './components/Instructor/instructor_submission
 import AdminAccounts from './components/Admin/admin_accounts';
 import AdminActivity from './components/Admin/admin_acitivty';
 import AdminReports from './components/Admin/admin_reports';
+import AdminRepository from './components/Admin/admin_repository';
 import ProtectedRoute from './components/ProtectedRoute';
+
 
 
 {/*LANDING PAGE*/ }
@@ -74,6 +76,7 @@ function App() {
           <Route path="/admin/accounts" element={<AdminAccounts />} />
           <Route path="/admin/activity" element={<AdminActivity />} />
           <Route path="/admin/report" element={<AdminReports />} />
+          <Route path="/admin/repository" element={<AdminRepository />} />
           <Route path="/admin/logout" element={<Navigate to="/" replace />} />
         </Route>
 
