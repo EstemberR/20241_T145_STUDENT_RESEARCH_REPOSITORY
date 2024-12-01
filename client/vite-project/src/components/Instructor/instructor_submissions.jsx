@@ -191,19 +191,19 @@ const InstructorSubmissions = () => {
     {
       name: 'Actions',
       cell: row => (
-        <div className="d-flex gap-2 flex-wrap justify-content-start" style={{ minWidth: '200px' }}>
+        <div className="d-flex gap-2">
           <button
-            className="btn btn-sm btn-primary d-flex align-items-center"
+            className="btn btn-sm btn-primary"
             onClick={() => handleViewClick(row)}
-            style={{ width: '80px' }}
+            title="View Details"
           >
-            <FaEye className="me-1" /> View
+            <FaEye className="text-white" />
           </button>
           
           {row.status === 'Pending' && (
             <>
               <button 
-                className="btn btn-sm btn-success d-flex align-items-center"
+                className="btn btn-sm btn-success"
                 onClick={() => {
                   setConfirmationAction({
                     type: 'accept',
@@ -214,12 +214,12 @@ const InstructorSubmissions = () => {
                   modal.show();
                 }}
                 disabled={isProcessing}
-                style={{ width: '90px' }}
+                title="Accept Submission"
               >
-                <FaCheck className="me-1" /> Accept
+                <FaCheck className="text-white" />
               </button>
               <button 
-                className="btn btn-sm btn-warning d-flex align-items-center"
+                className="btn btn-sm btn-warning"
                 onClick={() => {
                   setSelectedSubmissionId(row._id);
                   setRevisionComment('');
@@ -227,15 +227,15 @@ const InstructorSubmissions = () => {
                   modal.show();
                 }}
                 disabled={isProcessing}
-                style={{ width: '90px' }}
+                title="Request Revision"
               >
-                <FaEdit className="me-1" /> Revise
+                <FaEdit className="text-white" />
               </button>
             </>
           )}
           {row.status === 'Revision' && (
             <button 
-              className="btn btn-sm btn-success d-flex align-items-center"
+              className="btn btn-sm btn-success"
               onClick={() => {
                 setConfirmationAction({
                   type: 'accept',
@@ -246,15 +246,15 @@ const InstructorSubmissions = () => {
                 modal.show();
               }}
               disabled={isProcessing}
-              style={{ width: '90px' }}
+              title="Accept Submission"
             >
-              <FaCheck className="me-1" /> Accept
+              <FaCheck className="text-white" />
             </button>
           )}
         </div>
       ),
       button: true,
-      width: '250px'
+      width: '150px'
     }
   ];
 

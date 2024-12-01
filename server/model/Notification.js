@@ -17,7 +17,7 @@ const notificationSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE', 'GENERAL', 'RESEARCH_SUBMISSION'],
+        enum: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE', 'GENERAL', 'RESEARCH_SUBMISSION', 'RESEARCH_ACCEPTED', 'RESEARCH_REJECTED'],
         default: 'GENERAL'
     },
     status: {
@@ -35,7 +35,15 @@ const notificationSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Instructor'
         },
-        rejectMessage: String
+        rejectMessage: String,
+        researchId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Research'
+        },
+        title: String,
+        revisionNote: String,
+        acceptedBy: String,
+        rejectionReason: String
     },
     timestamp: {
         type: Date,

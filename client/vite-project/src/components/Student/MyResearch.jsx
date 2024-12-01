@@ -48,6 +48,7 @@ const MyResearch = () => {
   const [fileVersion, setFileVersion] = useState(1);
   const [versionHistory, setVersionHistory] = useState([]);
   const [isResubmitting, setIsResubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const fetchResearchEntries = async () => {
     try {
@@ -76,6 +77,8 @@ const MyResearch = () => {
     } catch (error) {
       console.error('Error fetching research entries:', error);
       showAlertMessage(`Error fetching research entries: ${error.message}`, 'danger');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -170,6 +173,7 @@ const MyResearch = () => {
   useEffect(() => {
     const checkTeamStatus = async () => {
       try {
+        setLoading(true);
         const token = getToken();
         const response = await fetch('http://localhost:8000/student/check-team-status', {
           headers: {
@@ -186,11 +190,13 @@ const MyResearch = () => {
             'You need to have an approved team before submitting research. Please go to Manage Members section first.',
             'warning'
           );
-          setShowForm(false);  // Hide the submission form if no team
+          setShowForm(false);
         }
       } catch (error) {
         console.error('Error checking team status:', error);
         showAlertMessage('Error checking team status', 'danger');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -265,28 +271,7 @@ const MyResearch = () => {
     setIsSubmitting(true);
 
     try {
-      if (pendingAction.type === 'delete') {
-        try {
-          const token = getToken();
-          const response = await fetch(`http://localhost:8000/student/research/${pendingAction.data._id}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          if (response.ok) {
-            showAlertMessage('Research deleted successfully', 'success');
-            fetchResearchEntries(); // Refresh the list
-          } else {
-            const data = await response.json();
-            showAlertMessage(data.message || 'Error deleting research', 'danger');
-          }
-        } catch (error) {
-          console.error('Error deleting research:', error);
-          showAlertMessage('Error deleting research', 'danger');
-        }
-      } else {
+      if (pendingAction.type === 'submit') {
         // Create form data with course included
         const formDataToSubmit = new FormData();
         formDataToSubmit.append('file', file);
@@ -335,7 +320,16 @@ const MyResearch = () => {
         const savedResearch = await researchSubmitResponse.json();
         console.log('Research saved:', savedResearch);
 
-        // Reset form and close modal
+        // After successful submission, close all modals
+        const submitModal = bootstrap.Modal.getInstance(document.getElementById('submitResearchModal'));
+        const fileModal = bootstrap.Modal.getInstance(document.getElementById('fileUploadModal'));
+        const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+        
+        if (submitModal) submitModal.hide();
+        if (fileModal) fileModal.hide();
+        if (confirmModal) confirmModal.hide();
+
+        // Reset form and states
         setFormData({
           title: '',
           abstract: '',
@@ -347,20 +341,39 @@ const MyResearch = () => {
         });
         setFile(null);
         setShowForm(false);
+        setShowConfirmModal(false);
+        setPendingAction(null);
 
-        // Refresh research entries
-        await fetchResearchEntries();
-        
+        // Show success message and refresh data
         showAlertMessage('Research submitted successfully!', 'success');
+        await fetchResearchEntries();
+      } else {
+        try {
+          const token = getToken();
+          const response = await fetch(`http://localhost:8000/student/research/${pendingAction.data._id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            showAlertMessage('Research deleted successfully', 'success');
+            fetchResearchEntries(); // Refresh the list
+          } else {
+            const data = await response.json();
+            showAlertMessage(data.message || 'Error deleting research', 'danger');
+          }
+        } catch (error) {
+          console.error('Error deleting research:', error);
+          showAlertMessage('Error deleting research', 'danger');
+        }
       }
     } catch (error) {
       console.error('Error:', error);
       showAlertMessage(error.message || 'An error occurred', 'danger');
     } finally {
       setIsSubmitting(false);
-      setShowConfirmModal(false);
-      setPendingAction(null);
-      setResearchToDelete(null);
     }
   };
 
@@ -477,7 +490,13 @@ const MyResearch = () => {
       <div className="main-section col-10">
         <Header userName={userName} />
         <main className="p-4">
-          {!hasTeam ? (
+          {loading ? (
+            <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
+              <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          ) : !hasTeam ? (
             <div className="card shadow-sm">
               <div className="card-header bg-warning text-dark">
                 <h4 className="mb-0">
@@ -579,113 +598,105 @@ const MyResearch = () => {
                             <table className="table table-hover">
                               <thead>
                                 <tr>
-                                  <th>Title</th>
-                                  <th>Version</th>
-                                  <th>Authors</th>
-                                  <th>Keywords</th>
-                                  <th>File</th>
-                                  <th>Status</th>
-                                  <th>Submission Date</th>
-                                  <th>View</th>
-                                  <th>Actions</th>
+                                  <th style={{ width: '20%' }}>Title</th>
+                                  <th style={{ width: '5%' }}>Version</th>
+                                  <th style={{ width: '20%' }}>Authors</th>
+                                  <th style={{ width: '10%' }}>Keywords</th>
+                                  <th style={{ width: '15%' }}>File</th>
+                                  <th style={{ width: '8%' }}>Status</th>
+                                  <th style={{ width: '10%' }}>Submission Date</th>
+                                  <th style={{ width: '12%' }}>Actions</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {researchEntries.filter(research => research.status === status).length === 0 ? (
-                                  <tr>
-                                    <td colSpan="6" className="text-center py-4">
-                                      No research entries found in this category.
+                                {researchEntries.filter(research => research.status === status).map((research, index) => (
+                                  <tr key={index}>
+                                    <td style={{ maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {research.title}
+                                    </td>
+                                    <td>v{research.version || 1}</td>
+                                    <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {research.authors}
+                                    </td>
+                                    <td style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {research.keywords}
+                                    </td>
+                                    <td>
+                                      <div className="d-flex align-items-center">
+                                        <i className="fas fa-file-pdf text-danger me-2"></i>
+                                        <span className="text-truncate me-2" style={{ maxWidth: '100px' }}>
+                                          {research.fileName || 'research.pdf'}
+                                        </span>
+                                        <a 
+                                          href={`https://drive.google.com/file/d/${research.driveFileId}/view`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="btn btn-sm btn-link p-0"
+                                          title="Open in Google Drive"
+                                        >
+                                          <i className="fas fa-external-link-alt"></i>
+                                        </a>
+                                      </div>
+                                    </td>
+                                    <td>
+                                      <span className={`badge bg-${
+                                        research.status === RESEARCH_STATUS.APPROVED ? 'success' :
+                                        research.status === RESEARCH_STATUS.PENDING ? 'warning' :
+                                        research.status === RESEARCH_STATUS.REVISE ? 'info' : 'danger'
+                                      }`}>
+                                        {research.status}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      {new Date(research.uploadDate).toLocaleDateString()}
+                                    </td>
+                                    <td>
+                                      <div className="d-flex gap-1 flex-nowrap">
+                                        <button 
+                                          className="btn btn-sm btn-primary"
+                                          onClick={() => handleViewResearch(research)}
+                                          data-bs-toggle="modal"
+                                          data-bs-target="#viewResearchModal"
+                                          title="View Details"
+                                        >
+                                          <i className="fas fa-eye text-white"></i>
+                                        </button>
+                                        <button 
+                                          className="btn btn-sm btn-info"
+                                          onClick={async () => {
+                                            setSelectedResearch(research);
+                                            await fetchVersionHistory(research._id);
+                                            const modal = new bootstrap.Modal(document.getElementById('versionHistoryModal'));
+                                            modal.show();
+                                          }}
+                                          title="Version History"
+                                        >
+                                          <i className="fas fa-history text-white"></i>
+                                        </button>
+                                        {research.status === RESEARCH_STATUS.PENDING && (
+                                          <button 
+                                            className="btn btn-sm btn-danger"
+                                            onClick={() => handleDelete(research)}
+                                            title="Delete"
+                                          >
+                                            <i className="fas fa-trash text-white"></i>
+                                          </button>
+                                        )}
+                                        {research.status === RESEARCH_STATUS.REVISE && (
+                                          <button
+                                            className="btn btn-sm btn-success"
+                                            onClick={() => handleResubmitClick(research)}
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#resubmitModal"
+                                            title="Resubmit"
+                                          >
+                                            <i className="fas fa-upload text-white"></i>
+                                          </button>
+                                        )}
+                                      </div>
                                     </td>
                                   </tr>
-                                ) : (
-                                  researchEntries
-                                    .filter(research => research.status === status)
-                                    .map((research, index) => (
-                                      <tr key={index}>
-                                        <td>{research.title}</td>
-                                        <td>v{research.version || 1}</td>
-                                        <td>{research.authors}</td>
-                                        <td>{research.keywords}</td>
-                                        <td>
-                                          <div className="d-flex align-items-center">
-                                            <i className="fas fa-file-pdf text-danger me-2"></i>
-                                            {research.fileName || 'research.pdf'}
-                                            <a 
-                                              href={`https://drive.google.com/file/d/${research.driveFileId}/view`}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="ms-2"
-                                            >
-                                              <i className="fas fa-download text-primary"></i>
-                                            </a>
-                                          </div>
-                                        </td>
-                                        <td>
-                                          <span className={`badge bg-${
-                                          research.status === RESEARCH_STATUS.APPROVED ? 'success' :
-                                          research.status === RESEARCH_STATUS.PENDING ? 'warning' :
-                                          research.status === RESEARCH_STATUS.REVISE ? 'info' : 'danger'
-                                        } mb-2`}>
-                                            {research.status}
-                                          </span>
-                                        </td>
-                                        <td>
-                                          {new Date(research.uploadDate).toLocaleDateString('en-US', {
-                                            month: '2-digit',
-                                            day: '2-digit',
-                                            year: 'numeric'
-                                          })}
-                                        </td>
-                                        <td>
-                                          <button 
-                                              className="btn btn-sm btn-success"
-                                              onClick={() => handleViewResearch(research)}
-                                              data-bs-toggle="modal"
-                                              data-bs-target="#viewResearchModal"
-                                            >
-                                              <i className="fas fa-eye"></i> View
-                                            </button>
-                                          <button 
-                                            className="btn btn-sm btn-info ms-2"
-                                            onClick={async () => {
-                                              setSelectedResearch(research);
-                                              await fetchVersionHistory(research._id);
-                                              const modal = new bootstrap.Modal(document.getElementById('versionHistoryModal'));
-                                              modal.show();
-                                            }}
-                                          >
-                                            <i className="fas fa-history"></i> Versions
-                                          </button>
-                                        </td>
-                                        <td>
-                                          <button 
-                                            className="btn btn-sm btn-secondary"
-                                            onClick={() => {/* Add edit functionality */}}
-                                          >
-                                            <i className="fas fa-edit"></i> Edit
-                                          </button>
-                                          {research.status === RESEARCH_STATUS.PENDING && (
-                                            <button 
-                                              className="btn btn-sm btn-danger"
-                                              onClick={() => handleDelete(research)}
-                                            >
-                                              <i className="fas fa-trash"></i> Delete
-                                            </button>
-                                          )}
-                                          {research.status === RESEARCH_STATUS.REVISE && (
-                                            <button
-                                              className="btn btn-primary btn-sm"
-                                              onClick={() => handleResubmitClick(research)}
-                                              data-bs-toggle="modal"
-                                              data-bs-target="#resubmitModal"
-                                            >
-                                              <i className="fas fa-upload"></i> Resubmit
-                                            </button>
-                                          )}
-                                        </td>
-                                      </tr>
-                                    ))
-                                )}
+                                ))}
                               </tbody>
                             </table>
                           </div>

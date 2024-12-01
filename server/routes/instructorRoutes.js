@@ -117,7 +117,8 @@ instructorRoutes.put('/submissions/:id/status', authenticateToken, async (req, r
 
     const research = await Research.findById(id)
       .populate('mongoId')
-      .populate('teamMembers');
+      .populate('teamMembers')
+      .populate('adviser', 'name');
     
     if (!research) {
       return res.status(404).json({ message: 'Research not found' });
@@ -127,23 +128,59 @@ instructorRoutes.put('/submissions/:id/status', authenticateToken, async (req, r
     if (note) research.note = note;
     await research.save();
 
-    // Create notification for revision
-    if (status === 'Revision') {
-      const allTeamMembers = [research.mongoId._id, ...research.teamMembers.map(member => member._id)];
-      
-      const notifications = allTeamMembers.map(memberId => ({
-        recipient: memberId,
-        recipientModel: 'Student',
-        type: 'RESEARCH_SUBMISSION',
-        message: `Your research "${research.title}" needs revision`,
-        status: 'UNREAD',
-        relatedData: {
-          researchId: research._id,
-          title: research.title,
-          revisionNote: note
-        }
-      }));
+    // Create notifications based on status
+    const allTeamMembers = [research.mongoId._id, ...research.teamMembers.map(member => member._id)];
+    let notifications;
+    
+    switch(status) {
+      case 'Revision':
+        notifications = allTeamMembers.map(memberId => ({
+          recipient: memberId,
+          recipientModel: 'Student',
+          type: 'RESEARCH_SUBMISSION',
+          message: `Your research "${research.title}" needs revision`,
+          status: 'UNREAD',
+          relatedData: {
+            researchId: research._id,
+            title: research.title,
+            revisionNote: note
+          }
+        }));
+        break;
 
+      case 'Accepted':
+        notifications = allTeamMembers.map(memberId => ({
+          recipient: memberId,
+          recipientModel: 'Student',
+          type: 'RESEARCH_ACCEPTED',
+          message: `Congratulations! Your research "${research.title}" has been accepted by ${research.adviser.name}`,
+          status: 'UNREAD',
+          relatedData: {
+            researchId: research._id,
+            title: research.title,
+            acceptedBy: research.adviser.name
+          }
+        }));
+        break;
+
+      case 'Rejected':
+        notifications = allTeamMembers.map(memberId => ({
+          recipient: memberId,
+          recipientModel: 'Student',
+          type: 'RESEARCH_REJECTED',
+          message: `Your research "${research.title}" has been rejected`,
+          status: 'UNREAD',
+          relatedData: {
+            researchId: research._id,
+            title: research.title,
+            rejectionReason: note,
+            rejectedBy: research.adviser.name
+          }
+        }));
+        break;
+    }
+
+    if (notifications) {
       await Notification.insertMany(notifications);
     }
 

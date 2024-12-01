@@ -264,7 +264,7 @@ const InstructorStudents = () => {
                             <strong>Section:</strong> {team.teamLeader.section}
                           </p>
                           <button 
-                            className="btn btn-info btn-sm w-100"
+                            className="btn btn-success btn-sm w-100"
                             onClick={() => handleViewStudent(team.teamLeader)}
                           >
                             <i className="fas fa-eye me-2"></i>
@@ -286,7 +286,7 @@ const InstructorStudents = () => {
                               <strong>Section:</strong> {member.section}
                             </p>
                             <button 
-                              className="btn btn-info btn-sm w-100"
+                              className="btn btn-success btn-sm w-100"
                               onClick={() => handleViewStudent(member)}
                             >
                               <i className="fas fa-eye me-2"></i>
