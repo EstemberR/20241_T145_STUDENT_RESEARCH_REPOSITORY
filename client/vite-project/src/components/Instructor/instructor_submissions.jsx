@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
+import DataTable from 'react-data-table-component';
+import { FaEye, FaCheck, FaEdit } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
@@ -140,160 +142,215 @@ const InstructorSubmissions = () => {
     viewModal.show();
   };
 
+  const columns = [
+    {
+      name: 'ID',
+      selector: row => row.studentId,
+      sortable: true,
+    },
+    {
+      name: 'Title',
+      selector: row => row.title,
+      sortable: true,
+      grow: 2,
+    },
+    {
+      name: 'Version',
+      selector: row => `v${row.version || 1}`,
+      sortable: true,
+    },
+    {
+      name: 'Student',
+      selector: row => row.studentName,
+      sortable: true,
+    },
+    {
+      name: 'Date Submitted',
+      selector: row => row.uploadDate,
+      sortable: true,
+      cell: row => new Date(row.uploadDate).toLocaleDateString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric'
+      })
+    },
+    {
+      name: 'Status',
+      selector: row => row.status,
+      sortable: true,
+      cell: row => (
+        <span className={`badge bg-${
+          row.status === 'Accepted' ? 'success' :
+          row.status === 'Pending' ? 'warning' :
+          row.status === 'Revision' ? 'info' : 'danger'
+        }`}>
+          {row.status}
+        </span>
+      )
+    },
+    {
+      name: 'Actions',
+      cell: row => (
+        <div className="d-flex gap-2 flex-wrap justify-content-start" style={{ minWidth: '200px' }}>
+          <button
+            className="btn btn-sm btn-primary d-flex align-items-center"
+            onClick={() => handleViewClick(row)}
+            style={{ width: '80px' }}
+          >
+            <FaEye className="me-1" /> View
+          </button>
+          
+          {row.status === 'Pending' && (
+            <>
+              <button 
+                className="btn btn-sm btn-success d-flex align-items-center"
+                onClick={() => {
+                  setConfirmationAction({
+                    type: 'accept',
+                    id: row._id,
+                    title: row.title
+                  });
+                  const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+                  modal.show();
+                }}
+                disabled={isProcessing}
+                style={{ width: '90px' }}
+              >
+                <FaCheck className="me-1" /> Accept
+              </button>
+              <button 
+                className="btn btn-sm btn-warning d-flex align-items-center"
+                onClick={() => {
+                  setSelectedSubmissionId(row._id);
+                  setRevisionComment('');
+                  const modal = new bootstrap.Modal(document.getElementById('revisionModal'));
+                  modal.show();
+                }}
+                disabled={isProcessing}
+                style={{ width: '90px' }}
+              >
+                <FaEdit className="me-1" /> Revise
+              </button>
+            </>
+          )}
+          {row.status === 'Revision' && (
+            <button 
+              className="btn btn-sm btn-success d-flex align-items-center"
+              onClick={() => {
+                setConfirmationAction({
+                  type: 'accept',
+                  id: row._id,
+                  title: row.title
+                });
+                const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+                modal.show();
+              }}
+              disabled={isProcessing}
+              style={{ width: '90px' }}
+            >
+              <FaCheck className="me-1" /> Accept
+            </button>
+          )}
+        </div>
+      ),
+      button: true,
+      width: '250px'
+    }
+  ];
+
+  const customStyles = {
+    rows: {
+      style: {
+        minHeight: '72px',
+        '&:hover': {
+          backgroundColor: '#f8f9fa',
+        }
+      }
+    },
+    headCells: {
+      style: {
+        paddingLeft: '16px',
+        paddingRight: '16px',
+        backgroundColor: '#f8f9fa',
+        fontWeight: 'bold'
+      },
+    },
+    cells: {
+      style: {
+        paddingLeft: '16px',
+        paddingRight: '16px',
+      },
+    },
+  };
+
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
-      <Header userName={userName} userRole={userRole} />
+        <Header userName={userName} userRole={userRole} />
+        <main className="main-content p-4">
+          <h4 className="my-3">STUDENT SUBMISSIONS</h4>
+          
+          <ul className="nav nav-tabs mb-4">
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'Pending' ? 'active' : ''}`}
+                onClick={() => setActiveTab('Pending')}
+              >
+                Pending
+                <span className="badge bg-warning ms-2">
+                  {submissions.filter(submission => submission.status === 'Pending').length}
+                </span>
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'Accepted' ? 'active' : ''}`}
+                onClick={() => setActiveTab('Accepted')}
+              >
+                Accepted
+                <span className="badge bg-success ms-2">
+                  {submissions.filter(submission => submission.status === 'Accepted').length}
+                </span>
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'Revision' ? 'active' : ''}`}
+                onClick={() => setActiveTab('Revision')}
+              >
+                Revision
+                <span className="badge bg-info ms-2">
+                  {submissions.filter(submission => submission.status === 'Revision').length}
+                </span>
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'Rejected' ? 'active' : ''}`}
+                onClick={() => setActiveTab('Rejected')}
+              >
+                Rejected
+                <span className="badge bg-danger ms-2">
+                  {submissions.filter(submission => submission.status === 'Rejected').length}
+                </span>
+              </button>
+            </li>
+          </ul>
 
-        <main className="main-content">
-            <h4 className="my-3">STUDENT SUBMISSIONS</h4>
-            <ul className="nav nav-tabs mb-4">
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'Pending' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('Pending')}
-                >
-                  Pending
-                  <span className="badge bg-warning ms-2">
-                    {submissions.filter(submission => submission.status === 'Pending').length}
-                  </span>
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'Accepted' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('Accepted')}
-                >
-                  Accepted
-                  <span className="badge bg-success ms-2">
-                    {submissions.filter(submission => submission.status === 'Accepted').length}
-                  </span>
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'Revision' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('Revision')}
-                >
-                  Revision
-                  <span className="badge bg-info ms-2">
-                    {submissions.filter(submission => submission.status === 'Revision').length}
-                  </span>
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'Rejected' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('Rejected')}
-                >
-                  Rejected
-                  <span className="badge bg-danger ms-2">
-                    {submissions.filter(submission => submission.status === 'Rejected').length}
-                  </span>
-                </button>
-              </li>
-            </ul>
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Title</th>
-                    <th>Version</th>
-                    <th>Student</th>
-                    <th>Date Submitted</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredData.map((submission) => (
-                    <tr key={submission._id}>
-                      <td>{submission.studentId}</td>
-                      <td>{submission.title}</td>
-                      <td>v{submission.version || 1}</td>
-                      <td>{submission.studentName}</td>
-                      <td>
-                        {new Date(submission.uploadDate).toLocaleDateString('en-US', {
-                          month: '2-digit',
-                          day: '2-digit',
-                          year: 'numeric'
-                        })}
-                      </td>
-                      <td>
-                        <span className={`badge bg-${
-                          submission.status === 'Accepted' ? 'success' :
-                          submission.status === 'Pending' ? 'warning' :
-                          submission.status === 'Revision' ? 'info' : 'danger'
-                        }`}>
-                          {submission.status}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="d-flex gap-2">
-                          <button
-                            className="btn btn-sm btn-primary"
-                            onClick={() => handleViewClick(submission)}
-                          >
-                            <i className="fas fa-eye"></i> View
-                          </button>
-                          
-                          {submission.status === 'Pending' && (
-                            <>
-                              <button 
-                                className="btn btn-sm btn-success"
-                                onClick={() => {
-                                  setConfirmationAction({
-                                    type: 'accept',
-                                    id: submission._id,
-                                    title: submission.title
-                                  });
-                                  const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
-                                  modal.show();
-                                }}
-                                disabled={isProcessing}
-                              >
-                                <i className="fas fa-check"></i> Accept
-                              </button>
-                              <button 
-                                className="btn btn-sm btn-warning"
-                                onClick={() => {
-                                  setSelectedSubmissionId(submission._id);
-                                  setRevisionComment('');
-                                  const modal = new bootstrap.Modal(document.getElementById('revisionModal'));
-                                  modal.show();
-                                }}
-                                disabled={isProcessing}
-                              >
-                                <i className="fas fa-edit"></i> Revise
-                              </button>
-                            </>
-                          )}
-                          {submission.status === 'Revision' && (
-                            <button 
-                              className="btn btn-sm btn-success"
-                              onClick={() => {
-                                setConfirmationAction({
-                                  type: 'accept',
-                                  id: submission._id,
-                                  title: submission.title
-                                });
-                                const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
-                                modal.show();
-                              }}
-                              disabled={isProcessing}
-                            >
-                              <i className="fas fa-check"></i> Accept
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <DataTable
+            columns={columns}
+            data={filteredData}
+            pagination
+            paginationPerPage={10}
+            paginationRowsPerPageOptions={[10, 20, 30, 50]}
+            progressPending={loading}
+            customStyles={customStyles}
+            highlightOnHover
+            pointerOnHover
+            responsive
+            striped
+          />
         </main>
       </div>
       <div className="modal fade" id="viewResearchModal" tabIndex="-1" aria-hidden="true">

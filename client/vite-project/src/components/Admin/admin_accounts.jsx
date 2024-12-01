@@ -9,6 +9,8 @@ import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 import io from 'socket.io-client';
 import { useEditMode } from './resources/EditModeContext';
+import DataTable from 'react-data-table-component';
+import { FaEye, FaArchive, FaUndo } from 'react-icons/fa';
 
 const AdminAccounts = () => {
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ const AdminAccounts = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeTab, setActiveTab] = useState('Students');
   const [alertMessage, setAlertMessage] = useState('');
-  const [alertType, setAlertType] = useState(''); // 'success' or 'danger'
+  const [alertType, setAlertType] = useState(''); 
   const [showAlert, setShowAlert] = useState(false);
   const { 
     isEditMode, 
@@ -301,12 +303,164 @@ const AdminAccounts = () => {
     setSelectedUser(null);
   };
 
+  const columns = {
+    active: [
+      {
+        name: 'ID',
+        selector: row => row.studentId || row.uid,
+        sortable: true,
+      },
+      {
+        name: 'Name',
+        selector: row => row.name,
+        sortable: true,
+      },
+      {
+        name: 'Role',
+        selector: row => row.role,
+        sortable: true,
+      },
+      {
+        name: 'Email',
+        selector: row => row.email,
+        sortable: true,
+      },
+      {
+        name: 'Status',
+        cell: row => (
+          <span className="badge bg-success">
+            Active
+          </span>
+        ),
+        sortable: true,
+      },
+      {
+        name: 'Actions',
+        cell: row => (
+          <div className="d-flex gap-2 flex-wrap justify-content-start" style={{ minWidth: '200px' }}>
+            <button
+              className="btn btn-sm btn-success d-flex align-items-center"
+              onClick={() => handleViewClick(row._id, row.role === 'student' ? 'students' : 'instructors')}
+              style={{ width: '80px' }}
+            >
+              <FaEye className="me-1" /> View
+            </button>
+            <button
+              className="btn btn-sm btn-danger d-flex align-items-center"
+              onClick={() => handleArchive(row._id, row.role === 'student' ? 'students' : 'instructors')}
+              disabled={!isEditMode}
+              style={{ width: '100px' }}
+            >
+              <FaArchive className="me-1" /> Archive
+            </button>
+          </div>
+        ),
+        width: '250px'
+      }
+    ],
+    archived: [
+      {
+        name: 'ID',
+        selector: row => row.studentId || row.uid,
+        sortable: true,
+      },
+      {
+        name: 'Name',
+        selector: row => row.name,
+        sortable: true,
+      },
+      {
+        name: 'Role',
+        selector: row => row.role,
+        sortable: true,
+      },
+      {
+        name: 'Email',
+        selector: row => row.email,
+        sortable: true,
+      },
+      {
+        name: 'Status',
+        cell: row => (
+          <span className="badge bg-danger">
+            Archived
+          </span>
+        ),
+        sortable: true,
+      },
+      {
+        name: 'Actions',
+        cell: row => (
+          <div className="d-flex gap-2 flex-wrap justify-content-start" style={{ minWidth: '200px' }}>
+            <button
+              className="btn btn-sm btn-success d-flex align-items-center"
+              onClick={() => handleViewClick(row._id, row.role === 'student' ? 'students' : 'instructors')}
+              style={{ width: '80px' }}
+            >
+              <FaEye className="me-1" /> View
+            </button>
+            <button
+              className="btn btn-sm btn-primary d-flex align-items-center"
+              onClick={() => openRestoreModal(row._id, row.role === 'student' ? 'students' : 'instructors')}
+              disabled={!isEditMode}
+              style={{ width: '90px' }}
+            >
+              <FaUndo className="me-1" /> Restore
+            </button>
+          </div>
+        ),
+        width: '250px'
+      }
+    ]
+  };
+
+  const customStyles = {
+    rows: {
+      style: {
+        minHeight: '72px',
+        '&:hover': {
+          backgroundColor: '#f8f9fa',
+        }
+      }
+    },
+    headCells: {
+      style: {
+        paddingLeft: '16px',
+        paddingRight: '16px',
+        backgroundColor: '#f8f9fa',
+        fontWeight: 'bold'
+      },
+    },
+    cells: {
+      style: {
+        paddingLeft: '16px',
+        paddingRight: '16px',
+      },
+    },
+  };
+
+  const getFilteredData = () => {
+    switch (activeTab) {
+      case 'Students':
+        return students.filter(student => !student.archived);
+      case 'Instructors':
+        return instructors.filter(instructor => !instructor.archived);
+      case 'Archived':
+        return [
+          ...students.filter(student => student.archived),
+          ...instructors.filter(instructor => instructor.archived)
+        ];
+      default:
+        return [];
+    }
+  };
+
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
         <Header userName={userName} />
-        <main className="main-content">
+        <main className="main-content p-4">
           {showAlert && (
             <div className={`alert alert-${alertType} alert-dismissible fade show`} role="alert">
               {alertMessage}
@@ -329,7 +483,7 @@ const AdminAccounts = () => {
               </div>
             )}
           </div>
-          <ul className="nav nav-tabs">
+          <ul className="nav nav-tabs mb-4">
             <li className="nav-item">
               <button
                 className={`nav-link ${activeTab === 'Students' ? 'active' : ''} x`}
@@ -356,176 +510,18 @@ const AdminAccounts = () => {
             </li>
           </ul>
 
-          {activeTab === 'Students' && (
-            <table className="table table-striped table-bordered mt-3">
-              <thead className="table-primary">
-                <tr>
-                  <th>User ID</th>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students
-                  .filter(student => !student.archived)
-                  .map((student) => (
-                    <tr key={student._id}>
-                      <td>{student.studentId}</td>
-                      <td>{student.name}</td>
-                      <td>{student.role}</td>
-                      <td>{student.email}</td>
-                      <td>
-                        <span className="badge bg-success">
-                          Active
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-success btn-sm me-2"
-                          onClick={() => handleViewClick(student._id, 'students')}
-                        >
-                          View
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleArchive(student._id, 'students')}
-                          disabled={!isEditMode} // Disable if not in edit mode
-                        >
-                          Archive
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          )}
-
-          {activeTab === 'Instructors' && (
-            <table className="table table-striped table-bordered mt-3">
-              <thead className="table-primary">
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {instructors
-                  .filter(instructor => !instructor.archived)
-                  .map((instructor) => (
-                    <tr key={instructor._id}>
-                      <td>{instructor.uid}</td>
-                      <td>{instructor.name}</td>
-                      <td>{instructor.role}</td>
-                      <td>{instructor.email}</td>
-                      <td>
-                        <span className="badge bg-success">
-                          Active
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-success btn-sm me-2"
-                          onClick={() => handleViewClick(instructor._id, 'instructors')}
-                        >
-                          View
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleArchive(instructor._id, 'instructors')}
-                          disabled={!isEditMode} // Disable if not in edit mode
-                        >
-                          Archive
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          )}
-
-          {activeTab === 'Archived' && (
-            <table className="table table-striped table-bordered mt-3">
-              <thead className="table-primary">
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students
-                  .filter(student => student.archived)
-                  .map(student => (
-                    <tr key={student._id}>
-                      <td>{student.studentId}</td>
-                      <td>{student.name}</td>
-                      <td>{student.role}</td>
-                      <td>{student.email}</td>
-                      <td>
-                        <span className="badge bg-danger">
-                          Archived
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-success btn-sm me-2"
-                          onClick={() => handleViewClick(student._id, 'students')}
-                        >
-                          View
-                        </button>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => openRestoreModal(student._id, 'students')}
-                          disabled={!isEditMode} // Disable if not in edit mode
-                        >
-                          Restore
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                {instructors
-                  .filter(instructor => instructor.archived)
-                  .map(instructor => (
-                    <tr key={instructor._id}>
-                      <td>{instructor.uid}</td>
-                      <td>{instructor.name}</td>
-                      <td>{instructor.role}</td>
-                      <td>{instructor.email}</td>
-                      <td>
-                        <span className="badge bg-danger">
-                          Archived
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-success btn-sm me-2"
-                          onClick={() => handleViewClick(instructor._id, 'instructors')}
-                        >
-                          View
-                        </button>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => openRestoreModal(instructor._id, 'instructors')}
-                          disabled={!isEditMode} // Disable if not in edit mode
-                        >
-                          Restore
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          )}
+          <DataTable
+            columns={activeTab === 'Archived' ? columns.archived : columns.active}
+            data={getFilteredData()}
+            pagination
+            paginationPerPage={10}
+            paginationRowsPerPageOptions={[10, 20, 30, 50]}
+            highlightOnHover
+            pointerOnHover
+            responsive
+            striped
+            customStyles={customStyles}
+          />
 
           {/* Confirmation Modal for Archive */}
           {showConfirmArchiveModal && (
