@@ -10,7 +10,7 @@ import Repository from './components/Student/ResearchRepository';
 import Profile from './components/Student/UserProfile';
 import ResearchDetails from './components/Student/ResearchDetail';
 import ManageMember from './components/Student/ManageMember';
-
+import Bookmarks from './components/Student/Bookmarks';
 import InstructorDashboard from './components/Instructor/instructor_dashboard';
 import InstructorNotification from './components/Instructor/instructor_notification';
 import InstructorProfile from './components/Instructor/instructor_profile';
@@ -48,6 +48,7 @@ function App() {
         <Route element={<ProtectedRoute allowedRole="student" />}>
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/student/repository" element={<Repository />} />
+          <Route path="/student/bookmarks" element={<Bookmarks />} />
           <Route path="/student/profile" element={<Profile />} />
           <Route path="/student/myResearch" element={<MyResearch />} />
           <Route path="/student/FAQ" element={<FAQ />} />

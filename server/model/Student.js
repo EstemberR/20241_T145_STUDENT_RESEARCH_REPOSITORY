@@ -51,7 +51,11 @@ const studentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Instructor',
         required: false
-    }
+    },
+    bookmarks: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Research'
+    }]
 }, {
     timestamps: true,
     toJSON: { virtuals: true },

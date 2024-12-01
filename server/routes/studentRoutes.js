@@ -818,4 +818,88 @@ studentRoutes.get('/research/:id/versions', authenticateToken, async (req, res) 
   }
 });
 
+// Get all bookmarks for a student
+studentRoutes.get('/bookmarks', authenticateToken, async (req, res) => {
+    try {
+        const student = await Student.findById(req.user.userId)
+            .populate('bookmarks');
+        
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            bookmarks: student.bookmarks || []
+        });
+    } catch (error) {
+        console.error('Error fetching bookmarks:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching bookmarks'
+        });
+    }
+});
+
+// Toggle bookmark for a research
+studentRoutes.post('/bookmark/:researchId', authenticateToken, async (req, res) => {
+    try {
+        const student = await Student.findById(req.user.userId);
+        const research = await Research.findById(req.params.researchId);
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+        }
+
+        if (!research) {
+            return res.status(404).json({
+                success: false,
+                message: 'Research not found'
+            });
+        }
+
+        // Initialize bookmarks array if it doesn't exist
+        if (!student.bookmarks) {
+            student.bookmarks = [];
+        }
+
+        // Check if research is already bookmarked
+        const bookmarkIndex = student.bookmarks.indexOf(req.params.researchId);
+        
+        if (bookmarkIndex === -1) {
+            // Add bookmark
+            student.bookmarks.push(req.params.researchId);
+            await student.save();
+            
+            res.status(200).json({
+                success: true,
+                message: 'Research bookmarked successfully',
+                isBookmarked: true
+            });
+        } else {
+            // Remove bookmark
+            student.bookmarks.splice(bookmarkIndex, 1);
+            await student.save();
+            
+            res.status(200).json({
+                success: true,
+                message: 'Bookmark removed successfully',
+                isBookmarked: false
+            });
+        }
+    } catch (error) {
+        console.error('Error toggling bookmark:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error toggling bookmark'
+        });
+    }
+});
+
 export default studentRoutes;

@@ -3,27 +3,130 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
+import DataTable from 'react-data-table-component';
+import { FaSearch, FaExternalLinkAlt, FaFilter, FaBookmark, FaRegBookmark } from 'react-icons/fa';
+import { Modal, Alert } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/ResearchRepository.css';
 
 const Repository = () => {
-  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
   const [researches, setResearches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredResearches, setFilteredResearches] = useState([]);
+  const [filterText, setFilterText] = useState('');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [filters, setFilters] = useState({
-    dateFrom: '',
-    dateTo: '',
+    yearFrom: '',
+    yearTo: '',
     course: '',
     keywords: ''
   });
+  const [bookmarkedResearch, setBookmarkedResearch] = useState(new Set());
+  const [alert, setAlert] = useState({
+    show: false,
+    message: '',
+    variant: 'success'
+  });
 
-  // Fetch all accepted researches
+  const columns = [
+    {
+      name: 'Title',
+      selector: row => row.title,
+      sortable: true,
+      cell: row => (
+        <div>
+          <div className="fw-bold">{row.title}</div>
+        </div>
+      ),
+      grow: 2,
+    },
+    {
+      name: 'Authors',
+      selector: row => row.authors,
+      sortable: true,
+      wrap: true
+    },
+    {
+      name: 'Course',
+      selector: row => row.course || row.student?.course,
+      sortable: true,
+    },
+    {
+      name: 'Keywords',
+      selector: row => row.keywords,
+      sortable: true,
+      wrap: true
+    },
+    {
+      name: 'Upload Date',
+      selector: row => row.uploadDate,
+      sortable: true,
+      cell: row => new Date(row.uploadDate).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      })
+    },
+    {
+      name: 'Bookmark',
+      cell: row => (
+        <button
+          className="btn btn-link"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleBookmark(row._id);
+          }}
+          title={bookmarkedResearch.has(row._id) ? "Remove Bookmark" : "Add Bookmark"}
+        >
+          {bookmarkedResearch.has(row._id) ? (
+            <FaBookmark className="text-success" />
+          ) : (
+            <FaRegBookmark className="text-success" />
+          )}
+        </button>
+      ),
+      width: '100px',
+      center: true,
+    },
+    {
+      name: 'Actions',
+      cell: row => (
+        <button
+          className="btn btn-sm btn-success"
+          onClick={() => handleCardClick(row._id)}
+          title="View Research"
+        >
+          <FaExternalLinkAlt />
+        </button>
+      ),
+      button: true,
+    }
+  ];
+
+  const customStyles = {
+    rows: {
+      style: {
+        minHeight: '72px',
+      }
+    },
+    headCells: {
+      style: {
+        paddingLeft: '8px',
+        paddingRight: '8px',
+        backgroundColor: '#f8f9fa',
+        fontWeight: 'bold'
+      },
+    },
+    cells: {
+      style: {
+        paddingLeft: '8px',
+        paddingRight: '8px',
+      },
+    },
+  };
+
   useEffect(() => {
     const fetchResearches = async () => {
       try {
@@ -45,10 +148,8 @@ const Repository = () => {
         if (!response.ok) throw new Error('Failed to fetch researches');
         
         const data = await response.json();
-        // Filter only accepted researches
         const acceptedResearches = data.filter(research => research.status === 'Accepted');
         setResearches(acceptedResearches);
-        setFilteredResearches(acceptedResearches);
         setLoading(false);
       } catch (error) {
         console.error('Error:', error);
@@ -59,15 +160,27 @@ const Repository = () => {
     fetchResearches();
   }, [navigate]);
 
-  // Handle search
   useEffect(() => {
-    const results = researches.filter(research =>
-      research.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      research.authors.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      research.keywords.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredResearches(results);
-  }, [searchTerm, researches]);
+    const fetchBookmarks = async () => {
+      try {
+        const token = getToken();
+        const response = await fetch('http://localhost:8000/student/bookmarks', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const bookmarkedIds = new Set(data.bookmarks.map(bookmark => bookmark._id));
+          setBookmarkedResearch(bookmarkedIds);
+        }
+      } catch (error) {
+        console.error('Error fetching bookmarks:', error);
+      }
+    };
+
+    fetchBookmarks();
+  }, []);
 
   const handleCardClick = (researchId) => {
     window.open(`/repository/${researchId}`, '_blank');
@@ -82,21 +195,21 @@ const Repository = () => {
   };
 
   const applyFilters = () => {
-    let results = [...researches];
+    let results = researches;
 
-    // Date range filter
-    if (filters.dateFrom || filters.dateTo) {
+    // Year range filter
+    if (filters.yearFrom || filters.yearTo) {
       results = results.filter(research => {
-        const uploadDate = new Date(research.uploadDate);
-        const fromDate = filters.dateFrom ? new Date(filters.dateFrom) : null;
-        const toDate = filters.dateTo ? new Date(filters.dateTo) : null;
+        const uploadYear = new Date(research.uploadDate).getFullYear();
+        const fromYear = filters.yearFrom ? parseInt(filters.yearFrom) : null;
+        const toYear = filters.yearTo ? parseInt(filters.yearTo) : null;
 
-        if (fromDate && toDate) {
-          return uploadDate >= fromDate && uploadDate <= toDate;
-        } else if (fromDate) {
-          return uploadDate >= fromDate;
-        } else if (toDate) {
-          return uploadDate <= toDate;
+        if (fromYear && toYear) {
+          return uploadYear >= fromYear && uploadYear <= toYear;
+        } else if (fromYear) {
+          return uploadYear >= fromYear;
+        } else if (toYear) {
+          return uploadYear <= toYear;
         }
         return true;
       });
@@ -105,7 +218,7 @@ const Repository = () => {
     // Course filter
     if (filters.course) {
       results = results.filter(research => 
-        research.course?.toLowerCase() === filters.course.toLowerCase()
+        (research.course || research.student?.course)?.toLowerCase() === filters.course.toLowerCase()
       );
     }
 
@@ -116,19 +229,78 @@ const Repository = () => {
       );
     }
 
-    setFilteredResearches(results);
+    setFilteredItems(results);
     setShowFilterModal(false);
   };
 
   const resetFilters = () => {
     setFilters({
-      dateFrom: '',
-      dateTo: '',
+      yearFrom: '',
+      yearTo: '',
       course: '',
       keywords: ''
     });
-    setFilteredResearches(researches);
+    setFilteredItems(researches);
     setShowFilterModal(false);
+  };
+
+  const [filteredItems, setFilteredItems] = useState([]);
+
+  useEffect(() => {
+    const results = researches.filter(
+      item => {
+        const searchText = filterText.toLowerCase();
+        return (
+          item.title.toLowerCase().includes(searchText) ||
+          item.authors.toLowerCase().includes(searchText) ||
+          item.keywords.toLowerCase().includes(searchText) ||
+          (item.course || item.student?.course || '').toLowerCase().includes(searchText)
+        );
+      }
+    );
+    setFilteredItems(results);
+  }, [filterText, researches]);
+
+  const showAlert = (message, variant = 'success') => {
+    setAlert({
+      show: true,
+      message,
+      variant
+    });
+
+    setTimeout(() => {
+      setAlert(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
+
+  const handleBookmark = async (researchId) => {
+    try {
+      const token = getToken();
+      const response = await fetch(`http://localhost:8000/student/bookmark/${researchId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setBookmarkedResearch(prev => {
+          const newBookmarks = new Set(prev);
+          if (data.isBookmarked) {
+            newBookmarks.add(researchId);
+            showAlert('Research added to bookmarks');
+          } else {
+            newBookmarks.delete(researchId);
+            showAlert('Research removed from bookmarks');
+          }
+          return newBookmarks;
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      showAlert('Failed to update bookmark', 'danger');
+    }
   };
 
   return (
@@ -137,174 +309,143 @@ const Repository = () => {
       <div className="main-section col-10 d-flex flex-column">
         <Header userName={userName} />
         <main className="main-content p-4">
-          {/* Search and Filter Bar */}
-          <div className="search-filter-container mb-4">
-            <div className="d-flex gap-3">
-              <div className="input-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search by title, authors, or keywords..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <span className="input-group-text">
-                  <i className="fas fa-search"></i>
-                </span>
+          <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1050 }}>
+            <Alert 
+              show={alert.show} 
+              variant={alert.variant}
+              onClose={() => setAlert(prev => ({ ...prev, show: false }))}
+              dismissible
+            >
+              {alert.message}
+            </Alert>
+          </div>
+          <div className="mb-4">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h4>RESEARCH REPOSITORY</h4>
+              <div className="d-flex gap-2">
+                <div className="search-container">
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search..."
+                      value={filterText}
+                      onChange={e => setFilterText(e.target.value)}
+                    />
+                    <span className="input-group-text">
+                      <FaSearch />
+                    </span>
+                  </div>
+                </div>
+                <button 
+                  className="btn btn-success" 
+                  onClick={() => setShowFilterModal(true)}
+                >
+                  <FaFilter className="me-2" />
+                  Filters
+                </button>
               </div>
-              <button 
-                className="btn btn-success" 
-                onClick={() => setShowFilterModal(true)}
-              >
-                <i className="fas fa-filter me-2"></i>
-                Filters
-              </button>
             </div>
           </div>
 
           {/* Filter Modal */}
-          <div className={`modal fade ${showFilterModal ? 'show' : ''}`} 
-               style={{ display: showFilterModal ? 'block' : 'none' }}>
-            <div className="modal-dialog">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Filter Research Papers</h5>
-                  <button 
-                    type="button" 
-                    className="btn-close" 
-                    onClick={() => setShowFilterModal(false)}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">Date Range</label>
-                    <div className="d-flex gap-2">
-                      <input
-                        type="date"
-                        className="form-control"
-                        name="dateFrom"
-                        value={filters.dateFrom}
-                        onChange={handleFilterChange}
-                      />
-                      <span className="align-self-center">to</span>
-                      <input
-                        type="date"
-                        className="form-control"
-                        name="dateTo"
-                        value={filters.dateTo}
-                        onChange={handleFilterChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Course</label>
-                    <select 
-                      className="form-select"
-                      name="course"
-                      value={filters.course}
-                      onChange={handleFilterChange}
-                    >
-                      <option value="">All Courses</option>
-                      <option value="BS-MATH">BS Mathematics</option>
-                      <option value="BS-ES">BS Environmental Science</option>
-                      <option value="BSDC">BS Data Science</option>
-                      <option value="BSCD">BS Computer Science</option>
-                      <option value="BS-BIO">BS Biology</option>
-                      <option value="AB-SOCSCI">AB Social Science</option>
-                      <option value="AB-SOCIO">AB Sociology</option>
-                      <option value="AB-PHILO">AB Philosophy</option>
-                    </select>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Keywords</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="keywords"
-                      value={filters.keywords}
-                      onChange={handleFilterChange}
-                      placeholder="Enter keywords..."
-                    />
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary" 
-                    onClick={resetFilters}
+          <Modal show={showFilterModal} onHide={() => setShowFilterModal(false)}>
+            <Modal.Header closeButton>
+              <Modal.Title>Filter Research Papers</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <div className="mb-3">
+                <label className="form-label">Year Range</label>
+                <div className="d-flex gap-2">
+                  <select
+                    className="form-select"
+                    name="yearFrom"
+                    value={filters.yearFrom}
+                    onChange={handleFilterChange}
                   >
-                    Reset
-                  </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-success" 
-                    onClick={applyFilters}
+                    <option value="">From Year</option>
+                    {Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <span className="align-self-center">to</span>
+                  <select
+                    className="form-select"
+                    name="yearTo"
+                    value={filters.yearTo}
+                    onChange={handleFilterChange}
                   >
-                    Apply Filters
-                  </button>
+                    <option value="">To Year</option>
+                    {Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {loading ? (
-            <div className="text-center">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
+              <div className="mb-3">
+                <label className="form-label">Course</label>
+                <select 
+                  className="form-select"
+                  name="course"
+                  value={filters.course}
+                  onChange={handleFilterChange}
+                >
+                  <option value="">All Courses</option>
+                  <option value="BS-MATH">BS Mathematics</option>
+                  <option value="BS-ES">BS Environmental Science</option>
+                  <option value="BSDC">BS Data Science</option>
+                  <option value="BSCD">BS Computer Science</option>
+                  <option value="BS-BIO">BS Biology</option>
+                  <option value="AB-SOCSCI">AB Social Science</option>
+                  <option value="AB-SOCIO">AB Sociology</option>
+                  <option value="AB-PHILO">AB Philosophy</option>
+                </select>
               </div>
-            </div>
-          ) : (
-            <div className="row g-4">
-              {filteredResearches.map((research) => (
-                <div key={research._id} className="col-12">
-                  <div 
-                    className="card research-card shadow-sm" 
-                    onClick={() => handleCardClick(research._id)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div className="card-body">
-                      <div className="row">
-                        <div className="col-lg-9">
-                          <h5 className="card-title">{research.title}</h5>
-                          <div className="meta-info">
-                            <p className="card-text text-muted mb-2">
-                              <i className="fas fa-users me-2"></i>
-                              <span>{research.authors}</span>
-                            </p>
-                            <p className="card-text text-muted mb-2">
-                              <i className="fas fa-graduation-cap me-2"></i>
-                              <span>{research.course || research.student?.course}</span>
-                            </p>
-                            <p className="card-text text-muted mb-2">
-                              <i className="fas fa-tags me-2"></i>
-                              <span>{research.keywords}</span>
-                            </p>
-                          </div>
-                          <p className="abstract-preview">
-                            {research.abstract.substring(0, 150)}...
-                          </p>
-                        </div>
-                        <div className="col-lg-3 d-flex flex-column justify-content-center align-items-end">
-                          <div className="text-muted">
-                            <i className="fas fa-calendar me-2"></i>
-                            <small>
-                              {new Date(research.uploadDate).toLocaleDateString('en-US', {
-                                month: 'long',
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
-                            </small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+
+              <div className="mb-3">
+                <label className="form-label">Keywords</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="keywords"
+                  value={filters.keywords}
+                  onChange={handleFilterChange}
+                  placeholder="Enter keywords..."
+                />
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={resetFilters}
+              >
+                Reset
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-success" 
+                onClick={applyFilters}
+              >
+                Apply Filters
+              </button>
+            </Modal.Footer>
+          </Modal>
+
+          <DataTable
+            columns={columns}
+            data={filteredItems}
+            pagination
+            paginationPerPage={10}
+            paginationRowsPerPageOptions={[10, 20, 30, 50]}
+            progressPending={loading}
+            customStyles={customStyles}
+            highlightOnHover
+            pointerOnHover
+            responsive
+            striped
+          />
         </main>
       </div>
     </div>
