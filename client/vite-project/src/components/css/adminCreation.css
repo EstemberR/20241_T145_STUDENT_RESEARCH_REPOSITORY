@@ -74,4 +74,36 @@
   background-color: #b4b6b4 !important;
 }
 
-/* Add your existing styles here */
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+}
+
+.form-check {
+  margin-bottom: 0.5rem;
+}
+
+.form-check-input {
+  margin-right: 0.5rem;
+}
+
+.form-check-label {
+  user-select: none;
+  cursor: pointer;
+}
+
+.permissions-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.permissions-badges .badge {
+  font-size: 0.75rem;
+  font-weight: normal;
+} 

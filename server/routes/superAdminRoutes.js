@@ -7,6 +7,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import authenticateToken from '../utils/token.js';
 import mongoose from 'mongoose';
+import Admin from '../model/Admin.js';
+import { ADMIN_PERMISSIONS } from '../model/Admin.js';
 
 const router = express.Router();
   
@@ -19,14 +21,15 @@ router.post('/admin-login', async (req, res) => {
             return res.status(400).json({ message: 'Please complete the reCAPTCHA' });
         }
 
-        // Find super admin
-        const superAdmin = await SuperAdmin.findOne({ email });
-        if (!superAdmin) {
+        // Find admin in both SuperAdmin and Admin collections
+        const admin = await Admin.findOne({ email }) || await SuperAdmin.findOne({ email });
+        
+        if (!admin) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         // Verify password
-        const isPasswordValid = await bcrypt.compare(password, superAdmin.password);
+        const isPasswordValid = await bcrypt.compare(password, admin.password);
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
@@ -34,9 +37,9 @@ router.post('/admin-login', async (req, res) => {
         // Generate token
         const token = jwt.sign(
             { 
-                userId: superAdmin._id,
-                role: 'superadmin',
-                email: superAdmin.email
+                userId: admin._id,
+                role: admin.role,
+                email: admin.email
             },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
@@ -45,12 +48,12 @@ router.post('/admin-login', async (req, res) => {
         // Send response
         res.json({
             token,
-            name: superAdmin.name,
-            role: 'superadmin'
+            name: admin.name,
+            role: admin.role
         });
 
     } catch (error) {
-        console.error('Super Admin login error:', error);
+        console.error('Admin login error:', error);
         res.status(500).json({ message: 'Login failed' });
     }
 });
@@ -131,6 +134,64 @@ router.put('/instructors/:instructorId/admin-status', authenticateToken, async (
       error: error.message
     });
   }
+});
+
+router.post('/create-admin', authenticateToken, async (req, res) => {
+    try {
+        const { name, email, password, permissions } = req.body;
+
+        // Check if admin already exists
+        const existingAdmin = await Admin.findOne({ email });
+        if (existingAdmin) {
+            return res.status(400).json({
+                success: false,
+                message: 'Admin with this email already exists'
+            });
+        }
+
+        // Validate permissions
+        if (permissions) {
+            const validPermissions = Object.values(ADMIN_PERMISSIONS);
+            const invalidPermissions = permissions.filter(p => !validPermissions.includes(p));
+            if (invalidPermissions.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Invalid permissions: ${invalidPermissions.join(', ')}`
+                });
+            }
+        }
+
+        // Create new admin with raw password
+        const admin = new Admin({
+            name,
+            email,
+            password,  // Raw password - will be hashed by middleware
+            role: 'admin',
+            permissions: permissions || [],
+            uid: Date.now().toString()
+        });
+
+        await admin.save();
+
+        console.log('Created new admin:', {
+            name: admin.name,
+            email: admin.email,
+            role: admin.role,
+            permissions: admin.permissions
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Admin created successfully'
+        });
+
+    } catch (error) {
+        console.error('Error creating admin:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create admin'
+        });
+    }
 });
 
 export default router; 

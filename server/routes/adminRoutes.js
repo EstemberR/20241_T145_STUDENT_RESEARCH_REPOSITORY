@@ -44,27 +44,28 @@ adminRoutes.post('/login', async (req, res) => {
 
         // Regular admin login
         const admin = await Admin.findOne({ email });
+        console.log('Found admin:', admin);
         
         if (!admin) {
+            console.log('No admin found with email:', email);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
             });
         }
 
-        // Verify password using bcrypt
+        console.log('Raw password before comparison:', password);
+        console.log('Stored hash before comparison:', admin.password);
         const isValidPassword = await bcrypt.compare(password, admin.password);
+        console.log('Comparison result:', isValidPassword);
         
         if (!isValidPassword) {
+            console.log('Invalid password for admin:', email);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
             });
         }
-
-        // Update last login
-        admin.lastLogin = new Date();
-        await admin.save();
 
         // Generate JWT token
         const token = jwt.sign(
@@ -431,7 +432,7 @@ adminRoutes.post('/create-admin', authenticateToken, async (req, res) => {
             });
         }
 
-        const { name, email, password, permissions } = req.body;
+        const { name, email, password } = req.body;
 
         // Check if admin already exists
         const existingAdmin = await Admin.findOne({ email });
@@ -442,21 +443,24 @@ adminRoutes.post('/create-admin', authenticateToken, async (req, res) => {
             });
         }
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create new admin
+        // Create new admin and let middleware handle password hashing
         const newAdmin = new Admin({
             name,
             email,
-            password: hashedPassword,
-            permissions: permissions || [],
+            password, // Raw password - will be hashed by middleware
+            permissions: [],
             role: 'admin',
-            uid: Date.now().toString(),
-            createdBy: req.user.email
+            uid: Date.now().toString()
         });
 
+        // Save and let middleware handle hashing
         await newAdmin.save();
+
+        console.log('Created new admin:', {
+            name: newAdmin.name,
+            email: newAdmin.email,
+            role: newAdmin.role
+        });
 
         res.status(201).json({
             success: true,

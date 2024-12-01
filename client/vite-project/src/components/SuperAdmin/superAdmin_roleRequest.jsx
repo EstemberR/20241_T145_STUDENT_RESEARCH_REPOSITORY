@@ -11,10 +11,19 @@ import axios from 'axios';
 import '../css/adminCreation.css';
 import { Modal } from 'react-bootstrap';
 
+const PERMISSIONS = {
+    MANAGE_STUDENTS: { id: 'manage_students', label: 'Manage Students' },
+    MANAGE_INSTRUCTORS: { id: 'manage_instructors', label: 'Manage Instructors' },
+    MANAGE_ADMINS: { id: 'manage_admins', label: 'Manage Admins' },
+    MANAGE_RESEARCH: { id: 'manage_research', label: 'Manage Research' },
+    MANAGE_ADVISER_REQUESTS: { id: 'manage_adviser_requests', label: 'Manage Adviser Requests' },
+    VIEW_ANALYTICS: { id: 'view_analytics', label: 'View Analytics' }
+};
+
 const SuperAdminManageAdmins = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
-  const [Instructors, setInstructors] = useState([]);
+  const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -25,10 +34,28 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: ''
+    password: '',
+    permissions: []
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePermissionChange = (permissionId) => {
+    setFormData(prev => {
+      const newPermissions = prev.permissions.includes(permissionId)
+        ? prev.permissions.filter(p => p !== permissionId)
+        : [...prev.permissions, permissionId];
+      return { ...prev, permissions: newPermissions };
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,7 +75,7 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
       );
 
       if (response.data.success) {
-        setFormData({ name: '', email: '', password: '' });
+        setFormData({ name: '', email: '', password: '', permissions: [] });
         alert('Admin created successfully!');
         if (onSuccess) onSuccess();
         onHide();
@@ -81,8 +108,9 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
             <input
               type="text"
               className="form-control"
+              name="name"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              onChange={handleInputChange}
               required
             />
           </div>
@@ -92,8 +120,9 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
             <input
               type="email"
               className="form-control"
+              name="email"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={handleInputChange}
               required
             />
           </div>
@@ -103,10 +132,31 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
             <input
               type="password"
               className="form-control"
+              name="password"
               value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              onChange={handleInputChange}
               required
             />
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Permissions:</label>
+            <div className="permissions-grid">
+              {Object.values(PERMISSIONS).map(permission => (
+                <div key={permission.id} className="form-check">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id={permission.id}
+                    checked={formData.permissions.includes(permission.id)}
+                    onChange={() => handlePermissionChange(permission.id)}
+                  />
+                  <label className="form-check-label" htmlFor={permission.id}>
+                    {permission.label}
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="d-flex justify-content-end gap-2">
@@ -138,63 +188,55 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
       navigate('/');
       return;
     }
-    fetchInstructors();
+    fetchAdmins();
   }, [navigate]);
 
-  const fetchInstructors = async () => {
+  const fetchAdmins = async () => {
     try {
       setLoading(true);
       const token = getToken();
-      console.log('Fetching with token:', token);
       
-      const response = await fetch('http://localhost:8000/admin/accounts/instructors', {
+      const response = await fetch('http://localhost:8000/admin/admins', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
       
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers));
-      
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response:', errorText);
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
-      const data = await response.json();
-      console.log('Fetched data:', data);
       
-      const activeInstructors = data.filter(instructor => !instructor.archived);
-      setInstructors(activeInstructors);
-
+      const data = await response.json();
+      setAdmins(data.admins);
       setError(null);
     } catch (error) {
-      console.error('Error fetching instructors:', error);
-      setError(`Failed to fetch instructors: ${error.message}`);
-      setInstructors([]);
+      console.error('Error fetching admins:', error);
+      setError(`Failed to fetch admins: ${error.message}`);
+      setAdmins([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAdminStatusUpdate = async (instructorId, makeAdmin) => {
+  const handleAdminStatusUpdate = async (adminId, makeActive) => {
     try {
       setLoading(true);
       const token = getToken();
-      const response = await fetch(`http://localhost:8000/superadmin/instructors/${instructorId}/admin-status`, {
+      const response = await fetch(`http://localhost:8000/superadmin/admins/${adminId}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ isAdmin: makeAdmin })
+        body: JSON.stringify({ isActive: makeActive })
       });
 
       if (!response.ok) throw new Error('Failed to update admin status');
 
        // Update stats based on the actual data structure
-      await fetchInstructors();
+      await fetchAdmins();
     } catch (err) {
       setError('Failed to update admin status');
       console.error(err);
@@ -220,27 +262,25 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
             </button>
           </div>
 
-          {/* Create Admin Modal */}
           <CreateAdminForm 
             show={showCreateForm}
             onHide={() => setShowCreateForm(false)}
             onSuccess={() => {
               setShowCreateForm(false);
-              fetchInstructors();
+              fetchAdmins();
             }}
           />
-          {/* Error Alert */}
+
           {error && (
             <div className="alert alert-danger" role="alert">
               {error}
             </div>
           )}
 
-          {/* Loading Spinner and Table */}
           {loading ? (
             <div className="text-center py-5">
               <FaSpinner className="spinner-border" />
-              <p className="mt-2">Loading instructors...</p>
+              <p className="mt-2">Loading admins...</p>
             </div>
           ) : (
             <div className="card border-0 shadow-sm">
@@ -251,45 +291,49 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
                       <tr>
                         <th>Name</th>
                         <th>Email</th>
-                        <th>Admin Status</th>
+                        <th>Permissions</th>
+                        <th>Status</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {Instructors.length === 0 ? (
+                      {admins.length === 0 ? (
                         <tr>
                           <td colSpan="5" className="text-center py-4">
-                            No instructors found
+                            No admin accounts found
                           </td>
                         </tr>
                       ) : (
-                        Instructors.map((instructor) => (
-                          <tr key={instructor._id}>
-                            <td>{instructor.name}</td>
-                            <td>{instructor.email}</td>
+                        admins.map((admin) => (
+                          <tr key={admin._id}>
+                            <td>{admin.name}</td>
+                            <td>{admin.email}</td>
                             <td>
-                              <span className={`badge ${instructor.isAdmin ? 'bg-success' : 'bg-secondary'}`}>
-                                {instructor.isAdmin ? 'Admin' : 'Regular'}
+                              {admin.permissions?.length > 0 ? (
+                                <div className="permissions-badges">
+                                  {admin.permissions.map((permission, index) => (
+                                    <span key={index} className="badge bg-info me-1">
+                                      {permission}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-muted">No permissions</span>
+                              )}
+                            </td>
+                            <td>
+                              <span className={`badge ${admin.isActive ? 'bg-success' : 'bg-danger'}`}>
+                                {admin.isActive ? 'Active' : 'Inactive'}
                               </span>
                             </td>
                             <td>
-                              {instructor.isAdmin ? (
-                                <button
-                                  className="btn btn-danger btn-sm"
-                                  onClick={() => handleAdminStatusUpdate(instructor._id, false)}
-                                  title="Remove Admin"
-                                >
-                                  <FaUserMinus />
-                                </button>
-                              ) : (
-                                <button
-                                  className="btn btn-success btn-sm"
-                                  onClick={() => handleAdminStatusUpdate(instructor._id, true)}
-                                  title="Make Admin"
-                                >
-                                  <FaUserPlus />
-                                </button>
-                              )}
+                              <button
+                                className={`btn btn-sm ${admin.isActive ? 'btn-danger' : 'btn-success'}`}
+                                onClick={() => handleAdminStatusUpdate(admin._id, !admin.isActive)}
+                                title={admin.isActive ? 'Deactivate Admin' : 'Activate Admin'}
+                              >
+                                {admin.isActive ? <FaUserMinus /> : <FaUserPlus />}
+                              </button>
                             </td>
                           </tr>
                         ))
@@ -302,95 +346,6 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
           )}
         </main>
       </div>
-    </div>
-  );
-};
-
-const CreateAdminForm = ({ onSuccess }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: ''  // Added password field
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await axios.post(
-        'http://localhost:8000/admin/create-admin', 
-        formData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getToken()}`
-          }
-        }
-      );
-
-      if (response.data.success) {
-        setFormData({ name: '', email: '', password: '' });
-        alert('Admin created successfully!');
-        if (onSuccess) onSuccess();
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="create-admin-form">
-      <h5 className="mb-4">Create New Admin Account</h5>
-      {error && <div className="alert alert-danger">{error}</div>}
-      
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label className="form-label">Username:</label>
-          <input
-            type="text"
-            className="form-control"
-            value={formData.name}
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Email:</label>
-          <input
-            type="email"
-            className="form-control"
-            value={formData.email}
-            onChange={(e) => setFormData({...formData, email: e.target.value})}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Password:</label>
-          <input
-            type="password"
-            className="form-control"
-            value={formData.password}
-            onChange={(e) => setFormData({...formData, password: e.target.value})}
-            required
-          />
-        </div>
-
-        <button 
-          type="submit" 
-          className="btn btn-secondary"
-          disabled={loading}
-        >
-          {loading ? 'Creating...' : 'Create Admin'}
-        </button>
-      </form>
     </div>
   );
 };
