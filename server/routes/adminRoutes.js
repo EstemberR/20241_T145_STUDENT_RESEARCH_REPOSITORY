@@ -58,10 +58,16 @@ adminRoutes.post('/login', async (req, res) => {
             });
         }
 
-        console.log('Raw password before comparison:', password);
-        console.log('Stored hash before comparison:', admin.password);
+        // Check if admin is active
+        if (!admin.isActive) {
+            console.log('Inactive admin attempted to login:', email);
+            return res.status(403).json({
+                success: false,
+                message: 'Your account has been deactivated. Please contact the super administrator.'
+            });
+        }
+
         const isValidPassword = await bcrypt.compare(password, admin.password);
-        console.log('Comparison result:', isValidPassword);
         
         if (!isValidPassword) {
             console.log('Invalid password for admin:', email);
@@ -823,6 +829,40 @@ adminRoutes.get('/download-report', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error downloading report:', error);
     res.status(500).json({ message: 'Error downloading report' });
+  }
+});
+
+// Update admin permissions
+adminRoutes.put('/admins/:id/permissions', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { permissions } = req.body;
+
+    const admin = await Admin.findByIdAndUpdate(
+      id,
+      { permissions },
+      { new: true }
+    ).select('-password');
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      admin,
+      message: 'Permissions updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Error updating admin permissions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating permissions'
+    });
   }
 });
 

@@ -41,175 +41,181 @@ const SuperAdminManageAdmins = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [updatedPermissions, setUpdatedPermissions] = useState([]);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [alert, setAlert] = useState({ show: false, message: '', type: '' });
 
-
-     
-const CreateAdminForm = ({ show, onHide, onSuccess }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    permissions: []
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handlePermissionChange = (permissionId) => {
-    console.log('Changing permission:', permissionId);
-    setFormData(prev => {
-      const newPermissions = prev.permissions.includes(permissionId)
-        ? prev.permissions.filter(p => p !== permissionId)
-        : [...prev.permissions, permissionId];
-      console.log('New permissions:', newPermissions);
-      return { ...prev, permissions: newPermissions };
+  const CreateAdminForm = ({ show, onHide, onSuccess }) => {
+    const [formData, setFormData] = useState({
+      name: '',
+      email: '',
+      password: '',
+      permissions: []
     });
-  };
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    const submitData = {
-      ...formData,
-      permissions: formData.permissions
+    const handleInputChange = (e) => {
+      const { name, value } = e.target;
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
     };
 
-    console.log('Submitting data:', submitData);
+    const handlePermissionChange = (permissionId) => {
+      console.log('Changing permission:', permissionId);
+      setFormData(prev => {
+        const newPermissions = prev.permissions.includes(permissionId)
+          ? prev.permissions.filter(p => p !== permissionId)
+          : [...prev.permissions, permissionId];
+        console.log('New permissions:', newPermissions);
+        return { ...prev, permissions: newPermissions };
+      });
+    };
 
-    try {
-      const response = await axios.post(
-        'http://localhost:8000/admin/create-admin', 
-        submitData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getToken()}`
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setLoading(true);
+      setError('');
+
+      const submitData = {
+        ...formData,
+        permissions: formData.permissions
+      };
+
+      console.log('Submitting data:', submitData);
+
+      try {
+        const response = await axios.post(
+          'http://localhost:8000/admin/create-admin', 
+          submitData,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${getToken()}`
+            }
           }
-        }
-      );
+        );
 
-      if (response.data.success) {
-        setFormData({ name: '', email: '', password: '', permissions: [] });
-        alert('Admin created successfully!');
-        if (onSuccess) onSuccess();
-        onHide();
+        if (response.data.success) {
+          setFormData({ name: '', email: '', password: '', permissions: [] });
+          alert('Admin created successfully!');
+          if (onSuccess) onSuccess();
+          onHide();
+        }
+      } catch (err) {
+        console.error('Error creating admin:', err);
+        setError(err.response?.data?.message || 'Something went wrong');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error creating admin:', err);
-      setError(err.response?.data?.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    return (
+      <Modal
+        show={show}
+        onHide={onHide}
+        centered
+        backdrop="static"
+        keyboard={false}
+        className="admin-modal"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Create New Admin Account</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {error && <div className="alert alert-danger">{error}</div>}
+          
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label className="form-label">Username:</label>
+              <input
+                type="text"
+                className="form-control"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Email:</label>
+              <input
+                type="email"
+                className="form-control"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Password:</label>
+              <input
+                type="password"
+                className="form-control"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Admin Permissions:</label>
+              <div className="permissions-grid">
+                  {Object.values(PERMISSIONS).map(permission => (
+                      <div key={permission.id} className="permission-item mb-2 p-2 border rounded">
+                          <div className="d-flex align-items-center">
+                              <input
+                                  type="checkbox"
+                                  className="form-check-input me-2"
+                                  id={permission.id}
+                                  checked={formData.permissions.includes(permission.id)}
+                                  onChange={() => handlePermissionChange(permission.id)}
+                              />
+                              <div>
+                                  <label className="form-check-label fw-bold" htmlFor={permission.id}>
+                                      {permission.label}
+                                  </label>
+                                  <p className="text-muted small mb-0">{permission.description}</p>
+                              </div>
+                          </div>
+                      </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="d-flex justify-content-end gap-2">
+              <button 
+                type="button" 
+                className="btn create-admin-btn"
+                onClick={onHide}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="btn btn-primary"
+                disabled={loading}
+              >
+                {loading ? 'Creating...' : 'Create Admin'}
+              </button>
+            </div>
+          </form>
+        </Modal.Body>
+      </Modal>
+    );
   };
 
-  return (
-    <Modal
-      show={show}
-      onHide={onHide}
-      centered
-      backdrop="static"
-      keyboard={false}
-      className="admin-modal"
-    >
-      <Modal.Header closeButton>
-        <Modal.Title>Create New Admin Account</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {error && <div className="alert alert-danger">{error}</div>}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label">Username:</label>
-            <input
-              type="text"
-              className="form-control"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Email:</label>
-            <input
-              type="email"
-              className="form-control"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Password:</label>
-            <input
-              type="password"
-              className="form-control"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Admin Permissions:</label>
-            <div className="permissions-grid">
-                {Object.values(PERMISSIONS).map(permission => (
-                    <div key={permission.id} className="permission-item mb-2 p-2 border rounded">
-                        <div className="d-flex align-items-center">
-                            <input
-                                type="checkbox"
-                                className="form-check-input me-2"
-                                id={permission.id}
-                                checked={formData.permissions.includes(permission.id)}
-                                onChange={() => handlePermissionChange(permission.id)}
-                            />
-                            <div>
-                                <label className="form-check-label fw-bold" htmlFor={permission.id}>
-                                    {permission.label}
-                                </label>
-                                <p className="text-muted small mb-0">{permission.description}</p>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-          </div>
-
-          <div className="d-flex justify-content-end gap-2">
-            <button 
-              type="button" 
-              className="btn create-admin-btn"
-              onClick={onHide}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="btn btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'Creating...' : 'Create Admin'}
-            </button>
-          </div>
-        </form>
-      </Modal.Body>
-    </Modal>
-  );
-};
   useEffect(() => {
     const token = getToken();
     if (!token) {
@@ -249,31 +255,149 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
     }
   };
 
+  const showAlert = (message, type = 'success') => {
+    setAlert({ show: true, message, type });
+    setTimeout(() => {
+      setAlert({ show: false, message: '', type: '' });
+    }, 3000);
+  };
+
   const handleAdminStatusUpdate = async (adminId, makeActive) => {
     try {
-      setLoading(true);
-      const token = getToken();
-      const response = await fetch(`http://localhost:8000/superadmin/admins/${adminId}/status`, {
+      setIsProcessing(true);
+      const response = await fetch(`http://localhost:8000/admin/admins/${adminId}/status`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${getToken()}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ isActive: makeActive })
       });
 
       if (!response.ok) throw new Error('Failed to update admin status');
-
-       // Update stats based on the actual data structure
+      
       await fetchAdmins();
-    } catch (err) {
-      setError('Failed to update admin status');
-      console.error(err);
+      showAlert(`Admin ${makeActive ? 'activated' : 'deactivated'} successfully`);
+    } catch (error) {
+      console.error('Error updating admin status:', error);
+      showAlert('Failed to update admin status', 'danger');
     } finally {
-      setLoading(false);
+      setIsProcessing(false);
+      setShowConfirmModal(false);
     }
   };
-  
+
+  const ConfirmationModal = ({ show, onHide, message, onConfirm, isProcessing }) => (
+    <Modal show={show} onHide={onHide} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>Confirm Action</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>{message}</Modal.Body>
+      <Modal.Footer>
+        <button 
+          className="btn btn-secondary" 
+          onClick={onHide} 
+          disabled={isProcessing}
+        >
+          Cancel
+        </button>
+        <button 
+          className="btn btn-primary" 
+          onClick={onConfirm} 
+          disabled={isProcessing}
+        >
+          {isProcessing ? 'Processing...' : 'Confirm'}
+        </button>
+      </Modal.Footer>
+    </Modal>
+  );
+
+  const EditPermissionsModal = ({ show, onHide, admin }) => {
+    const [permissions, setPermissions] = useState(admin?.permissions || []);
+    const [saving, setSaving] = useState(false);
+
+    const handlePermissionChange = (permissionId) => {
+      setPermissions(prev => 
+        prev.includes(permissionId) 
+          ? prev.filter(p => p !== permissionId)
+          : [...prev, permissionId]
+      );
+    };
+
+    const handleSubmit = async () => {
+      setSaving(true);
+      try {
+        const response = await fetch(`http://localhost:8000/admin/admins/${admin._id}/permissions`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ permissions })
+        });
+
+        if (!response.ok) throw new Error('Failed to update permissions');
+        
+        await fetchAdmins();
+        showAlert('Permissions updated successfully');
+        onHide();
+      } catch (error) {
+        console.error('Error updating permissions:', error);
+        showAlert('Failed to update permissions', 'danger');
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    return (
+      <Modal show={show} onHide={onHide} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Admin Permissions</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Editing permissions for: <strong>{admin?.name}</strong></p>
+          <div className="permissions-grid">
+            {Object.values(PERMISSIONS).map(permission => (
+              <div key={permission.id} className="permission-item mb-2 p-2 border rounded">
+                <div className="d-flex align-items-center">
+                  <input
+                    type="checkbox"
+                    className="form-check-input me-2"
+                    checked={permissions.includes(permission.id)}
+                    onChange={() => handlePermissionChange(permission.id)}
+                    disabled={saving}
+                  />
+                  <div>
+                    <label className="form-check-label fw-bold">
+                      {permission.label}
+                    </label>
+                    <p className="text-muted small mb-0">{permission.description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <button 
+            className="btn btn-secondary" 
+            onClick={onHide} 
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button 
+            className="btn btn-primary" 
+            onClick={handleSubmit} 
+            disabled={saving}
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </Modal.Footer>
+      </Modal>
+    );
+  };
+
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
@@ -290,6 +414,20 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
               Create New Admin
             </button>
           </div>
+
+          {alert.show && (
+            <div 
+              className={`alert alert-${alert.type} alert-dismissible fade show`} 
+              role="alert"
+            >
+              {alert.message}
+              <button 
+                type="button" 
+                className="btn-close" 
+                onClick={() => setAlert({ show: false, message: '', type: '' })}
+              ></button>
+            </div>
+          )}
 
           <CreateAdminForm 
             show={showCreateForm}
@@ -359,13 +497,31 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
                               </span>
                             </td>
                             <td>
-                              <button
-                                className={`btn btn-sm ${admin.isActive ? 'btn-danger' : 'btn-success'}`}
-                                onClick={() => handleAdminStatusUpdate(admin._id, !admin.isActive)}
-                                title={admin.isActive ? 'Deactivate Admin' : 'Activate Admin'}
-                              >
-                                {admin.isActive ? <FaUserMinus /> : <FaUserPlus />}
-                              </button>
+                              <div className="d-flex gap-2">
+                                <button
+                                  className={`btn btn-sm ${admin.isActive ? 'btn-danger' : 'btn-success'}`}
+                                  onClick={() => {
+                                    setSelectedAdmin(admin);
+                                    setConfirmAction(() => () => handleAdminStatusUpdate(admin._id, !admin.isActive));
+                                    setShowConfirmModal(true);
+                                  }}
+                                  disabled={isProcessing}
+                                  title={admin.isActive ? 'Deactivate Admin' : 'Activate Admin'}
+                                >
+                                  {admin.isActive ? <FaUserMinus /> : <FaUserPlus />}
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-primary"
+                                  onClick={() => {
+                                    setSelectedAdmin(admin);
+                                    setShowPermissionModal(true);
+                                  }}
+                                  disabled={isProcessing}
+                                  title="Edit Permissions"
+                                >
+                                  <i className="fas fa-key"></i>
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -376,6 +532,20 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
               </div>
             </div>
           )}
+
+          <ConfirmationModal
+            show={showConfirmModal}
+            onHide={() => !isProcessing && setShowConfirmModal(false)}
+            message={`Are you sure you want to ${selectedAdmin?.isActive ? 'deactivate' : 'activate'} this admin account?`}
+            onConfirm={confirmAction}
+            isProcessing={isProcessing}
+          />
+
+          <EditPermissionsModal
+            show={showPermissionModal}
+            onHide={() => setShowPermissionModal(false)}
+            admin={selectedAdmin}
+          />
         </main>
       </div>
     </div>
