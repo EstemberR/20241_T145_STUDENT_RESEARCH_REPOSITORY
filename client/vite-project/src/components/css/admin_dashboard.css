@@ -283,3 +283,19 @@
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
 }
 }
+.nav-link.disabled {
+  pointer-events: none;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.nav-link.disabled:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.nav-link .fa-lock {
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover .fa-lock {
+  transform: scale(1.1);
+}

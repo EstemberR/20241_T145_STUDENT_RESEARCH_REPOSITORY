@@ -5,11 +5,11 @@ import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
 import DataTable from 'react-data-table-component';
 import { FaEye, FaDownload, FaArchive, FaUndo, FaExternalLinkAlt } from 'react-icons/fa';
-import { useEditMode } from './resources/EditModeContext';
+import { useEditMode } from '../Admin/resources/EditModeContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 
-const AdminRepository = () => {
+const SuperAdminRepository = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
   const [researches, setResearches] = useState([]);
@@ -498,4 +498,4 @@ const AdminRepository = () => {
   );
 };
 
-export default AdminRepository;
+export default SuperAdminRepository;

@@ -11,6 +11,8 @@ import Admin from '../model/Admin.js';
 import { io } from '../src/app.js'; // Import io instance
 import ExcelJS from 'exceljs';
 import PDFGenerator from '../services/pdfGeneration.js';
+import { checkPermission, checkAnyPermission } from '../middleware/checkPermission.js';
+import { ADMIN_PERMISSIONS } from '../model/Admin.js';
 
 const adminRoutes = express.Router();
 
@@ -434,7 +436,7 @@ adminRoutes.post('/create-admin', authenticateToken, async (req, res) => {
             });
         }
 
-        const { name, email, password } = req.body;
+        const { name, email, password, permissions } = req.body;
 
         // Check if admin already exists
         const existingAdmin = await Admin.findOne({ email });
@@ -445,12 +447,26 @@ adminRoutes.post('/create-admin', authenticateToken, async (req, res) => {
             });
         }
 
-        // Create new admin and let middleware handle password hashing
+        // Validate permissions
+        if (permissions && Array.isArray(permissions)) {
+            const invalidPermissions = permissions.filter(
+                p => !Object.values(ADMIN_PERMISSIONS).includes(p)
+            );
+            
+            if (invalidPermissions.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Invalid permissions: ${invalidPermissions.join(', ')}`
+                });
+            }
+        }
+
+        // Create new admin with permissions
         const newAdmin = new Admin({
             name,
             email,
-            password, // Raw password - will be hashed by middleware
-            permissions: [],
+            password,
+            permissions: permissions || [], // Include permissions from request
             role: 'admin',
             uid: Date.now().toString()
         });
@@ -461,19 +477,26 @@ adminRoutes.post('/create-admin', authenticateToken, async (req, res) => {
         console.log('Created new admin:', {
             name: newAdmin.name,
             email: newAdmin.email,
-            role: newAdmin.role
+            role: newAdmin.role,
+            permissions: newAdmin.permissions // Log permissions
         });
 
         res.status(201).json({
             success: true,
-            message: 'Admin account created successfully'
+            message: 'Admin account created successfully',
+            admin: {
+                name: newAdmin.name,
+                email: newAdmin.email,
+                permissions: newAdmin.permissions
+            }
         });
 
     } catch (error) {
         console.error('Error creating admin:', error);
         res.status(500).json({
             success: false,
-            message: 'Error creating admin account'
+            message: 'Error creating admin account',
+            error: error.message
         });
     }
 });

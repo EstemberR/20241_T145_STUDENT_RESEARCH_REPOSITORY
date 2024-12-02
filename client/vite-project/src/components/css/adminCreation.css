@@ -107,3 +107,22 @@
   font-size: 0.75rem;
   font-weight: normal;
 } 
+.permissions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.permission-item {
+  background-color: #f8f9fa;
+  transition: background-color 0.2s;
+}
+
+.permission-item:hover {
+  background-color: #e9ecef;
+}
+
+.permission-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}

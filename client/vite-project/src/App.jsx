@@ -35,7 +35,7 @@ import SuperAdminAccounts from './components/SuperAdmin/superAdmin_accounts';
 import SuperAdminActivity from './components/SuperAdmin/superAdmin_acitivty';
 import SuperAdminReports from './components/SuperAdmin/superAdmin_reports';
 import SuperAdminRoleRequests from './components/SuperAdmin/superAdmin_roleRequest';
-
+import SuperAdminRepository from './components/SuperAdmin/superAdmin_repository';
 
 function App() {
   return (
@@ -83,6 +83,7 @@ function App() {
       {/*Super Admin Protected Routes*/}
       <Route element={<ProtectedRoute allowedRole="superadmin" />}>
           <Route path="/superadmin/superAdmin_accounts" element={<SuperAdminAccounts />} />
+          <Route path="/superadmin/superAdmin_repository" element={<SuperAdminRepository />} />
           <Route path="/superadmin/superAdmin_activity" element={<SuperAdminActivity />} />
           <Route path="/superadmin/superAdmin_reports" element={<SuperAdminReports />} />
           <Route path="/superadmin/superAdmin_role-requests" element={<SuperAdminRoleRequests />} />

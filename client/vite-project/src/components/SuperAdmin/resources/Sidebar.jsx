@@ -28,10 +28,18 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <Link 
+              className={`nav-link ${location.pathname === '/superadmin/superAdmin_repository' ? 'active' : ''}`} 
+              to="/superadmin/superAdmin_repository"
+            >
+              <i className="fas fa-file-alt submission zx"></i> Manage Repository
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link 
               className={`nav-link ${location.pathname === '/superadmin/superAdmin_role-requests' ? 'active' : ''}`} 
               to="/superadmin/superAdmin_role-requests"
               >
-              <i className="fas fa-folder-open search zx"></i> Role Requests
+              <i className="fas fa-folder-open search zx"></i> Manage Admins
             </Link>
           </li>
           <li className="nav-item">

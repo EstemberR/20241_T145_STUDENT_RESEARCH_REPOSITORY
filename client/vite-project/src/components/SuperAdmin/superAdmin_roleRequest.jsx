@@ -12,12 +12,26 @@ import '../css/adminCreation.css';
 import { Modal } from 'react-bootstrap';
 
 const PERMISSIONS = {
-    MANAGE_STUDENTS: { id: 'manage_students', label: 'Manage Students' },
-    MANAGE_INSTRUCTORS: { id: 'manage_instructors', label: 'Manage Instructors' },
-    MANAGE_ADMINS: { id: 'manage_admins', label: 'Manage Admins' },
-    MANAGE_RESEARCH: { id: 'manage_research', label: 'Manage Research' },
-    MANAGE_ADVISER_REQUESTS: { id: 'manage_adviser_requests', label: 'Manage Adviser Requests' },
-    VIEW_ANALYTICS: { id: 'view_analytics', label: 'View Analytics' }
+    MANAGE_ACCOUNTS: { 
+        id: 'manage_accounts', 
+        label: 'Manage Accounts',
+        description: 'Can view and manage student/instructor accounts'
+    },
+    MANAGE_REPOSITORY: { 
+        id: 'manage_repository', 
+        label: 'Manage Repository',
+        description: 'Can manage research submissions and repository content'
+    },
+    VIEW_USER_ACTIVITY: { 
+        id: 'view_user_activity', 
+        label: 'View User Activity',
+        description: 'Can access and monitor user activities'
+    },
+    GENERATE_REPORTS: { 
+        id: 'generate_reports', 
+        label: 'Generate Reports',
+        description: 'Can generate and view system reports'
+    }
 };
 
 const SuperAdminManageAdmins = () => {
@@ -49,10 +63,12 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
   };
 
   const handlePermissionChange = (permissionId) => {
+    console.log('Changing permission:', permissionId);
     setFormData(prev => {
       const newPermissions = prev.permissions.includes(permissionId)
         ? prev.permissions.filter(p => p !== permissionId)
         : [...prev.permissions, permissionId];
+      console.log('New permissions:', newPermissions);
       return { ...prev, permissions: newPermissions };
     });
   };
@@ -62,10 +78,17 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
     setLoading(true);
     setError('');
 
+    const submitData = {
+      ...formData,
+      permissions: formData.permissions
+    };
+
+    console.log('Submitting data:', submitData);
+
     try {
       const response = await axios.post(
         'http://localhost:8000/admin/create-admin', 
-        formData,
+        submitData,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -81,6 +104,7 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
         onHide();
       }
     } catch (err) {
+      console.error('Error creating admin:', err);
       setError(err.response?.data?.message || 'Something went wrong');
     } finally {
       setLoading(false);
@@ -140,22 +164,27 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Permissions:</label>
+            <label className="form-label">Admin Permissions:</label>
             <div className="permissions-grid">
-              {Object.values(PERMISSIONS).map(permission => (
-                <div key={permission.id} className="form-check">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id={permission.id}
-                    checked={formData.permissions.includes(permission.id)}
-                    onChange={() => handlePermissionChange(permission.id)}
-                  />
-                  <label className="form-check-label" htmlFor={permission.id}>
-                    {permission.label}
-                  </label>
-                </div>
-              ))}
+                {Object.values(PERMISSIONS).map(permission => (
+                    <div key={permission.id} className="permission-item mb-2 p-2 border rounded">
+                        <div className="d-flex align-items-center">
+                            <input
+                                type="checkbox"
+                                className="form-check-input me-2"
+                                id={permission.id}
+                                checked={formData.permissions.includes(permission.id)}
+                                onChange={() => handlePermissionChange(permission.id)}
+                            />
+                            <div>
+                                <label className="form-check-label fw-bold" htmlFor={permission.id}>
+                                    {permission.label}
+                                </label>
+                                <p className="text-muted small mb-0">{permission.description}</p>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
           </div>
 
@@ -311,11 +340,14 @@ const CreateAdminForm = ({ show, onHide, onSuccess }) => {
                             <td>
                               {admin.permissions?.length > 0 ? (
                                 <div className="permissions-badges">
-                                  {admin.permissions.map((permission, index) => (
-                                    <span key={index} className="badge bg-info me-1">
-                                      {permission}
-                                    </span>
-                                  ))}
+                                  {admin.permissions.map((permission, index) => {
+                                    const permissionInfo = Object.values(PERMISSIONS).find(p => p.id === permission);
+                                    return (
+                                      <span key={index} className="badge bg-info me-1">
+                                        {permissionInfo ? permissionInfo.label : permission}
+                                      </span>
+                                    );
+                                  })}
                                 </div>
                               ) : (
                                 <span className="text-muted">No permissions</span>
