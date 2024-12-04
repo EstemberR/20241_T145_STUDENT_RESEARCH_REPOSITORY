@@ -158,6 +158,8 @@ router.post('/verify-otp', async (req, res) => {
         return res.status(200).json({
             token,
             role: user.role,
+            name: user.name,
+            photoURL: user.photoURL,
             message: 'Verification successful!',
             redirect: user.role === 'student' ? '/student/dashboard' : '/instructor/instructor_dashboard'
         });
@@ -188,6 +190,11 @@ router.post('/google', async (req, res) => {
 
         if (user) {
             console.log('Existing user detected:', email);
+
+            if (photoURL && user.photoURL !== photoURL) {
+                user.photoURL = photoURL;
+                await user.save();
+            }
             
             if (user.archived) {
                 return res.status(403).json({
@@ -202,6 +209,7 @@ router.post('/google', async (req, res) => {
                 token,
                 role: user.role,
                 name: user.name,
+                photoURL: user.photoURL,
                 message: 'Welcome back!',
                 redirect: user.role === 'student' ? '/student/dashboard' : '/instructor/instructor_dashboard'
             });
@@ -214,7 +222,7 @@ router.post('/google', async (req, res) => {
         if (userRole === 'student') {
             const studentId = email.split('@')[0];
             user = new Student({
-                name, email, uid,
+                name, email, uid, photoURL,
                 role: 'student',
                 studentId,
                 isVerified: false,
@@ -223,7 +231,7 @@ router.post('/google', async (req, res) => {
             });
         } else {
             user = new Instructor({
-                name, email, uid,
+                name, email, uid, photoURL,
                 role: 'instructor',
                 isVerified: false,
                 verificationToken: otp,
@@ -241,6 +249,7 @@ router.post('/google', async (req, res) => {
         
         return res.status(200).json({
             isVerified: false,
+            photoURL: user.photoURL,
             message: 'OTP sent to your email for verification'
         });
     } catch (error) {

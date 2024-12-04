@@ -8,10 +8,24 @@ const Header = ({ userName }) => {
     const [profilePic, setProfilePic] = useState(null);
 
     useEffect(() => {
-        const photoURL = localStorage.getItem('userPhoto');
-        if (photoURL) {
-            setProfilePic(photoURL);
-        }
+        // Function to get and set profile picture
+        const getProfilePic = () => {
+            const photoURL = localStorage.getItem('userPhoto');
+            if (photoURL && photoURL !== 'undefined' && photoURL !== 'null') {
+                setProfilePic(photoURL);
+            }
+        };
+
+        // Initial load
+        getProfilePic();
+
+        // Set up event listener for storage changes
+        window.addEventListener('storage', getProfilePic);
+
+        // Cleanup
+        return () => {
+            window.removeEventListener('storage', getProfilePic);
+        };
     }, []);
 
     return (
@@ -25,7 +39,17 @@ const Header = ({ userName }) => {
                         src={profilePic} 
                         alt="Profile" 
                         className="img-fluid rounded-circle"
-                        style={{ width: '50px', height: '50px' }}
+                        style={{ 
+                            width: '50px', 
+                            height: '50px',
+                            objectFit: 'cover',
+                            border: '2px solid #e0e0e0'
+                        }}
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'path/to/fallback/image.png'; // Add a fallback image
+                            setProfilePic(null);
+                        }}
                     />
                 ) : (
                     <i className="fas fa-user-circle fa-2x me-2"></i>

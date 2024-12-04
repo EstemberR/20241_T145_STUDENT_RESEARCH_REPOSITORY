@@ -14,6 +14,10 @@ const studentSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     },
+    photoURL: {  
+        type: String,
+        default: null
+    },
     uid: { 
         type: String, 
         required: true, 
