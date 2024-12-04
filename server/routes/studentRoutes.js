@@ -198,16 +198,18 @@ studentRoutes.get('/research', authenticateToken, async (req, res) => {
         if (!student) {
             return res.status(404).json({ message: 'Student not found' });
         }
-
-        // Find latest versions of research where student is either submitter, leader, or team member
         const allResearch = await Research.find({ 
-            $or: [
-                { mongoId: mongoId },
-                { teamMembers: mongoId }
+            $and: [
+                { 
+                    $or: [
+                        { mongoId: mongoId },
+                        { teamMembers: mongoId }
+                    ]
+                },
+                { title: { $exists: true, $ne: '' } } 
             ]
         });
 
-        // Group by original research (using parentId) and get only the latest versions
         const latestVersions = allResearch.reduce((acc, research) => {
             const groupId = research.parentId || research._id;
             if (!acc[groupId] || acc[groupId].version < research.version) {
