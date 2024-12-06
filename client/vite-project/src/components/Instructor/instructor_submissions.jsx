@@ -71,7 +71,13 @@ const InstructorSubmissions = () => {
           throw new Error(`HTTP error! status: ${submissionsResponse.status}`);
         }
         const submissionsData = await submissionsResponse.json();
-        setSubmissions(submissionsData);
+        
+        // Filter out team setup entries (those without titles)
+        const filteredSubmissions = submissionsData.filter(submission => 
+          submission.title && submission.title.trim() !== ''
+        );
+        
+        setSubmissions(filteredSubmissions);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error);

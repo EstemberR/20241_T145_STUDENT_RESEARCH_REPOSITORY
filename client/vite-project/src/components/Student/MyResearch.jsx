@@ -271,7 +271,28 @@ const MyResearch = () => {
     setIsSubmitting(true);
 
     try {
-      if (pendingAction.type === 'submit') {
+      if (pendingAction.type === 'delete') {
+        const token = getToken();
+        const response = await fetch(`http://localhost:8000/student/research/${pendingAction.data._id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          // Close the confirmation modal
+          setShowConfirmModal(false);
+          setPendingAction(null);
+          setResearchToDelete(null);
+          
+          showAlertMessage('Research deleted successfully', 'success');
+          await fetchResearchEntries(); // Refresh the list
+        } else {
+          const data = await response.json();
+          showAlertMessage(data.message || 'Error deleting research', 'danger');
+        }
+      } else {
         // Create form data with course included
         const formDataToSubmit = new FormData();
         formDataToSubmit.append('file', file);
@@ -347,27 +368,6 @@ const MyResearch = () => {
         // Show success message and refresh data
         showAlertMessage('Research submitted successfully!', 'success');
         await fetchResearchEntries();
-      } else {
-        try {
-          const token = getToken();
-          const response = await fetch(`http://localhost:8000/student/research/${pendingAction.data._id}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          if (response.ok) {
-            showAlertMessage('Research deleted successfully', 'success');
-            fetchResearchEntries(); // Refresh the list
-          } else {
-            const data = await response.json();
-            showAlertMessage(data.message || 'Error deleting research', 'danger');
-          }
-        } catch (error) {
-          console.error('Error deleting research:', error);
-          showAlertMessage('Error deleting research', 'danger');
-        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -789,8 +789,9 @@ const MyResearch = () => {
                                 id="uploadDate"
                                 name="uploadDate"
                                 value={formData.uploadDate}
-                                onChange={handleInputChange}
-                                required
+                                readOnly
+                                disabled
+                                style={{ backgroundColor: '#e9ecef' }}
                               />
                             </div>
 

@@ -69,14 +69,19 @@ const OTPVerification = ({ email, onClose }) => {
                 body: JSON.stringify({ email, otp }),
             });
 
-            const data = await response.json();
-
             if (response.ok) {
+                const data = await response.json();
                 setStatus('success');
                 setMessage('Verification successful!');
+                const photoURL = sessionStorage.getItem('tempUserPhoto');
+                const userName = sessionStorage.getItem('tempUserName');
                 
                 // Store necessary data in localStorage
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('userRole', data.role);
+                localStorage.setItem('userName', userName);
+                localStorage.setItem('userPhoto', photoURL);
+                localStorage.setItem('isGoogleUser', 'true');
                 localStorage.setItem('isVerified', 'true');
                 
                 // Immediate navigation without delay

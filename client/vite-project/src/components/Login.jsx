@@ -194,6 +194,9 @@ const Login = () => {
                     localStorage.setItem('userEmail', user.email);
                     localStorage.setItem('userPhoto', user.photoURL);
 
+                    sessionStorage.setItem('tempUserPhoto', user.photoURL || '');
+                    sessionStorage.setItem('tempUserName', user.displayName);
+
                     console.log('User role set to:', userRole);
 
                     // Navigate based on role
@@ -206,6 +209,8 @@ const Login = () => {
                     }
                 } else {
                     // Keep existing OTP verification flow
+                    sessionStorage.setItem('tempUserPhoto', user.photoURL || '');
+                    sessionStorage.setItem('tempUserName', user.displayName);
                     setUserEmail(user.email);
                     setShowOTPVerification(true);
                 }
