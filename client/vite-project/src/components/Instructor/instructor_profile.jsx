@@ -286,7 +286,7 @@ const InstructorProfile = () => {
             <div className="card-body p-4">
               <h4 className="mb-4 text-success">My Calendar</h4>
               <div className="calendar-wrapper">
-                <ProfileCalendar />
+                <ProfileCalendar userRole="instructor" />
               </div>
             </div>
           </div>

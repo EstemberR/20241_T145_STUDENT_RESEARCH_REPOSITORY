@@ -1,86 +1,66 @@
 import express from 'express';
-import calendarService from '../services/calendarService.js';
-import { authenticateToken } from '../middleware/auth.js';
+import authenticateToken from '../middleware/authenticateToken.js';
+import Event from '../model/Event.js';
 
 const router = express.Router();
 
-// Create calendar event
-router.post('/events', authenticateToken, async (req, res) => {
-  try {
-    const { title, description, startDateTime, endDateTime, attendees } = req.body;
-    const user = await user.findById(req.user.id);
-
-    if (!user.calendarId) {
-      // Create calendar for new user
-      await calendarService.createUserCalendar(user._id, user.email);
-    }
-
-    const event = await calendarService.createEvent(user.calendarId, {
-      title,
-      description,
-      startDateTime,
-      endDateTime,
-      attendees
-    });
-
-    res.json(event);
-  } catch (error) {
-    console.error('Calendar event creation error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get user's calendar events
+// Get all events
 router.get('/events', authenticateToken, async (req, res) => {
-  try {
-    const { timeMin, timeMax } = req.query;
-    const user = await User.findById(req.user.id);
-
-    if (!user.calendarId) {
-      return res.json([]);
+    try {
+        const events = await Event.find({});
+        const eventsWithTheme = events.map(event => ({
+            ...event.toObject(),
+            backgroundColor: '#28a745',
+            borderColor: '#28a745',
+            textColor: '#ffffff'
+        }));
+        res.json(eventsWithTheme);
+    } catch (error) {
+        console.error('Error fetching events:', error);
+        res.status(500).json({ message: error.message });
     }
-
-    const events = await calendarService.getEvents(
-      user.calendarId,
-      new Date(timeMin),
-      new Date(timeMax)
-    );
-
-    res.json(events);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 });
 
-// Update calendar event
-router.put('/events/:eventId', authenticateToken, async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const user = await User.findById(req.user.id);
-    
-    const updatedEvent = await calendarService.updateEvent(
-      user.calendarId,
-      eventId,
-      req.body
-    );
+// Create a new event
+router.post('/events', authenticateToken, async (req, res) => {
+    try {
+        const { title, description, start, end } = req.body;
+        
+        const newEvent = new Event({
+            title,
+            start: new Date(start),
+            end: new Date(end),
+            extendedProps: {
+                description
+            }
+        });
 
-    res.json(updatedEvent);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+        const savedEvent = await newEvent.save();
+        const eventWithTheme = {
+            ...savedEvent.toObject(),
+            backgroundColor: '#28a745',
+            borderColor: '#28a745',
+            textColor: '#ffffff'
+        };
+        res.status(201).json(eventWithTheme);
+    } catch (error) {
+        console.error('Error creating event:', error);
+        res.status(500).json({ message: error.message });
+    }
 });
 
-// Delete calendar event
-router.delete('/events/:eventId', authenticateToken, async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const user = await User.findById(req.user.id);
-    
-    await calendarService.deleteEvent(user.calendarId, eventId);
-    res.json({ message: 'Event deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+// Delete an event
+router.delete('/events/:id', authenticateToken, async (req, res) => {
+    try {
+        const event = await Event.findByIdAndDelete(req.params.id);
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+        res.json({ message: 'Event deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        res.status(500).json({ message: error.message });
+    }
 });
 
 export default router;

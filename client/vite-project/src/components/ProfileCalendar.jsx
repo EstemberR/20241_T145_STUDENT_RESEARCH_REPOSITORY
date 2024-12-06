@@ -3,300 +3,390 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { Modal, Button, Form, Badge, Alert } from "react-bootstrap";
+import { Modal, Button, Form, Alert } from "react-bootstrap";
+import { FaExpandAlt, FaCompress } from 'react-icons/fa';
 import "../components/css/Calendar.css";
+import axios from 'axios';
 
-const ProfileCalendar = () => {
+axios.defaults.baseURL = 'http://localhost:8000';
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    console.log('Axios Error:', {
+      message: error.message,
+      response: error.response,
+      config: error.config
+    });
+    return Promise.reject(error);
+  }
+);
+
+const ProfileCalendar = ({ userRole }) => {
   const [events, setEvents] = useState([]);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
-    startDateTime: '',
-    endDateTime: '',
-    type: 'research',
-    priority: 'medium'
+    startTime: '09:00',
+    endTime: '10:00',
+    clickedDate: null
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
-  const eventColors = {
-    research: {
-      backgroundColor: '#28a745',
-      borderColor: '#28a745',
-      textColor: '#ffffff'
-    },
-    deadline: {
-      backgroundColor: '#dc3545',
-      borderColor: '#dc3545',
-      textColor: '#ffffff'
-    },
-    meeting: {
-      backgroundColor: '#007bff',
-      borderColor: '#007bff',
-      textColor: '#ffffff'
-    },
-    other: {
-      backgroundColor: '#6c757d',
-      borderColor: '#6c757d',
-      textColor: '#ffffff'
+  const canModifyEvents = userRole === 'instructor';
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/events', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      setEvents(response.data);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      setError('Failed to load events');
     }
   };
 
-  // Handle date selection
-  const handleDateSelect = (selectInfo) => {
-    const startDate = new Date(selectInfo.start);
-    const endDate = new Date(selectInfo.end);
-    
-    // Format dates for datetime-local input
-    const formatDateForInput = (date) => {
-      return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
-    };
+  const handleDateClick = (info) => {
+    if (!canModifyEvents) return;
 
+    console.log('Clicked date:', info.dateStr);
     setNewEvent({
       ...newEvent,
-      startDateTime: formatDateForInput(startDate),
-      endDateTime: formatDateForInput(endDate)
+      clickedDate: info.dateStr,
+      title: '',
+      description: '',
+      startTime: '09:00',
+      endTime: '10:00'
     });
     setShowEventModal(true);
   };
 
-  // Handle event click
   const handleEventClick = (clickInfo) => {
-    // You can add event editing/viewing functionality here
-    alert(`Event: ${clickInfo.event.title}`);
+    console.log('Clicked event:', clickInfo.event);
+    console.log('Event ID:', clickInfo.event._def.extendedProps._id);
+
+    setSelectedEvent({
+      _id: clickInfo.event._def.extendedProps._id,
+      title: clickInfo.event.title,
+      start: clickInfo.event.start,
+      end: clickInfo.event.end,
+      extendedProps: clickInfo.event.extendedProps
+    });
+    setShowViewModal(true);
   };
 
-  // Validate event data
-  const validateEvent = (event) => {
-    if (!event.title.trim()) {
-      throw new Error('Event title is required');
-    }
-
-    const start = new Date(event.startDateTime);
-    const end = new Date(event.endDateTime);
-
-    if (isNaN(start.getTime())) {
-      throw new Error('Invalid start date/time');
-    }
-
-    if (isNaN(end.getTime())) {
-      throw new Error('Invalid end date/time');
-    }
-
-    if (start >= end) {
-      throw new Error('End time must be after start time');
-    }
-
-    if (start < new Date()) {
-      throw new Error('Cannot create events in the past');
-    }
-  };
-
-  // Handle form submission
   const handleEventSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      // Validate event data
-      validateEvent(newEvent);
-
+      const token = localStorage.getItem('token');
+      
       const eventToAdd = {
         title: newEvent.title.trim(),
         description: newEvent.description.trim(),
-        start: newEvent.startDateTime,
-        end: newEvent.endDateTime,
-        backgroundColor: eventColors[newEvent.type].backgroundColor,
-        borderColor: eventColors[newEvent.type].borderColor,
-        textColor: eventColors[newEvent.type].textColor,
-        extendedProps: {
-          type: newEvent.type,
-          priority: newEvent.priority
-        }
+        start: `${newEvent.clickedDate}T${newEvent.startTime}`,
+        end: `${newEvent.clickedDate}T${newEvent.endTime}`
       };
 
-      // Add event to state
-      setEvents([...events, eventToAdd]);
-      
-      // Reset form and close modal
+      console.log('Creating event:', eventToAdd);
+
+      const response = await axios.post('/api/events', eventToAdd, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      setEvents([...events, response.data]);
+      setShowEventModal(false);
       setNewEvent({
         title: '',
         description: '',
-        startDateTime: '',
-        endDateTime: '',
-        type: 'research',
-        priority: 'medium'
+        startTime: '09:00',
+        endTime: '10:00',
+        clickedDate: null
       });
-      setShowEventModal(false);
     } catch (error) {
-      setError(error.message);
+      console.error('Error creating event:', error);
+      setError(error.response?.data?.message || error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Custom event rendering
+  const handleDeleteEvent = async () => {
+    console.log('Selected Event for deletion:', selectedEvent);
+
+    if (!selectedEvent?._id) {
+      console.error('No event ID found:', selectedEvent);
+      setError('Cannot delete event: Event ID not found');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      console.log('Attempting to delete event with ID:', selectedEvent._id);
+
+      const response = await axios.delete(`/api/events/${selectedEvent._id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 200) {
+        console.log('Event deleted successfully');
+        await fetchEvents(); // Refresh events after successful deletion
+        setShowViewModal(false);
+        setSelectedEvent(null);
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      setError(error.response?.data?.message || 'Failed to delete event. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderEventContent = (eventInfo) => {
     return (
-      <div className={`event-content event-${eventInfo.event.extendedProps.type}`}>
-        <div className="event-title">
-          {eventInfo.timeText && <span className="event-time">{eventInfo.timeText}</span>}
-          <span className="event-name">{eventInfo.event.title}</span>
-        </div>
-        {eventInfo.event.extendedProps.priority === 'high' && (
-          <span className="priority-indicator">⚡</span>
-        )}
+      <div className="calendar-event-content">
+        <div className="event-time">{eventInfo.timeText}</div>
+        <div className="event-title">{eventInfo.event.title}</div>
       </div>
     );
   };
 
   return (
-    <div className="calendar-container">
-     
+    <div className={`calendar-container ${isExpanded ? 'expanded' : ''}`}>
+      <div className="calendar-header">
+        <div className="calendar-title">
+          <h5>Research Timeline</h5>
+          <Button 
+            variant="link" 
+            className="expand-button"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            {isExpanded ? <FaCompress /> : <FaExpandAlt />}
+          </Button>
+        </div>
+      </div>
 
       <div className="calendar-wrapper">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          headerToolbar={{
+          initialView={isExpanded ? "dayGridMonth" : "dayGridWeek"}
+          headerToolbar={isExpanded ? {
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          } : {
+            left: 'prev,next',
+            center: 'title',
+            right: 'today'
           }}
+          height={isExpanded ? "80vh" : "400px"}
           events={events}
-          selectable={true}
-          select={handleDateSelect}
+          dateClick={canModifyEvents ? handleDateClick : null}
           eventClick={handleEventClick}
           eventContent={renderEventContent}
-          height="auto"
-          dayMaxEvents={true}
-          weekends={true}
-          businessHours={{
-            daysOfWeek: [1, 2, 3, 4, 5],
-            startTime: '08:00',
-            endTime: '17:00',
-          }}
-          slotMinTime="08:00:00"
-          slotMaxTime="17:00:00"
+          dayMaxEvents={false}
+          eventDisplay="block"
+          eventBackgroundColor="#28a745"
+          eventBorderColor="#28a745"
+          eventTextColor="#ffffff"
+          selectable={canModifyEvents}
+          editable={false}
         />
       </div>
 
+      {/* View Event Modal - Show to everyone but with different options */}
       <Modal 
-        show={showEventModal} 
+        show={showViewModal} 
         onHide={() => {
-          setShowEventModal(false);
+          setShowViewModal(false);
           setError(null);
         }}
-        className="calendar-modal"
+        size="sm"
+        centered
+        className="event-detail-modal"
       >
-        <Modal.Header closeButton className="bg-light">
-          <Modal.Title>Add New Event</Modal.Title>
+        <Modal.Header closeButton style={{ backgroundColor: '#28a745' }}>
+          <Modal.Title style={{ width: '100%' }}>
+            <div style={{ color: '#ffffff', fontWeight: 500, fontSize: '1rem' }}>
+              {selectedEvent?.title}
+            </div>
+            <div style={{ color: '#ffffff', fontSize: '0.8rem', opacity: 0.9 }}>
+              {selectedEvent?.start ? new Date(selectedEvent.start).toLocaleDateString() : ''}
+            </div>
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {error && (
-            <Alert variant="danger" className="mb-3">
+            <Alert 
+              variant="danger" 
+              className="py-1 px-2 mb-2" 
+              style={{ 
+                fontSize: '0.8rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center'
+              }}
+            >
               {error}
             </Alert>
           )}
-          
-          <Form onSubmit={handleEventSubmit}>
-            <Form.Group className="mb-3">
-              <Form.Label>Event Title <span className="text-danger">*</span></Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter event title"
-                value={newEvent.title}
-                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                required
-                isInvalid={error && !newEvent.title.trim()}
-              />
-              <Form.Control.Feedback type="invalid">
-                Title is required
-              </Form.Control.Feedback>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Start Date & Time <span className="text-danger">*</span></Form.Label>
-              <Form.Control
-                type="datetime-local"
-                value={newEvent.startDateTime}
-                onChange={(e) => setNewEvent({ ...newEvent, startDateTime: e.target.value })}
-                required
-                min={new Date().toISOString().slice(0, 16)}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>End Date & Time <span className="text-danger">*</span></Form.Label>
-              <Form.Control
-                type="datetime-local"
-                value={newEvent.endDateTime}
-                onChange={(e) => setNewEvent({ ...newEvent, endDateTime: e.target.value })}
-                required
-                min={newEvent.startDateTime}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Event Type</Form.Label>
-              <Form.Select
-                value={newEvent.type}
-                onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
-              >
-                <option value="research">Revision</option>
-                <option value="deadline">Deadline</option>
-                <option value="meeting">Meeting</option>
-                <option value="other">Other</option>
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Priority</Form.Label>
-              <Form.Select
-                value={newEvent.priority}
-                onChange={(e) => setNewEvent({ ...newEvent, priority: e.target.value })}
-              >
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                placeholder="Enter event description"
-                value={newEvent.description}
-                onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-              />
-            </Form.Group>
-
-            <div className="d-flex justify-content-end gap-2">
-              <Button 
-                variant="secondary" 
-                onClick={() => {
-                  setShowEventModal(false);
-                  setError(null);
-                }}
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="success" 
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? 'Creating...' : 'Create Event'}
-              </Button>
+          <div className="event-details">
+            {selectedEvent?.extendedProps?.description && (
+              <div className="detail-section">
+                <h6 className="text-success">Description</h6>
+                <p>{selectedEvent.extendedProps.description}</p>
+              </div>
+            )}
+            <div className="detail-section">
+              <h6 className="text-success">Time</h6>
+              <p>
+                <strong>Start:</strong> {selectedEvent?.start ? new Date(selectedEvent.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}<br/>
+                <strong>End:</strong> {selectedEvent?.end ? new Date(selectedEvent.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+              </p>
             </div>
-          </Form>
+          </div>
         </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="outline-secondary" 
+            size="sm" 
+            onClick={() => {
+              setShowViewModal(false);
+              setError(null);
+            }}
+          >
+            Close
+          </Button>
+          {canModifyEvents && (
+            <Button 
+              variant="danger" 
+              size="sm" 
+              onClick={handleDeleteEvent}
+              disabled={loading}
+            >
+              {loading ? 'Deleting...' : 'Delete'}
+            </Button>
+          )}
+        </Modal.Footer>
       </Modal>
+
+      {/* Add Event Modal - Only shown to instructors */}
+      {canModifyEvents && (
+        <Modal 
+          show={showEventModal} 
+          onHide={() => {
+            setShowEventModal(false);
+            setError(null);
+          }}
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              Add Event for {newEvent.clickedDate ? new Date(newEvent.clickedDate).toLocaleDateString() : ''}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {error && (
+              <Alert variant="danger" className="mb-3">
+                {error}
+              </Alert>
+            )}
+            
+            <Form onSubmit={handleEventSubmit}>
+              <Form.Group className="mb-3">
+                <Form.Label>Event Title <span className="text-danger">*</span></Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter event title"
+                  value={newEvent.title}
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                  required
+                />
+              </Form.Group>
+
+              <div className="row">
+                <div className="col-md-6">
+                  <Form.Group className="mb-3">
+                    <Form.Label>Start Time <span className="text-danger">*</span></Form.Label>
+                    <Form.Control
+                      type="time"
+                      value={newEvent.startTime}
+                      onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
+                      required
+                    />
+                  </Form.Group>
+                </div>
+                <div className="col-md-6">
+                  <Form.Group className="mb-3">
+                    <Form.Label>End Time <span className="text-danger">*</span></Form.Label>
+                    <Form.Control
+                      type="time"
+                      value={newEvent.endTime}
+                      onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
+                      required
+                    />
+                  </Form.Group>
+                </div>
+              </div>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Description</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  placeholder="Enter event description"
+                  value={newEvent.description}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                />
+              </Form.Group>
+
+              <div className="d-flex justify-content-end gap-2">
+                <Button 
+                  variant="secondary" 
+                  onClick={() => {
+                    setShowEventModal(false);
+                    setError(null);
+                  }}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="success" 
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? 'Adding...' : 'Add Event'}
+                </Button>
+              </div>
+            </Form>
+          </Modal.Body>
+        </Modal>
+      )}
     </div>
   );
 };

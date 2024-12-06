@@ -19,6 +19,7 @@ import Student from '../model/Student.js'
 import driveRoutes from '../routes/driveRoutes.js';
 //SUPER ADMIN
 import superAdminRoutes from '../routes/superAdminRoutes.js';
+import calendarRoutes from '../routes/calendarRoutes.js';
 
 dotenv.config(); 
 const app = express();
@@ -28,7 +29,7 @@ const server = createServer(app); // Create HTTP server
 const io = initializeSocket(server);
 
 app.use(express.json());
-const PORT = process.env.PORT || 6000; 
+const PORT = process.env.PORT || 8000; 
 
 app.use(cors({
     origin: 'http://localhost:3000', 
@@ -71,6 +72,8 @@ app.use('/admin', adminRoutes);
 
 //EMAIL VERIFICATION
 app.use('/api/auth', authRoutes); // Use the email routes under the /api/email path
+
+app.use('/api', calendarRoutes);
 
 // Change app.listen to server.listen
 server.listen(PORT, () => {
