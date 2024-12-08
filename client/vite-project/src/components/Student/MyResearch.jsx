@@ -214,6 +214,7 @@ const MyResearch = () => {
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
+      showAlertMessage(`File selected: ${e.target.files[0].name}`, 'info');
     }
   };
 
@@ -303,7 +304,9 @@ const MyResearch = () => {
         formDataToSubmit.append('course', studentInfo.course);
         formDataToSubmit.append('status', 'Pending');
         formDataToSubmit.append('uploadDate', new Date().toISOString());
+        formDataToSubmit.append('fileName', file.name);
 
+       
         const fileUploadResponse = await fetch('http://localhost:8000/api/auth/google-drive', {
           method: 'POST',
           body: formDataToSubmit,
@@ -330,6 +333,7 @@ const MyResearch = () => {
             keywords: formData.keywords,
             fileUrl: `https://drive.google.com/file/d/${fileResult.fileId}/view`,
             driveFileId: fileResult.fileId,
+            fileName: file.name,
             uploadDate: new Date().toISOString()
           })
         });
@@ -410,10 +414,11 @@ const MyResearch = () => {
     e.preventDefault();
     if (!file || isResubmitting) return;
 
-    setIsResubmitting(true); // Disable the button
+    setIsResubmitting(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('fileName', file.name);
 
       // Upload file to Google Drive
       const fileUploadResponse = await fetch('http://localhost:8000/api/auth/google-drive', {
@@ -437,9 +442,15 @@ const MyResearch = () => {
         },
         body: JSON.stringify({
           researchId: selectedResearch._id,
+          title: formData.title,
+          abstract: formData.abstract,
+          authors: selectedAuthors.map(author => author.name).join(', '),
+          keywords: formData.keywords,
           fileUrl: `https://drive.google.com/file/d/${fileResult.fileId}/view`,
           driveFileId: fileResult.fileId,
-          version: (selectedResearch.version || 1) + 1
+          fileName: file.name,
+          version: (selectedResearch.version || 1) + 1,
+          uploadDate: new Date().toISOString()
         })
       });
 
@@ -625,7 +636,7 @@ const MyResearch = () => {
                                       <div className="d-flex align-items-center">
                                         <i className="fas fa-file-pdf text-danger me-2"></i>
                                         <span className="text-truncate me-2" style={{ maxWidth: '100px' }}>
-                                          {research.fileName || 'research.pdf'}
+                                          {research.fileName}
                                         </span>
                                         <a 
                                           href={`https://drive.google.com/file/d/${research.driveFileId}/view`}
@@ -950,7 +961,7 @@ const MyResearch = () => {
                               <p><strong>File:</strong></p>
                               <div className="d-flex align-items-center">
                                 <i className="fas fa-file-pdf text-danger me-2"></i>
-                                <span className="me-2">{selectedResearch.fileName || 'research.pdf'}</span>
+                                <span className="me-2">{selectedResearch.fileName}</span>
                                 <a 
                                   href={`https://drive.google.com/file/d/${selectedResearch.driveFileId}/view`}
                                   target="_blank"

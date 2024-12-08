@@ -115,6 +115,7 @@ studentRoutes.post('/submit-research', authenticateToken, async (req, res) => {
             course: student.course,
             fileUrl: req.body.fileUrl,
             driveFileId: req.body.driveFileId,
+            fileName: req.body.fileName,  // Add this line
             status: 'Pending',
             uploadDate: req.body.uploadDate || new Date(),
             teamMembers: research.teamMembers, // Include team members
@@ -711,7 +712,7 @@ studentRoutes.get('/available-students', authenticateToken, async (req, res) => 
 studentRoutes.put('/resubmit-research', authenticateToken, async (req, res) => {
   try {
     const mongoId = req.user.userId;
-    const { researchId, fileUrl, driveFileId, version } = req.body;
+    const { researchId, fileUrl, driveFileId, fileName, version } = req.body;
 
     // Find the original research
     const originalResearch = await Research.findById(researchId);
@@ -726,6 +727,7 @@ studentRoutes.put('/resubmit-research', authenticateToken, async (req, res) => {
       status: 'Pending',
       fileUrl: fileUrl,
       driveFileId: driveFileId,
+      fileName: fileName, 
       version: parseInt(version),
       uploadDate: new Date(),
       submittedBy: mongoId,

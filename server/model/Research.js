@@ -46,6 +46,11 @@ const researchSchema = new mongoose.Schema({
       required: true,
       trim: true
   },
+  fileName: {  
+      type: String,
+      required: true,
+      trim: true
+  },
   status: {
       type: String,
       enum: ['Pending', 'Accepted', 'Rejected', 'Revision'],
@@ -93,11 +98,11 @@ const researchSchema = new mongoose.Schema({
       type: Number,
       default: 1
   },
-  parentId: {  // Add this new field
+  parentId: {  
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Research',
     default: null
-}
+  }
 }, { 
     timestamps: true,
     toJSON: { virtuals: true },
@@ -126,4 +131,4 @@ const Research = mongoose.model('Research', researchSchema);
 
 Research.createIndexes();
 
-export default Research; 
+export default Research;
