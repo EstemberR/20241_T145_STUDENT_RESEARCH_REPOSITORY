@@ -52,7 +52,8 @@ const ProfileCalendar = ({ userRole }) => {
       const response = await axios.get('/api/events', {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-User-Role': userRole
         }
       });
       setEvents(response.data);
@@ -108,14 +109,17 @@ const ProfileCalendar = ({ userRole }) => {
 
       console.log('Creating event:', eventToAdd);
 
-      const response = await axios.post('/api/events', eventToAdd, {
+      await axios.post('/api/events', eventToAdd, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-User-Role': userRole
         }
       });
 
-      setEvents([...events, response.data]);
+      // Fetch all events again to ensure we have the latest data
+      await fetchEvents();
+      
       setShowEventModal(false);
       setNewEvent({
         title: '',
@@ -148,7 +152,9 @@ const ProfileCalendar = ({ userRole }) => {
 
       const response = await axios.delete(`/api/events/${selectedEvent._id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'X-User-Role': userRole
         }
       });
 
@@ -391,4 +397,4 @@ const ProfileCalendar = ({ userRole }) => {
   );
 };
 
-export default ProfileCalendar; 
+export default ProfileCalendar;

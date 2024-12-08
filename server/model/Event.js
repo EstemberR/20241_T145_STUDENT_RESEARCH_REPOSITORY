@@ -13,6 +13,11 @@ const eventSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Instructor',
+        required: true
+    },
     extendedProps: {
         type: Object,
         default: {}
