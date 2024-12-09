@@ -191,7 +191,9 @@ router.post('/google', async (req, res) => {
         if (user) {
             console.log('Existing user detected:', email);
 
-            if (photoURL && user.photoURL !== photoURL) {
+            // Always update photoURL with the latest from Google
+            if (photoURL) {
+                console.log('Updating user photo URL:', photoURL);
                 user.photoURL = photoURL;
                 await user.save();
             }

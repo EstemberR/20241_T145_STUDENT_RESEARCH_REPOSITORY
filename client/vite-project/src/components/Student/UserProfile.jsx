@@ -84,11 +84,48 @@ const Profile = () => {
   }, [navigate, updateUserName]);
 
   useEffect(() => {
-    // Get profile picture from localStorage
-    const photoURL = localStorage.getItem('userPhoto');
-    if (photoURL) {
+    // Try to get profile picture from multiple sources
+    const photoFromLocal = localStorage.getItem('userPhoto');
+    const photoFromSession = sessionStorage.getItem('tempUserPhoto');
+    const photoURL = photoFromLocal || photoFromSession;
+
+    console.log('Profile picture sources:', {
+      localStorage: photoFromLocal,
+      sessionStorage: photoFromSession,
+      finalURL: photoURL
+    });
+
+    if (photoURL && photoURL !== 'undefined' && photoURL !== 'null') {
+      console.log('Setting profile picture from:', photoURL);
       setProfilePic(photoURL);
+    } else {
+      console.log('No valid profile picture found, using placeholder');
+      setProfilePic('https://via.placeholder.com/150');
     }
+  }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/student/profile', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const data = await response.json();
+        console.log('Profile data from server:', data);
+        
+        if (data.photoURL) {
+          console.log('Setting profile picture from server:', data.photoURL);
+          setProfilePic(data.photoURL);
+          localStorage.setItem('userPhoto', data.photoURL);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+    
+    fetchProfile();
   }, []);
 
   // Toggle Edit Mode
@@ -231,7 +268,7 @@ const Profile = () => {
                 <div className="col-md-4 border-end text-center">
                   <div className="position-relative mb-4">
                     <img
-                      src={profilePic || 'https://via.placeholder.com/150'}
+                      src={profilePic}
                       alt="Profile"
                       className="rounded-circle shadow"
                       style={{ 
@@ -239,6 +276,15 @@ const Profile = () => {
                         height: '150px',
                         border: '4px solid #fff',
                         objectFit: 'cover'
+                      }}
+                      onLoad={() => {
+                        console.log('Profile image loaded successfully:', profilePic);
+                      }}
+                      onError={(e) => {
+                        console.error('Profile image failed to load:', profilePic);
+                        e.target.onerror = null;
+                        e.target.src = 'https://via.placeholder.com/150';
+                        // Don't clear profilePic here to keep trying the original URL
                       }}
                     />
                     <div className="mt-3">
@@ -289,6 +335,17 @@ const Profile = () => {
                               </option>
                             ))}
                           </select>
+                        </div>
+                        <div className="mb-4">
+                          <label className="form-label text-muted">Section</label>
+                          <input
+                            type="text"
+                            className="form-control form-control-lg"
+                            name="section"
+                            value={user.section || ''}
+                            onChange={handleChange}
+                            placeholder="Enter your section"
+                          />
                         </div>
                         <button type="submit" className="btn btn-success btn-lg rounded-pill mb-3">
                           <i className="fas fa-save me-2"></i>
