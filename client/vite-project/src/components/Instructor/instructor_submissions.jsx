@@ -4,7 +4,7 @@ import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
 import DataTable from 'react-data-table-component';
-import { FaEye, FaCheck, FaEdit } from 'react-icons/fa';
+import { FaEye, FaCheck, FaEdit, FaTimesCircle, FaUndoAlt } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
@@ -109,30 +109,31 @@ const InstructorSubmissions = () => {
         body: JSON.stringify({
           status: newStatus,
           note: note,
-          notificationType: newStatus === 'Revision' ? 'REVISION_REQUEST' : 'STATUS_UPDATE'
+          notificationType: newStatus === 'Revision' ? 'REVISION_REQUEST' : 
+                           newStatus === 'Rejected' ? 'REJECTION' :
+                           newStatus === 'Pending' ? 'RESTORED' : 'STATUS_UPDATE'
         })
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to update status');
       }
-
+  
       // Update local state
       setSubmissions(submissions.map(sub => 
         sub._id === submissionId ? { ...sub, status: newStatus, note: note } : sub
       ));
-
-      // Reset states
+  
+      // Reset states and close modals
       setRevisionComment('');
       setSelectedSubmissionId(null);
       setConfirmationAction(null);
-
-      // Close modals
+  
       const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
       const revisionModal = bootstrap.Modal.getInstance(document.getElementById('revisionModal'));
       if (confirmModal) confirmModal.hide();
       if (revisionModal) revisionModal.hide();
-
+  
       showAlertMessage(`Research ${newStatus.toLowerCase()} successfully`, 'success');
     } catch (error) {
       console.error('Error updating status:', error);
@@ -141,6 +142,8 @@ const InstructorSubmissions = () => {
       setIsProcessing(false);
     }
   };
+ 
+
   const filteredData = submissions.filter((submission) => submission.status === activeTab);
   const handleViewClick = (research) => {
     setSelectedResearch(research);
@@ -237,8 +240,44 @@ const InstructorSubmissions = () => {
               >
                 <FaEdit className="text-white" />
               </button>
+              <button 
+                className="btn btn-sm btn-danger"
+                onClick={() => {
+                  setConfirmationAction({
+                    type: 'reject',
+                    id: row._id,
+                    title: row.title
+                  });
+                  const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+                  modal.show();
+                }}
+                disabled={isProcessing}
+                title="Reject Submission"
+              >
+                <FaTimesCircle className="text-white" />
+              </button>
             </>
           )}
+
+            {row.status === 'Rejected' && (
+              <button 
+                className="btn btn-sm btn-info"
+                onClick={() => {
+                  setConfirmationAction({
+                    type: 'restore',
+                    id: row._id,
+                    title: row.title
+                  });
+                  const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+                  modal.show();
+                }}
+                disabled={isProcessing}
+                title="Restore Submission"
+              >
+                <FaUndoAlt className="text-white" />
+              </button>
+            )}
+          
           {row.status === 'Revision' && (
             <button 
               className="btn btn-sm btn-success"
@@ -258,8 +297,9 @@ const InstructorSubmissions = () => {
             </button>
           )}
         </div>
+        
       ),
-      button: true,
+   
       width: '150px'
     }
   ];
@@ -425,7 +465,7 @@ const InstructorSubmissions = () => {
                                 </div>
                             ) : (
                                 <p className="text-muted">No PDF file available</p>
-                            )}
+                            )} 
                         </div>
                     </div>
                     {selectedResearch.status === 'Pending' && (
@@ -518,7 +558,9 @@ const InstructorSubmissions = () => {
             <div className="modal-body">
               {confirmationAction && (
                 <p>
-                  Are you sure you want to {confirmationAction.type} the research paper "{confirmationAction.title}"?
+                  Are you sure you want to {confirmationAction.type === 'reject' ? 'reject' : 
+                                          confirmationAction.type === 'restore' ? 'restore' : 
+                                          'accept'} the research "{confirmationAction.title}"?
                 </p>
               )}
             </div>
@@ -531,20 +573,23 @@ const InstructorSubmissions = () => {
               >
                 Cancel
               </button>
-              <button 
-                type="button" 
-                className={`btn btn-${confirmationAction?.type === 'accept' ? 'success' : 'warning'}`}
-                onClick={() => handleStatusUpdate(confirmationAction?.id, 'Accepted')}
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  if (confirmationAction) {
+                    if (confirmationAction.type === 'reject') {
+                      handleStatusUpdate(confirmationAction.id, 'Rejected');
+                    } else if (confirmationAction.type === 'restore') {
+                      handleStatusUpdate(confirmationAction.id, 'Pending');
+                    } else if (confirmationAction.type === 'accept') {
+                      handleStatusUpdate(confirmationAction.id, 'Accepted');
+                    }
+                  }
+                }}
                 disabled={isProcessing}
               >
-                {isProcessing ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Processing...
-                  </>
-                ) : (
-                  'Confirm'
-                )}
+                {isProcessing ? 'Processing...' : 'Confirm'}
               </button>
             </div>
           </div>

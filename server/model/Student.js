@@ -59,7 +59,15 @@ const studentSchema = new mongoose.Schema({
     bookmarks: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Research'
-    }]
+    }],
+    projectMembers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Student' // Reference to other students in the project
+    }],
+    instructorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Instructor' // Reference to the instructor overseeing the project
+    }
 }, {
     timestamps: true,
     toJSON: { virtuals: true },

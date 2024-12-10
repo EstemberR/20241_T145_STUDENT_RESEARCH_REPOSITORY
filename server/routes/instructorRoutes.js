@@ -124,9 +124,12 @@ instructorRoutes.put('/submissions/:id/status', authenticateToken, async (req, r
       return res.status(404).json({ message: 'Research not found' });
     }
 
-    research.status = status;
-    if (note) research.note = note;
-    await research.save();
+      // Only update the status and note fields
+      await Research.findByIdAndUpdate(
+        id,
+        { $set: { status: status, ...(note && { note: note }) } },
+        { new: true, runValidators: false }
+      );
 
     // Create notifications based on status
     const allTeamMembers = [research.mongoId._id, ...research.teamMembers.map(member => member._id)];
