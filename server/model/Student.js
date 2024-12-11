@@ -87,6 +87,50 @@ studentSchema.methods.getResearchCount = async function() {
     return await Research.countDocuments({ studentId: this.studentId });
 };
 
+// Add these methods before creating the model
+studentSchema.methods.removeProjectMember = async function(memberToRemove) {
+  try {
+    // Remove the member from projectMembers array
+    this.projectMembers = this.projectMembers.filter(
+      memberId => memberId.toString() !== memberToRemove.toString()
+    );
+    await this.save();
+    return true;
+  } catch (error) {
+    console.error('Error removing project member:', error);
+    return false;
+  }
+};
+
+// Add static method to handle team updates
+studentSchema.statics.updateTeamMembers = async function(leaderId, memberIdToRemove) {
+  try {
+    // Find the team leader
+    const leader = await this.findOne({ _id: leaderId });
+    if (!leader) {
+      throw new Error('Team leader not found');
+    }
+
+    // Remove the member from leader's projectMembers
+    await leader.removeProjectMember(memberIdToRemove);
+
+    // Remove the leader from member's projectMembers
+    const member = await this.findOne({ _id: memberIdToRemove });
+    if (member) {
+      member.projectMembers = member.projectMembers.filter(
+        id => id.toString() !== leaderId.toString()
+      );
+      member.instructorId = null; // Clear instructor reference
+      await member.save();
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error updating team members:', error);
+    throw error;
+  }
+};
+
 const Student = mongoose.model('Student', studentSchema);
 
 // Ensure indexes are created

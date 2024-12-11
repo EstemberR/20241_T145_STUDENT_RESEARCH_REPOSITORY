@@ -356,35 +356,50 @@ studentRoutes.get('/all-instructors', authenticateToken, async (req, res) => {
 studentRoutes.post('/manage-members', authenticateToken, async (req, res) => {
     try {
         const studentId = req.user.userId;
-        const { members, instructor } = req.body;
+        const { members } = req.body;
 
-        // Find the student's research
-        const research = await Research.findOne({ mongoId: studentId });
-        
-        if (!research) {
-            return res.status(404).json({ message: 'No research found for this student' });
+        // Find the current student (team leader)
+        const leader = await Student.findById(studentId);
+        if (!leader) {
+            return res.status(404).json({ message: 'Student not found' });
         }
 
-        // Update research with team members and instructor
-        research.teamMembers = members;
-        research.adviser = instructor;
-
-        await research.save();
-
-        // Update all team members' sections
-        if (members && members.length > 0) {
-            await Student.updateMany(
-                { _id: { $in: members } }
-            );
+        // Verify this student has project members (is a team leader)
+        if (!leader.projectMembers || leader.projectMembers.length === 0) {
+            return res.status(403).json({ message: 'Not authorized to manage members' });
         }
 
-        res.status(200).json({ 
+        // Update project members
+        leader.projectMembers = members;
+        await leader.save();
+
+        // Update removed member's references
+        const removedMembers = leader.projectMembers.filter(
+            memberId => !members.includes(memberId.toString())
+        );
+
+        // Clear references for removed members
+        await Student.updateMany(
+            { _id: { $in: removedMembers } },
+            { 
+                $pull: { projectMembers: leader._id },
+                $unset: { instructorId: "" }
+            }
+        );
+
+        // Send success response
+        res.json({ 
+            success: true, 
             message: 'Team members updated successfully',
-            research 
+            updatedMembers: leader.projectMembers
         });
+
     } catch (error) {
         console.error('Error managing team members:', error);
-        res.status(500).json({ message: 'Error updating team members' });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating team members' 
+        });
     }
 });
 
@@ -414,83 +429,35 @@ studentRoutes.get('/check-team-setup', authenticateToken, async (req, res) => {
 // Create team notification route
 studentRoutes.post('/create-team-notification', authenticateToken, async (req, res) => {
     try {
-        const studentId = req.user.userId;
-        const { instructorId, teamMembers } = req.body;
+        const { teamMembers, instructorId } = req.body;
+        const leaderId = req.user.userId;
 
-        // Get the requesting student's name
-        const requestingStudent = await Student.findById(studentId);
-        if (!requestingStudent) {
-            return res.status(404).json({ message: 'Student not found' });
+        // Find the leader
+        const leader = await Student.findById(leaderId);
+        if (!leader) {
+            return res.status(404).json({ message: 'Leader not found' });
         }
 
-        // Create notification for instructor
-        const instructorNotification = new Notification({
-            recipient: instructorId,
-            recipientModel: 'Instructor',
-            message: `New team request from ${requestingStudent.name}`,
-            type: 'TEAM_REQUEST',
-            relatedData: {
-                studentId: studentId,
-                teamMembers: teamMembers,
-                instructorId: instructorId,
-                timestamp: new Date()
-            }
-        });
+        // Update leader's projectMembers
+        leader.projectMembers = teamMembers; // Add all team members
+        leader.instructorId = instructorId;
+        await leader.save();
 
-        // Create notifications for each team member
-        const teamMemberNotifications = await Promise.all(teamMembers.map(async (memberId) => {
-            return new Notification({
-                recipient: memberId,
-                recipientModel: 'Student',
-                message: `${requestingStudent.name} has added you as a team member`,
-                type: 'TEAM_REQUEST',
-                relatedData: {
-                    studentId: studentId,
-                    teamMembers: teamMembers,
-                    instructorId: instructorId,
-                    timestamp: new Date()
+        // Update each member's projectMembers to include the leader
+        await Student.updateMany(
+            { _id: { $in: teamMembers } },
+            { 
+                $addToSet: { 
+                    projectMembers: leaderId,
+                    instructorId: instructorId 
                 }
-            });
-        }));
-
-        // Create notification for requesting student
-        const studentNotification = new Notification({
-            recipient: studentId,
-            recipientModel: 'Student',
-            message: 'Your team request is pending instructor approval',
-            type: 'TEAM_REQUEST',
-            relatedData: {
-                studentId: studentId,
-                teamMembers: teamMembers,
-                instructorId: instructorId,
-                timestamp: new Date()
             }
-        });
+        );
 
-        // Save all notifications
-        await Promise.all([
-            instructorNotification.save(),
-            ...teamMemberNotifications.map(notification => notification.save()),
-            studentNotification.save()
-        ]);
-
-        console.log('Team request created with notifications for all members');
-
-        res.status(201).json({ 
-            message: 'Team request sent successfully',
-            notifications: {
-                instructor: instructorNotification,
-                teamMembers: teamMemberNotifications,
-                requestingStudent: studentNotification
-            }
-        });
-
+        // Rest of your team creation logic...
     } catch (error) {
-        console.error('Error creating team notifications:', error);
-        res.status(500).json({ 
-            message: 'Error creating team notifications',
-            error: error.message 
-        });
+        console.error('Error creating team:', error);
+        res.status(500).json({ message: 'Error creating team' });
     }
 });
 
@@ -627,84 +594,67 @@ studentRoutes.put('/notifications/:id/mark-read', authenticateToken, async (req,
 studentRoutes.get('/check-team-status', authenticateToken, async (req, res) => {
     try {
         const studentId = req.user.userId;
-        const student = await Student.findById(studentId).populate('managedBy');
         
-        // Find the most recent team request/response
-        const latestRequest = await Notification.findOne({
-            $or: [
-                { recipient: studentId, type: { $in: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE'] }},
-                { 'relatedData.teamMembers': studentId, type: { $in: ['TEAM_REQUEST', 'TEAM_REQUEST_RESPONSE'] }}
-            ]
-        }).sort({ timestamp: -1 })
-        .populate('relatedData.studentId')
-        .populate('relatedData.teamMembers');
+        const student = await Student.findById(studentId)
+            .populate('projectMembers')
+            .populate('managedBy')
+            .populate('instructorId');
 
-        if (student.managedBy) {
-            // Student has an approved team
-            const research = await Research.findOne({
-                $or: [
-                    { mongoId: studentId },
-                    { teamMembers: studentId }
-                ]
-            }).populate('mongoId')
-             .populate('teamMembers');
+        console.log('Student found:', student);
 
-            if (research) {
-                const teamLeader = await Student.findById(research.mongoId);
-                let allTeamMembers = [teamLeader.name];
-                if (research.teamMembers && research.teamMembers.length > 0) {
-                    const otherMembers = research.teamMembers
-                        .filter(member => member._id.toString() !== teamLeader._id.toString())
-                        .map(member => member.name);
-                    allTeamMembers = [...allTeamMembers, ...otherMembers];
-                }
-
-                return res.json({
-                    hasApprovedTeam: true,
-                    hasPendingRequest: false,
-                    instructor: student.managedBy.name,
-                    section: student.section,
-                    teamMembers: allTeamMembers
-                });
-            }
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
         }
 
-        // Check for pending request
-        if (latestRequest && latestRequest.type === 'TEAM_REQUEST' && latestRequest.status === 'UNREAD') {
-            return res.json({
-                hasApprovedTeam: false,
-                hasPendingRequest: true
-            });
+        // Initialize arrays if they don't exist
+        if (!student.projectMembers) {
+            student.projectMembers = [];
+            await student.save();
         }
 
-        // If no team setup found, return default state
-        return res.json({
-            hasApprovedTeam: false,
+        const teamMembers = student.projectMembers.map(member => member.name);
+        if (!teamMembers.includes(student.name)) {
+            teamMembers.unshift(student.name);
+        }
+
+        console.log('Team members:', teamMembers);
+
+        res.json({
+            hasApprovedTeam: Boolean(student.managedBy),
             hasPendingRequest: false,
-            wasRejected: false
+            instructor: student.managedBy?.name || null,
+            section: student.section,
+            teamMembers: teamMembers
         });
 
     } catch (error) {
         console.error('Error checking team status:', error);
-        res.status(500).json({ 
-            message: 'Error checking team status',
-            error: error.message 
-        });
+        res.status(500).json({ message: 'Error checking team status' });
     }
 });
 
 // Get only available students (not in any team)
 studentRoutes.get('/available-students', authenticateToken, async (req, res) => {
     try {
-        const currentUserId = req.user.userId;
- 
+        const studentId = req.user.userId;
+        
+        // Find students who:
+        // 1. Are not the current user
+        // 2. Have no projectMembers (no group)
+        // 3. Are not archived
+        // 4. Have no managedBy (no instructor assigned)
         const availableStudents = await Student.find({
-            $and: [
-                { managedBy: null },  // Not in a team
-                { _id: { $ne: currentUserId } },  // Not the current user
-                { archived: false }  // Not archived
-            ]
-        }).select('name studentId email');
+            _id: { $ne: studentId },
+            $or: [
+                { projectMembers: { $exists: false } },
+                { projectMembers: { $size: 0 } },
+                { projectMembers: null }
+            ],
+            managedBy: null,
+            archived: { $ne: true }
+        }).select('name studentId');
+
+        console.log('Available students found:', availableStudents.length); // Debug log
 
         res.json(availableStudents);
     } catch (error) {
@@ -912,6 +862,154 @@ studentRoutes.post('/bookmark/:researchId', authenticateToken, async (req, res) 
             message: 'Error toggling bookmark'
         });
     }
+});
+
+studentRoutes.post('/remove-team-member', authenticateToken, async (req, res) => {
+  try {
+    const leaderId = req.user.userId;
+    const { memberToRemove } = req.body;
+
+    console.log('Starting removal process:', { leaderId, memberToRemove });
+
+    // Find the leader
+    const leader = await Student.findById(leaderId);
+    if (!leader) {
+      return res.status(404).json({ message: 'Leader not found' });
+    }
+    console.log('Leader found:', leader.name);
+
+    // Find the member to remove
+    const memberDoc = await Student.findOne({ name: memberToRemove });
+    if (!memberDoc) {
+      return res.status(404).json({ message: 'Member not found' });
+    }
+    console.log('Member found:', memberDoc.name);
+
+    // Initialize projectMembers array if it doesn't exist
+    if (!leader.projectMembers) {
+      leader.projectMembers = [];
+    }
+
+    // Remove member from leader's projectMembers
+    leader.projectMembers = leader.projectMembers.filter(
+      memberId => memberId.toString() !== memberDoc._id.toString()
+    );
+    await leader.save();
+    console.log('Updated leader projectMembers:', leader.projectMembers);
+
+    // Remove leader from member's projectMembers
+    if (!memberDoc.projectMembers) {
+      memberDoc.projectMembers = [];
+    }
+    memberDoc.projectMembers = memberDoc.projectMembers.filter(
+      id => id.toString() !== leader._id.toString()
+    );
+    memberDoc.instructorId = null;
+    memberDoc.managedBy = null;
+    await memberDoc.save();
+    console.log('Updated member projectMembers:', memberDoc.projectMembers);
+
+    // Update Research document if it exists
+    await Research.updateOne(
+      { mongoId: leaderId },
+      { $pull: { teamMembers: memberDoc._id } }
+    );
+
+    // Fetch updated team data
+    const updatedLeader = await Student.findById(leaderId)
+      .populate('projectMembers')
+      .populate('managedBy');
+
+    const updatedTeamMembers = updatedLeader.projectMembers.map(member => member.name);
+    if (!updatedTeamMembers.includes(updatedLeader.name)) {
+      updatedTeamMembers.unshift(updatedLeader.name);
+    }
+
+    res.json({
+      success: true,
+      message: 'Team member removed successfully',
+      teamMembers: updatedTeamMembers
+    });
+
+  } catch (error) {
+    console.error('Error removing member:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error removing team member',
+      error: error.message
+    });
+  }
+});
+
+// Add member route
+studentRoutes.post('/add-team-member', authenticateToken, async (req, res) => {
+  try {
+    const leaderId = req.user.userId;
+    const { newMemberId } = req.body;
+
+    // Find the leader and their current team
+    const leader = await Student.findById(leaderId)
+      .populate('managedBy')
+      .populate('instructorId');
+    
+    if (!leader) {
+      return res.status(404).json({ message: 'Leader not found' });
+    }
+
+    // Find the new member
+    const newMember = await Student.findById(newMemberId);
+    if (!newMember) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    // Check if team size is within limits
+    if (leader.projectMembers && leader.projectMembers.length >= 4) {
+      return res.status(400).json({ message: 'Maximum team size reached' });
+    }
+
+    // Initialize projectMembers array if it doesn't exist
+    if (!leader.projectMembers) {
+      leader.projectMembers = [];
+    }
+
+    // Add member to leader's projectMembers if not already there
+    if (!leader.projectMembers.includes(newMemberId)) {
+      leader.projectMembers.push(newMemberId);
+      await leader.save();
+    }
+
+    // Update the new member
+    await Student.findByIdAndUpdate(newMemberId, {
+      $addToSet: { projectMembers: leaderId },
+      instructorId: leader.instructorId,
+      managedBy: leader.managedBy
+    });
+
+    // Update Research document if it exists
+    await Research.updateOne(
+      { mongoId: leaderId },
+      { $addToSet: { teamMembers: newMemberId } }
+    );
+
+    // Get updated team data
+    const updatedLeader = await Student.findById(leaderId)
+      .populate('projectMembers')
+      .populate('managedBy');
+
+    res.json({
+      success: true,
+      message: 'Team member added successfully',
+      teamMembers: updatedLeader.projectMembers.map(member => member.name)
+    });
+
+  } catch (error) {
+    console.error('Error adding team member:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error adding team member',
+      error: error.message
+    });
+  }
 });
 
 export default studentRoutes;
