@@ -9,6 +9,18 @@ import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
 import io from 'socket.io-client';
 import { useEditMode } from '../Admin/resources/EditModeContext';
+import { 
+  FaUserGraduate, 
+  FaChalkboardTeacher, 
+  FaUserShield, 
+  FaUsers, 
+  FaArchive
+} from 'react-icons/fa';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Doughnut } from 'react-chartjs-2';
+
+// Register ChartJS components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const SuperAdminAccounts = () => {
   const navigate = useNavigate();
@@ -38,6 +50,33 @@ const SuperAdminAccounts = () => {
 
   const [isLoadingRestore, setIsLoadingRestore] = useState(false);
   const [isLoadingArchive, setIsLoadingArchive] = useState(false);
+
+  // Add these chart data configurations
+  const userDistributionData = {
+    labels: ['Students', 'Instructors'],
+    datasets: [{
+      data: [
+        students.filter(s => !s.archived).length,
+        instructors.filter(i => !i.archived).length
+      ],
+      backgroundColor: ['#4CAF50', '#2196F3'],
+      borderColor: ['#388E3C', '#1976D2'],
+      borderWidth: 1
+    }]
+  };
+
+  const accountStatusData = {
+    labels: ['Active', 'Archived'],
+    datasets: [{
+      data: [
+        students.filter(s => !s.archived).length + instructors.filter(i => !i.archived).length,
+        students.filter(s => s.archived).length + instructors.filter(i => i.archived).length
+      ],
+      backgroundColor: ['#4CAF50', '#FF5722'],
+      borderColor: ['#388E3C', '#D84315'],
+      borderWidth: 1
+    }]
+  };
 
   useEffect(() => {
     const token = getToken();
@@ -306,14 +345,128 @@ const SuperAdminAccounts = () => {
       <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
         <Header userName={userName} />
-        <main className="main-content">
+        <main className="main-content p-4">
           {showAlert && (
             <div className={`alert alert-${alertType} alert-dismissible fade show`} role="alert">
               {alertMessage}
               <button type="button" className="btn-close" onClick={() => setShowAlert(false)} aria-label="Close"></button>
             </div>
           )}
-          <h4 className="my-3">USER ACCOUNTS MANAGEMENT</h4>
+
+          <div className="row g-4 mb-4">
+            <div className="col-md-3">
+              <div className="card h-100 border-0 shadow-sm">
+                <div className="card-body d-flex align-items-center">
+                  <div className="rounded-circle p-3 bg-success bg-opacity-10 me-3">
+                    <FaUserGraduate size={30} className="text-success" />
+                  </div>
+                  <div>
+                    <h6 className="card-title text-muted mb-0">Students</h6>
+                    <h2 className="mt-2 mb-0">
+                      {students.filter(s => !s.archived).length}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-3">
+              <div className="card h-100 border-0 shadow-sm">
+                <div className="card-body d-flex align-items-center">
+                  <div className="rounded-circle p-3 bg-primary bg-opacity-10 me-3">
+                    <FaChalkboardTeacher size={30} className="text-primary" />
+                  </div>
+                  <div>
+                    <h6 className="card-title text-muted mb-0">Instructors</h6>
+                    <h2 className="mt-2 mb-0">
+                      {instructors.filter(i => !i.archived).length}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-3">
+              <div className="card h-100 border-0 shadow-sm">
+                <div className="card-body d-flex align-items-center">
+                  <div className="rounded-circle p-3 bg-warning bg-opacity-10 me-3">
+                    <FaArchive size={30} className="text-warning" />
+                  </div>
+                  <div>
+                    <h6 className="card-title text-muted mb-0">Archived</h6>
+                    <h2 className="mt-2 mb-0">
+                      {students.filter(s => s.archived).length + 
+                       instructors.filter(i => i.archived).length}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-3">
+              <div className="card h-100 border-0 shadow-sm">
+                <div className="card-body d-flex align-items-center">
+                  <div className="rounded-circle p-3 bg-info bg-opacity-10 me-3">
+                    <FaUsers size={30} className="text-info" />
+                  </div>
+                  <div>
+                    <h6 className="card-title text-muted mb-0">Total Users</h6>
+                    <h2 className="mt-2 mb-0">
+                      {students.length + instructors.length}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="row g-4 mb-4">
+            <div className="col-md-6">
+              <div className="card border-0 shadow-sm">
+                <div className="card-body">
+                  <h6 className="card-title mb-4">User Distribution</h6>
+                  <div style={{ height: '300px' }}>
+                    <Doughnut 
+                      data={userDistributionData}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            position: 'bottom'
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-6">
+              <div className="card border-0 shadow-sm">
+                <div className="card-body">
+                  <h6 className="card-title mb-4">Account Status Distribution</h6>
+                  <div style={{ height: '300px' }}>
+                    <Doughnut 
+                      data={accountStatusData}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            position: 'bottom'
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h4 className="my-4">USER ACCOUNTS MANAGEMENT</h4>
           <div className="d-flex justify-content-between align-items-center mb-3">
             <button 
               className={`btn ${isEditMode ? 'btn-danger' : 'btn-success'}`}

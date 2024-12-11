@@ -18,7 +18,7 @@
     "@fullcalendar/timegrid": "^6.1.15",
     "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
-    "chart.js": "^4.4.6",
+    "chart.js": "^4.4.7",
     "data-fns": "^1.1.0",
     "date-fns": "^4.1.0",
     "firebase": "^11.0.1",
