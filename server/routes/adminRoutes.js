@@ -365,20 +365,12 @@ adminRoutes.put('/adviser-requests/:id/status', authenticateToken, async (req, r
 
 adminRoutes.get('/user-counts', authenticateToken, async (req, res) => {
   try {
-    const studentCount = await Student.countDocuments({ archived: false });
-    const instructorCount = await Instructor.countDocuments({ 
-      archived: false,
-      role: 'instructor'
-    });
-    const adviserCount = await Instructor.countDocuments({
-      archived: false,
-      role: { $in: ['adviser'] }
-    });
+    const studentCount = await Student.countDocuments();
+    const instructorCount = await Instructor.countDocuments();
 
-    res.status(200).json({
+    res.json({
       students: studentCount,
-      instructors: instructorCount,
-      advisers: adviserCount
+      instructors: instructorCount
     });
   } catch (error) {
     console.error('Error fetching user counts:', error);
