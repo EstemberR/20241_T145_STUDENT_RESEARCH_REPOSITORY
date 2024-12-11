@@ -371,13 +371,15 @@ const InstructorStudents = () => {
               <div className="modal-body">
                 <div className="row">
                   <div className="col-md-4 text-center mb-3">
-                    <img
-                      src="https://via.placeholder.com/150"
-                      alt="Student"
-                      className="rounded-circle mb-3"
-                      style={{ width: '150px', height: '150px' }}
-                    />
-                    <h4>{selectedStudent.name}</h4>
+                    <div className="d-flex flex-column align-items-center">
+                      <img
+                        src="https://via.placeholder.com/150"
+                        alt="Student"
+                        className="rounded-circle mb-3"
+                        style={{ width: '150px', height: '150px' }}
+                      />
+                      <h4>{selectedStudent.name}</h4>
+                    </div>
                     <p className="text-muted">{selectedStudent.studentId}</p>
                   </div>
                   <div className="col-md-8">

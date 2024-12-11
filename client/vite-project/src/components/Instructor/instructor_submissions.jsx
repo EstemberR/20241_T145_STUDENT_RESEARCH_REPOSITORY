@@ -447,27 +447,27 @@ const InstructorSubmissions = () => {
                         </div>
                     </div>
                     <div className="row mb-3">
-                        <div className="col-12">
-                            <p><strong>Research Paper:</strong></p>
-                            {selectedResearch.driveFileId ? (
-                                <div className="d-flex align-items-center">
-                                    <i className="fas fa-file-pdf text-danger me-2"></i>
-                                    <span className="me-2">research.pdf</span>
-                                    <a 
-                                        href={`https://drive.google.com/file/d/${selectedResearch.driveFileId}/view`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="btn btn-sm btn-primary"
-                                    >
-                                        <i className="fas fa-external-link-alt me-1"></i>
-                                        Open File
-                                    </a>
-                                </div>
-                            ) : (
-                                <p className="text-muted">No PDF file available</p>
-                            )} 
-                        </div>
+                    <div className="col-12">
+                        <p><strong>Research Paper:</strong></p>
+                        {selectedResearch.driveFileId ? (
+                            <div className="d-flex align-items-center">
+                                <i className="fas fa-file-pdf text-danger me-2"></i>
+                                <span className="me-2">{selectedResearch.fileName || 'research.pdf'}</span> {/* Use the actual file name */}
+                                <a 
+                                    href={`https://drive.google.com/file/d/${selectedResearch.driveFileId}/view`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-sm btn-primary"
+                                >
+                                    <i className="fas fa-external-link-alt me-1"></i>
+                                    Open File
+                                </a>
+                            </div>
+                        ) : (
+                            <p className="text-muted">No PDF file available</p>
+                        )} 
                     </div>
+                </div>
                     {selectedResearch.status === 'Pending' && (
                         <div className="mt-4 border-top pt-3">
                             <h6 className="mb-3">Update Status</h6>
