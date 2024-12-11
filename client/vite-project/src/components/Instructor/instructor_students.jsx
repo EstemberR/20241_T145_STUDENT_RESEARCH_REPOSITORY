@@ -41,7 +41,7 @@ const InstructorStudents = () => {
     setTimeout(() => setAlert({ show: false, message: '', type: '' }), 3000);
   };
 
-  // Move fetchUserAndStudents outside useEffect so it can be reused
+  // Update fetchUserAndStudents to use profile data from the student object
   const fetchUserAndStudents = async () => {
     try {
       const token = getToken();
@@ -53,46 +53,50 @@ const InstructorStudents = () => {
         return;
       }
 
-      // Fetch user role
-      const profileResponse = await fetch('http://localhost:8000/instructor/profile', {
+      const response = await fetch('http://localhost:8000/instructor/students', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const profileData = await profileResponse.json();
-      setUserRole(profileData.role);
 
-      // Fetch students with their team information
-      const studentsResponse = await fetch('http://localhost:8000/instructor/students', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const studentsData = await studentsResponse.json();
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Student data:', data); // Let's see what data we get
+        const groupedStudents = {};
 
-      // Group students by team
-      const groupedStudents = {};
-      for (const student of studentsData) {
-        if (student.managedBy) {
+        for (const student of data) {
           const research = await fetch(`http://localhost:8000/instructor/research/${student._id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const researchData = await research.json();
           
           if (researchData) {
-            const teamId = researchData.mongoId; // Team leader's ID
+            const teamId = researchData.mongoId;
+            
             if (!groupedStudents[teamId]) {
               groupedStudents[teamId] = {
-                teamLeader: student,
+                teamLeader: { 
+                  ...student,
+                  // Use the profile picture from student data if available
+                  profilePicture: student.photoURL || student.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+                },
                 members: [],
                 section: student.section
               };
             }
             if (student._id === researchData.mongoId) {
-              groupedStudents[teamId].teamLeader = student;
+              groupedStudents[teamId].teamLeader = { 
+                ...student,
+                profilePicture: student.photoURL || student.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+              };
             } else {
-              groupedStudents[teamId].members.push(student);
+              groupedStudents[teamId].members.push({ 
+                ...student,
+                profilePicture: student.photoURL || student.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+              });
             }
           }
         }
+        setStudents(groupedStudents);
       }
-      setStudents(groupedStudents);
     } catch (error) {
       console.error('Error fetching data:', error);
       showAlert('Error fetching data', 'danger');
@@ -156,6 +160,7 @@ const InstructorStudents = () => {
     }
   };
 
+  // Update handleViewStudent to fetch profile picture
   const handleViewStudent = async (student) => {
     try {
       const token = getToken();
@@ -253,6 +258,27 @@ const InstructorStudents = () => {
                     <div className="col-md-4 mb-3">
                       <div className="card h-100 border-primary">
                         <div className="card-body">
+                          <div className="text-center mb-3">
+                            {team.teamLeader.profilePicture ? (
+                              <img
+                                src={team.teamLeader.profilePicture}
+                                alt={team.teamLeader.name}
+                                className="rounded-circle shadow"
+                                style={{ 
+                                  width: '80px', 
+                                  height: '80px',
+                                  border: '3px solid #fff',
+                                  objectFit: 'cover'
+                                }}
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+                                }}
+                              />
+                            ) : (
+                              <i className="fas fa-user-circle fa-4x"></i>
+                            )}
+                          </div>
                           <h6 className="card-title">
                             {team.teamLeader.name}
                             <span className="badge bg-primary ms-2">Team Leader</span>
@@ -278,6 +304,23 @@ const InstructorStudents = () => {
                       <div key={member._id} className="col-md-4 mb-3">
                         <div className="card h-100 border-success">
                           <div className="card-body">
+                            <div className="text-center mb-3">
+                              <img
+                                src={member.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'}
+                                alt={`${member.name || 'Student'}'s profile`}
+                                className="rounded-circle shadow"
+                                style={{ 
+                                  width: '80px', 
+                                  height: '80px',
+                                  border: '3px solid #fff',
+                                  objectFit: 'cover'
+                                }}
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+                                }}
+                              />
+                            </div>
                             <h6 className="card-title">{member.name}</h6>
                             <p className="card-text">
                               <strong>Student ID:</strong> {member.studentId}<br />
@@ -373,10 +416,10 @@ const InstructorStudents = () => {
                   <div className="col-md-4 text-center mb-3">
                     <div className="d-flex flex-column align-items-center">
                       <img
-                        src="https://via.placeholder.com/150"
-                        alt="Student"
+                        src={selectedStudent.profilePicture}
+                        alt={selectedStudent.name}
                         className="rounded-circle mb-3"
-                        style={{ width: '150px', height: '150px' }}
+                        style={{ width: '150px', height: '150px', objectFit: 'cover' }}
                       />
                       <h4>{selectedStudent.name}</h4>
                     </div>
