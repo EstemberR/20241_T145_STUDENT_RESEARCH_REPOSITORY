@@ -88,7 +88,7 @@ adminRoutes.post('/login', async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
-
+        
         res.status(200).json({
             success: true,
             token,
@@ -363,18 +363,121 @@ adminRoutes.put('/adviser-requests/:id/status', authenticateToken, async (req, r
   }
 });
 
+// Add these updated endpoints to your adminRoutes.js
+
+// Get user counts and stats
 adminRoutes.get('/user-counts', authenticateToken, async (req, res) => {
   try {
-    const studentCount = await Student.countDocuments();
-    const instructorCount = await Instructor.countDocuments();
+    // Get basic counts
+    const students = await Student.countDocuments();
+    const instructors = await Instructor.countDocuments();
+    const totalUsers = students + instructors;
+
+    console.log('User counts:', { students, instructors, totalUsers }); // Debug log
 
     res.json({
-      students: studentCount,
-      instructors: instructorCount
+      success: true,
+      students,
+      instructors,
+      totalUsers,
+      activeUsers: totalUsers // For now, assuming all users are active
     });
+
   } catch (error) {
     console.error('Error fetching user counts:', error);
-    res.status(500).json({ message: 'Error fetching user counts' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching user counts',
+      error: error.message 
+    });
+  }
+});
+
+// Get research stats
+adminRoutes.get('/activity-stats', authenticateToken, async (req, res) => {
+  try {
+    // Get research counts by status
+    const totalSubmissions = await Research.countDocuments();
+    const pendingSubmissions = await Research.countDocuments({ status: 'Pending' });
+    const approvedSubmissions = await Research.countDocuments({ status: 'Accepted' });
+    const rejectedSubmissions = await Research.countDocuments({ status: 'Rejected' });
+
+    console.log('Research stats:', { 
+      totalSubmissions, 
+      pendingSubmissions, 
+      approvedSubmissions, 
+      rejectedSubmissions 
+    }); // Debug log
+
+    res.json({
+      success: true,
+      totalSubmissions,
+      pendingSubmissions,
+      approvedSubmissions,
+      rejectedSubmissions
+    });
+
+  } catch (error) {
+    console.error('Error fetching activity stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching activity statistics',
+      error: error.message 
+    });
+  }
+});
+
+// Get recent activities and counts
+adminRoutes.get('/recent-activities', authenticateToken, async (req, res) => {
+  try {
+    // Get recent submissions
+    const recentSubmissions = await Research.find()
+      .sort({ uploadDate: -1 })
+      .limit(5)
+      .populate('mongoId', 'name')
+      .select('title uploadDate status mongoId');
+
+    // Get total counts
+    const [totalSubmissions, pendingSubmissions, acceptedSubmissions, rejectedSubmissions] = 
+    await Promise.all([
+      Research.countDocuments(),
+      Research.countDocuments({ status: 'Pending' }),
+      Research.countDocuments({ status: 'Accepted' }),
+      Research.countDocuments({ status: 'Rejected' })
+    ]);
+
+    console.log('Submission counts:', {
+      total: totalSubmissions,
+      pending: pendingSubmissions,
+      accepted: acceptedSubmissions,
+      rejected: rejectedSubmissions
+    });
+
+    // Format activities
+    const activities = recentSubmissions.map(submission => ({
+      type: 'submission',
+      description: `Research "${submission.title}" submitted by ${submission.mongoId?.name || 'Unknown'}`,
+      timestamp: submission.uploadDate,
+      status: submission.status
+    }));
+
+    res.json({
+      success: true,
+      activities,
+      counts: {
+        total: totalSubmissions,
+        pending: pendingSubmissions,
+        accepted: acceptedSubmissions,
+        rejected: rejectedSubmissions
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching recent activities:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching recent activities' 
+    });
   }
 });
 
@@ -854,6 +957,436 @@ adminRoutes.put('/admins/:id/permissions', authenticateToken, async (req, res) =
     res.status(500).json({
       success: false,
       message: 'Error updating permissions'
+    });
+  }
+});
+
+// Get activity stats
+adminRoutes.get('/activity-stats', authenticateToken, async (req, res) => {
+  try {
+    // Get research submission stats
+    const totalSubmissions = await Research.countDocuments();
+    const pendingSubmissions = await Research.countDocuments({ status: 'Pending' });
+    const approvedSubmissions = await Research.countDocuments({ status: 'Accepted' });
+    const rejectedSubmissions = await Research.countDocuments({ status: 'Rejected' });
+
+    res.json({
+      success: true,
+      totalSubmissions,
+      pendingSubmissions,
+      approvedSubmissions,
+      rejectedSubmissions
+    });
+  } catch (error) {
+    console.error('Error fetching activity stats:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching activity statistics' 
+    });
+  }
+});
+
+// Get recent activities
+adminRoutes.get('/recent-activities', authenticateToken, async (req, res) => {
+  try {
+    // Get recent research submissions
+    const recentSubmissions = await Research.find()
+      .sort({ uploadDate: -1 })
+      .limit(5)
+      .populate('mongoId', 'name')
+      .select('title status uploadDate mongoId');
+
+    // Get recent adviser requests
+    const recentRequests = await AdviserRequest.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('instructor', 'name')
+      .select('status createdAt instructor');
+
+    // Combine and format activities
+    const activities = [
+      ...recentSubmissions.map(submission => ({
+        type: 'submission',
+        description: `Research "${submission.title}" submitted by ${submission.mongoId?.name || 'Unknown'}`,
+        timestamp: submission.uploadDate,
+        status: submission.status
+      })),
+      ...recentRequests.map(request => ({
+        type: 'adviser_request',
+        description: `Adviser request from ${request.instructor?.name || 'Unknown'}`,
+        timestamp: request.createdAt,
+        status: request.status
+      }))
+    ];
+
+    // Sort by timestamp
+    activities.sort((a, b) => b.timestamp - a.timestamp);
+
+    res.json({
+      success: true,
+      activities: activities.slice(0, 10) // Get most recent 10 activities
+    });
+
+  } catch (error) {
+    console.error('Error fetching recent activities:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching recent activities' 
+    });
+  }
+});
+
+// Add these new endpoints
+
+// Get research status trends
+adminRoutes.get('/research-status-trends', authenticateToken, async (req, res) => {
+  try {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+
+    // Generate array of last 6 months
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const last6Months = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - (5 - i));
+      return {
+        month: date.getMonth(),
+        year: date.getFullYear(),
+        label: `${months[date.getMonth()]} ${date.getFullYear()}`
+      };
+    });
+
+    // Get monthly submission counts by status
+    const trends = await Research.aggregate([
+      {
+        $match: {
+          uploadDate: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: "$uploadDate" },
+            year: { $year: "$uploadDate" },
+            status: "$status"
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Format data for Chart.js
+    const formattedData = {
+      labels: last6Months.map(m => m.label),
+      datasets: [
+        {
+          label: 'Pending',
+          data: last6Months.map(monthData => {
+            const found = trends.find(
+              trend => 
+                trend._id.month === monthData.month + 1 && 
+                trend._id.year === monthData.year &&
+                trend._id.status === 'Pending'
+            );
+            return found ? found.count : 0;
+          }),
+          borderColor: 'rgb(255, 206, 86)', // Yellow
+          backgroundColor: 'rgba(255, 206, 86, 0.2)',
+          tension: 0.1
+        },
+        {
+          label: 'Approved',
+          data: last6Months.map(monthData => {
+            const found = trends.find(
+              trend => 
+                trend._id.month === monthData.month + 1 && 
+                trend._id.year === monthData.year &&
+                (trend._id.status === 'Approved' || trend._id.status === 'Accepted')
+            );
+            return found ? found.count : 0;
+          }),
+          borderColor: 'rgb(75, 192, 192)', // Green
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          tension: 0.1
+        },
+        {
+          label: 'Rejected',
+          data: last6Months.map(monthData => {
+            const found = trends.find(
+              trend => 
+                trend._id.month === monthData.month + 1 && 
+                trend._id.year === monthData.year &&
+                trend._id.status === 'Rejected'
+            );
+            return found ? found.count : 0;
+          }),
+          borderColor: 'rgb(255, 99, 132)', // Red
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          tension: 0.1
+        }
+      ]
+    };
+
+    console.log('Sending trend data:', formattedData);
+
+    res.json({
+      success: true,
+      data: formattedData
+    });
+
+  } catch (error) {
+    console.error('Error fetching research trends:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching research trends'
+    });
+  }
+});
+
+// Get submission trends
+adminRoutes.get('/submission-trends', authenticateToken, async (req, res) => {
+  try {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+
+    const trends = await Research.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: "$createdAt" },
+            year: { $year: "$createdAt" }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: {
+          "_id.year": 1,
+          "_id.month": 1
+        }
+      }
+    ]);
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // If no data, provide sample data for the last 6 months
+    if (trends.length === 0) {
+      const sampleData = Array.from({ length: 6 }, (_, i) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - (5 - i));
+        return {
+          month: `${months[date.getMonth()]} ${date.getFullYear()}`,
+          count: 0
+        };
+      });
+
+      return res.json({
+        success: true,
+        data: sampleData
+      });
+    }
+
+    const formattedData = trends.map(item => ({
+      month: `${months[item._id.month - 1]} ${item._id.year}`,
+      count: item.count
+    }));
+
+    res.json({
+      success: true,
+      data: formattedData
+    });
+
+  } catch (error) {
+    console.error('Error fetching submission trends:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching submission trends'
+    });
+  }
+});
+
+// Get research statistics
+adminRoutes.get('/research-stats', authenticateToken, async (req, res) => {
+  try {
+    // Get counts
+    const total = await Research.countDocuments();
+    const pending = await Research.countDocuments({ status: 'Pending' });
+    const accepted = await Research.countDocuments({ status: 'Accepted' });
+    const rejected = await Research.countDocuments({ status: 'Rejected' });
+
+    console.log('Sending stats:', { total, pending, accepted, rejected }); // Debug log
+
+    res.json({
+      success: true,
+      total,
+      pending,
+      accepted,
+      rejected
+    });
+
+  } catch (error) {
+    console.error('Error getting research stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch research statistics'
+    });
+  }
+});
+
+// Get user trends
+adminRoutes.get('/user-trends', authenticateToken, async (req, res) => {
+  try {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+
+    // Generate array of last 6 months
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const last6Months = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - (5 - i));
+      return {
+        month: date.getMonth(),
+        year: date.getFullYear(),
+        label: `${months[date.getMonth()]} ${date.getFullYear()}`
+      };
+    });
+
+    // Get student registration trends
+    const studentTrends = await Student.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: "$createdAt" },
+            year: { $year: "$createdAt" }
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Get instructor registration trends
+    const instructorTrends = await Instructor.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: "$createdAt" },
+            year: { $year: "$createdAt" }
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Format data for Chart.js
+    const formattedData = {
+      labels: last6Months.map(m => m.label),
+      datasets: [
+        {
+          label: 'Student Registrations',
+          data: last6Months.map(monthData => {
+            const found = studentTrends.find(
+              trend => 
+                trend._id.month === monthData.month + 1 && 
+                trend._id.year === monthData.year
+            );
+            return found ? found.count : 0;
+          }),
+          borderColor: 'rgb(75, 192, 192)', // Green
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          tension: 0.1
+        },
+        {
+          label: 'Instructor Registrations',
+          data: last6Months.map(monthData => {
+            const found = instructorTrends.find(
+              trend => 
+                trend._id.month === monthData.month + 1 && 
+                trend._id.year === monthData.year
+            );
+            return found ? found.count : 0;
+          }),
+          borderColor: 'rgb(255, 99, 132)', // Red
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          tension: 0.1
+        }
+      ]
+    };
+
+    console.log('Sending user trend data:', formattedData);
+
+    res.json({
+      success: true,
+      data: formattedData
+    });
+
+  } catch (error) {
+    console.error('Error fetching user trends:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching user trends'
+    });
+  }
+});
+
+// Get user distribution
+adminRoutes.get('/user-distribution', authenticateToken, async (req, res) => {
+  try {
+    // Get total counts
+    const [studentCount, instructorCount] = await Promise.all([
+      Student.countDocuments(),
+      Instructor.countDocuments()
+    ]);
+
+    // Format data for Pie chart
+    const formattedData = {
+      labels: ['Students', 'Instructors'],
+      datasets: [{
+        data: [studentCount, instructorCount],
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.8)',  // Green for students
+          'rgba(255, 99, 132, 0.8)'   // Red for instructors
+        ],
+        borderColor: [
+          'rgb(75, 192, 192)',
+          'rgb(255, 99, 132)'
+        ],
+        borderWidth: 1
+      }]
+    };
+
+    console.log('Sending user distribution data:', formattedData);
+
+    res.json({
+      success: true,
+      data: formattedData,
+      total: studentCount + instructorCount
+    });
+
+  } catch (error) {
+    console.error('Error fetching user distribution:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching user distribution'
     });
   }
 });

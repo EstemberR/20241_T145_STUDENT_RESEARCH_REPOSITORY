@@ -8,9 +8,10 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ArcElement
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Line, Pie } from 'react-chartjs-2';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
@@ -33,7 +34,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ArcElement
 );
 
 const AdminActivity = () => {
@@ -43,7 +45,9 @@ const AdminActivity = () => {
     students: 0,
     instructors: 0,
     activeUsers: 0,
-    totalUsers: 0
+    totalUsers: 0,
+    studentTrends: [],
+    instructorTrends: []
   });
   
   // Add activityStats state
@@ -60,6 +64,81 @@ const AdminActivity = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Replace the constant chartData with useState
+  const [chartData, setChartData] = useState({
+    labels: [],
+    datasets: [{
+      label: 'Research Submissions',
+      data: [],
+      borderColor: 'rgb(75, 192, 192)',
+      backgroundColor: 'rgba(75, 192, 192, 0.2)',
+      tension: 0.1
+    }]
+  });
+
+  // Update the chart data when userCounts changes
+  useEffect(() => {
+    setChartData(prevData => ({
+      ...prevData,
+      datasets: [
+        {
+          ...prevData.datasets[0],
+          data: userCounts.studentTrends || []
+        },
+        {
+          ...prevData.datasets[1],
+          data: userCounts.instructorTrends || []
+        }
+      ]
+    }));
+  }, [userCounts.studentTrends, userCounts.instructorTrends]);
+
+  // Add this new useEffect specifically for graph data
+  useEffect(() => {
+    const fetchGraphData = async () => {
+      try {
+        const token = getToken();
+        if (!token) {
+          navigate('/');
+          return;
+        }
+
+        const response = await fetch('http://localhost:8000/admin/submission-trends', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Graph error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Graph data:', data); // Debug log
+
+        if (data.success) {
+          const graphData = {
+            labels: data.data.map(item => item.month),
+            datasets: [{
+              label: 'Research Submissions',
+              data: data.data.map(item => item.count),
+              borderColor: 'rgb(75, 192, 192)',
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              tension: 0.1
+            }]
+          };
+
+          setChartData(graphData); // Make sure to add this state variable
+        }
+
+      } catch (error) {
+        console.error('Error fetching graph data:', error);
+      }
+    };
+
+    fetchGraphData();
+  }, [navigate]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -69,57 +148,85 @@ const AdminActivity = () => {
           return;
         }
 
-        // Fetch user counts
-        const response = await fetch('http://localhost:8000/admin/user-counts', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        try {
+          // Fetch user counts
+          const userCountsResponse = await fetch('http://localhost:8000/admin/user-counts', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch data');
+          if (!userCountsResponse.ok) {
+            throw new Error(`User counts error: ${userCountsResponse.status}`);
+          }
+
+          const userCountsData = await userCountsResponse.json();
+          const totalUsers = userCountsData.students + userCountsData.instructors;
+          
+          setUserCounts({
+            students: userCountsData.students || 0,
+            instructors: userCountsData.instructors || 0,
+            activeUsers: userCountsData.activeUsers || totalUsers,
+            totalUsers: totalUsers,
+            studentTrends: userCountsData.studentTrends || [],
+            instructorTrends: userCountsData.instructorTrends || []
+          });
+
+        } catch (error) {
+          console.error('Error fetching user counts:', error);
+          setError('Failed to load user counts');
+          return;
         }
 
-        const data = await response.json();
-        const totalUsers = data.students + data.instructors;
-        
-        setUserCounts({
-          students: data.students || 0,
-          instructors: data.instructors || 0,
-          activeUsers: totalUsers,
-          totalUsers: totalUsers
-        });
+        try {
+          // Fetch research submissions data
+          const submissionsResponse = await fetch('http://localhost:8000/admin/submission-trends', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
 
-        // Set some dummy data for activity stats
-        setActivityStats({
-          totalSubmissions: 25,
-          pendingSubmissions: 5,
-          approvedSubmissions: 15,
-          rejectedSubmissions: 5
-        });
-
-        // Set some dummy recent activity data
-        setRecentActivity([
-          {
-            type: 'submission',
-            description: 'New research paper submitted',
-            timestamp: new Date()
-          },
-          {
-            type: 'registration',
-            description: 'New student registered',
-            timestamp: new Date(Date.now() - 86400000) // 1 day ago
-          },
-          {
-            type: 'approval',
-            description: 'Research paper approved',
-            timestamp: new Date(Date.now() - 172800000) // 2 days ago
+          if (!submissionsResponse.ok) {
+            throw new Error(`Submissions error: ${submissionsResponse.status}`);
           }
-        ]);
+
+          const submissionsData = await submissionsResponse.json();
+          setActivityStats({
+            totalSubmissions: submissionsData.totalSubmissions,
+            pendingSubmissions: submissionsData.pendingSubmissions,
+            approvedSubmissions: submissionsData.approvedSubmissions,
+            rejectedSubmissions: submissionsData.rejectedSubmissions
+          });
+
+        } catch (error) {
+          console.error('Error fetching submissions:', error);
+          setError('Failed to load submission data');
+        }
+
+        try {
+          // Fetch recent activities
+          const recentActivityResponse = await fetch('http://localhost:8000/admin/recent-activities', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (!recentActivityResponse.ok) {
+            throw new Error(`Recent activities error: ${recentActivityResponse.status}`);
+          }
+
+          const recentActivityData = await recentActivityResponse.json();
+          setRecentActivity(recentActivityData.activities || []);
+
+        } catch (error) {
+          console.error('Error fetching recent activities:', error);
+          setError('Failed to load recent activities');
+          return;
+        }
 
       } catch (err) {
         console.error('Error:', err);
-        setError('Failed to load data');
+        setError(`Failed to load data: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -128,26 +235,150 @@ const AdminActivity = () => {
     fetchData();
   }, [navigate]);
 
-  // Sample data for the chart
-  const chartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Students',
-        data: [userCounts.students - 5, userCounts.students - 3, userCounts.students - 2, 
-               userCounts.students - 1, userCounts.students],
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1
-      },
-      {
-        label: 'Instructors',
-        data: [userCounts.instructors - 2, userCounts.instructors - 1, userCounts.instructors, 
-               userCounts.instructors, userCounts.instructors],
-        borderColor: 'rgb(255, 99, 132)',
-        tension: 0.1
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = getToken();
+        if (!token) {
+          navigate('/');
+          return;
+        }
+
+        // Changed from /research-counts to /research-stats
+        const statsResponse = await fetch('http://localhost:8000/admin/research-stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!statsResponse.ok) {
+          throw new Error(`Stats error: ${statsResponse.status}`);
+        }
+
+        const statsData = await statsResponse.json();
+        console.log('Stats data received:', statsData); // Debug log
+
+        if (statsData.success) {
+          setActivityStats({
+            totalSubmissions: statsData.total,
+            pendingSubmissions: statsData.pending,
+            approvedSubmissions: statsData.accepted,
+            rejectedSubmissions: statsData.rejected
+          });
+        }
+
+      } catch (error) {
+        console.error('Error fetching stats:', error);
       }
-    ]
-  };
+    };
+
+    fetchStats();
+  }, []);
+
+  const [researchTrendData, setResearchTrendData] = useState(null);
+
+  useEffect(() => {
+    const fetchResearchTrends = async () => {
+      try {
+        const token = getToken();
+        if (!token) {
+          navigate('/');
+          return;
+        }
+
+        const response = await fetch('http://localhost:8000/admin/research-status-trends', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Research trends error: ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (result.success) {
+          setResearchTrendData(result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching research trends:', error);
+      }
+    };
+
+    fetchResearchTrends();
+  }, [navigate]);
+
+  const [userTrendData, setUserTrendData] = useState(null);
+
+  useEffect(() => {
+    const fetchUserTrends = async () => {
+      try {
+        const token = getToken();
+        if (!token) {
+          navigate('/');
+          return;
+        }
+
+        console.log('Fetching user trends...'); // Debug log
+
+        const response = await fetch('http://localhost:8000/admin/user-trends', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`User trends error: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Raw user trend data:', result); // Debug log
+
+        if (result.success && result.data) {
+          console.log('Setting trend data:', result.data); // Debug log
+          setUserTrendData(result.data);
+        }
+
+      } catch (error) {
+        console.error('Error fetching user trends:', error);
+      }
+    };
+
+    fetchUserTrends();
+  }, [navigate]);
+
+  const [userDistribution, setUserDistribution] = useState(null);
+
+  useEffect(() => {
+    const fetchUserDistribution = async () => {
+      try {
+        const token = getToken();
+        if (!token) {
+          navigate('/');
+          return;
+        }
+
+        const response = await fetch('http://localhost:8000/admin/user-distribution', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`User distribution error: ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (result.success) {
+          setUserDistribution(result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching user distribution:', error);
+      }
+    };
+
+    fetchUserDistribution();
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -301,25 +532,74 @@ const AdminActivity = () => {
             </div>
           </div>
 
-          {/* User Trends Chart */}
+          {/* Research Trends Chart */}
           <div className="row mt-4">
-            <div className="col-12">
+            <div className="col-md-6 col-lg-4">
               <div className="card border-0 shadow-sm">
                 <div className="card-body">
-                  <h6 className="card-title mb-4">User Growth Trends</h6>
-                  <div style={{ height: '300px' }}>
-                    <Line 
-                      data={chartData}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                          y: {
-                            beginAtZero: true
+                  <h6 className="card-title mb-4">User Distribution</h6>
+                  <div style={{ height: '250px', display: 'flex', justifyContent: 'center' }}>
+                    {!userDistribution && <p>Loading user distribution...</p>}
+                    {userDistribution && (
+                      <div style={{ width: '100%', maxWidth: '300px' }}>
+                        <Pie
+                          data={userDistribution}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                              legend: {
+                                position: 'top',
+                              },
+                              tooltip: {
+                                callbacks: {
+                                  label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                  }
+                                }
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-6 col-lg-8">
+              <div className="card border-0 shadow-sm">
+                <div className="card-body">
+                  <h6 className="card-title mb-4">Research Submissions Over Time</h6>
+                  <div style={{ height: '250px' }}>
+                    {!researchTrendData && <p>Loading trends data...</p>}
+                    {researchTrendData && (
+                      <Line
+                        data={researchTrendData}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              ticks: {
+                                stepSize: 1,
+                                precision: 0
+                              }
+                            }
+                          },
+                          plugins: {
+                            legend: {
+                              position: 'top',
+                            }
                           }
-                        }
-                      }}
-                    />
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
