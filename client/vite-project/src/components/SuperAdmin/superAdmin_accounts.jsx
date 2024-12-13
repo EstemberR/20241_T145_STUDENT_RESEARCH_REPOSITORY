@@ -78,6 +78,13 @@ const SuperAdminAccounts = () => {
     }]
   };
 
+  // First, add a new state for the accounts modal
+  const [showAccountsModal, setShowAccountsModal] = useState(false);
+
+  // Add handler functions
+  const handleAccountsShow = () => setShowAccountsModal(true);
+  const handleAccountsClose = () => setShowAccountsModal(false);
+
   useEffect(() => {
     const token = getToken();
     if (!token) {
@@ -358,6 +365,23 @@ const SuperAdminAccounts = () => {
               <div className="card h-100 border-0 shadow-sm">
                 <div className="card-body d-flex align-items-center">
                   <div className="rounded-circle p-3 bg-success bg-opacity-10 me-3">
+                    <FaUsers className="text-success" />
+                  </div>
+                  <div>
+                    <h6 className="card-title text-muted mb-0">Total Users</h6>
+                    <h2 className="mt-2 mb-0">
+                      {students.filter(s => !s.archived).length + 
+                       instructors.filter(i => !i.archived).length}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-3">
+              <div className="card h-100 border-0 shadow-sm">
+                <div className="card-body d-flex align-items-center">
+                  <div className="rounded-circle p-3 bg-success bg-opacity-10 me-3">
                     <FaUserGraduate size={30} className="text-success" />
                   </div>
                   <div>
@@ -402,20 +426,19 @@ const SuperAdminAccounts = () => {
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="col-md-3">
-              <div className="card h-100 border-0 shadow-sm">
-                <div className="card-body d-flex align-items-center">
-                  <div className="rounded-circle p-3 bg-info bg-opacity-10 me-3">
-                    <FaUsers size={30} className="text-info" />
-                  </div>
-                  <div>
-                    <h6 className="card-title text-muted mb-0">Total Users</h6>
-                    <h2 className="mt-2 mb-0">
-                      {students.length + instructors.length}
-                    </h2>
-                  </div>
-                </div>
+          <div className="row mb-4">
+            <div className="col-12">
+              <div className="card-body py-2">
+                <button 
+                  className="btn btn-success w-20 py-2"
+                  onClick={handleAccountsShow}
+                  style={{ fontSize: '1rem' }}
+                >
+                  <FaUsers className="me-2" />
+                  Manage User Accounts
+                </button>
               </div>
             </div>
           </div>
@@ -466,218 +489,246 @@ const SuperAdminAccounts = () => {
             </div>
           </div>
 
-          <h4 className="my-4">USER ACCOUNTS MANAGEMENT</h4>
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <button 
-              className={`btn ${isEditMode ? 'btn-danger' : 'btn-success'}`}
-              onClick={toggleEditMode}
-              disabled={currentEditor && currentEditor !== userName}
+          {/* Create the Accounts Management Modal */}
+          {showAccountsModal && (
+            <div className="modal fade show" 
+              style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} 
+              tabIndex="-1"
             >
-              {isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
-            </button>
-            
-            {currentEditor && currentEditor !== userName && (
-              <div className="alert alert-warning mb-0 py-2">
-                {currentEditor} is currently editing
+              <div className="modal-dialog modal-xl modal-dialog-scrollable">
+                <div className="modal-content">
+                  <div className="modal-header" style={{ backgroundColor: '#4CAF50', color: 'white' }}>
+                    <h5 className="modal-title">User Accounts Management</h5>
+                    <button 
+                      type="button" 
+                      className="btn-close" 
+                      onClick={handleAccountsClose}
+                      style={{ filter: 'brightness(0) invert(1)' }}
+                    ></button>
+                  </div>
+                  <div className="modal-body">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <button 
+                        className={`btn ${isEditMode ? 'btn-danger' : 'btn-success'}`}
+                        onClick={toggleEditMode}
+                        disabled={currentEditor && currentEditor !== userName}
+                      >
+                        {isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+                      </button>
+                      
+                      {currentEditor && currentEditor !== userName && (
+                        <div className="alert alert-warning mb-0 py-2">
+                          {currentEditor} is currently editing
+                        </div>
+                      )}
+                    </div>
+
+                    <ul className="nav nav-tabs">
+                      <li className="nav-item">
+                        <button
+                          className={`nav-link ${activeTab === 'Students' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('Students')}
+                        >
+                          Students
+                        </button>
+                      </li>
+                      <li className="nav-item">
+                        <button
+                          className={`nav-link ${activeTab === 'Instructors' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('Instructors')}
+                        >
+                          Instructors
+                        </button>
+                      </li>
+                      <li className="nav-item">
+                        <button
+                          className={`nav-link ${activeTab === 'Archived' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('Archived')}
+                        >
+                          Archived
+                        </button>
+                      </li>
+                    </ul>
+
+                    {activeTab === 'Students' && (
+                      <table className="table table-striped table-bordered mt-3">
+                        <thead className="table-primary">
+                          <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {students
+                            .filter(student => !student.archived)
+                            .map((student) => (
+                              <tr key={student._id}>
+                                <td>{student.studentId}</td>
+                                <td>{student.name}</td>
+                                <td>{student.role}</td>
+                                <td>{student.email}</td>
+                                <td>
+                                  <span className="badge bg-success">
+                                    Active
+                                  </span>
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn btn-success btn-sm me-2"
+                                    onClick={() => handleViewClick(student._id, 'students')}
+                                  >
+                                    View
+                                  </button>
+                                  <button
+                                    className="btn btn-danger btn-sm"
+                                    onClick={() => handleArchive(student._id, 'students')}
+                                    disabled={!isEditMode} // Disable if not in edit mode
+                                  >
+                                    Archive
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    )}
+
+                    {activeTab === 'Instructors' && (
+                      <table className="table table-striped table-bordered mt-3">
+                        <thead className="table-primary">
+                          <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {instructors
+                            .filter(instructor => !instructor.archived)
+                            .map((instructor) => (
+                              <tr key={instructor._id}>
+                                <td>{instructor.uid}</td>
+                                <td>{instructor.name}</td>
+                                <td>{instructor.role}</td>
+                                <td>{instructor.email}</td>
+                                <td>
+                                  <span className="badge bg-success">
+                                    Active
+                                  </span>
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn btn-success btn-sm me-2"
+                                    onClick={() => handleViewClick(instructor._id, 'instructors')}
+                                  >
+                                    View
+                                  </button>
+                                  <button
+                                    className="btn btn-danger btn-sm"
+                                    onClick={() => handleArchive(instructor._id, 'instructors')}
+                                    disabled={!isEditMode} // Disable if not in edit mode
+                                  >
+                                    Archive
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    )}
+
+                    {activeTab === 'Archived' && (
+                      <table className="table table-striped table-bordered mt-3">
+                        <thead className="table-primary">
+                          <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {students
+                            .filter(student => student.archived)
+                            .map(student => (
+                              <tr key={student._id}>
+                                <td>{student.studentId}</td>
+                                <td>{student.name}</td>
+                                <td>{student.role}</td>
+                                <td>{student.email}</td>
+                                <td>
+                                  <span className="badge bg-danger">
+                                    Archived
+                                  </span>
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn btn-success btn-sm me-2"
+                                    onClick={() => handleViewClick(student._id, 'students')}
+                                  >
+                                    View
+                                  </button>
+                                  <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => openRestoreModal(student._id, 'students')}
+                                    disabled={!isEditMode} // Disable if not in edit mode
+                                  >
+                                    Restore
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          {instructors
+                            .filter(instructor => instructor.archived)
+                            .map(instructor => (
+                              <tr key={instructor._id}>
+                                <td>{instructor.uid}</td>
+                                <td>{instructor.name}</td>
+                                <td>{instructor.role}</td>
+                                <td>{instructor.email}</td>
+                                <td>
+                                  <span className="badge bg-danger">
+                                    Archived
+                                  </span>
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn btn-success btn-sm me-2"
+                                    onClick={() => handleViewClick(instructor._id, 'instructors')}
+                                  >
+                                    View
+                                  </button>
+                                  <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => openRestoreModal(instructor._id, 'instructors')}
+                                    disabled={!isEditMode} // Disable if not in edit mode
+                                  >
+                                    Restore
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={handleAccountsClose}>
+                      Close
+                    </button>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-          <ul className="nav nav-tabs">
-            <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === 'Students' ? 'active' : ''} x`}
-                onClick={() => setActiveTab('Students')}
-              >
-                Students
-              </button>
-            </li>
-            <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === 'Instructors' ? 'active' : ''} x`}
-                onClick={() => setActiveTab('Instructors')}
-              >
-                Instructors
-              </button>
-            </li>
-            <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === 'Archived' ? 'active' : ''} x`}
-                onClick={() => setActiveTab('Archived')}
-              >
-                Archived
-              </button>
-            </li>
-          </ul>
-
-          {activeTab === 'Students' && (
-            <table className="table table-striped table-bordered mt-3">
-              <thead className="table-primary">
-                <tr>
-                  <th>User ID</th>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students
-                  .filter(student => !student.archived)
-                  .map((student) => (
-                    <tr key={student._id}>
-                      <td>{student.studentId}</td>
-                      <td>{student.name}</td>
-                      <td>{student.role}</td>
-                      <td>{student.email}</td>
-                      <td>
-                        <span className="badge bg-success">
-                          Active
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-success btn-sm me-2"
-                          onClick={() => handleViewClick(student._id, 'students')}
-                        >
-                          View
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleArchive(student._id, 'students')}
-                          disabled={!isEditMode} // Disable if not in edit mode
-                        >
-                          Archive
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          )}
-
-          {activeTab === 'Instructors' && (
-            <table className="table table-striped table-bordered mt-3">
-              <thead className="table-primary">
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {instructors
-                  .filter(instructor => !instructor.archived)
-                  .map((instructor) => (
-                    <tr key={instructor._id}>
-                      <td>{instructor.uid}</td>
-                      <td>{instructor.name}</td>
-                      <td>{instructor.role}</td>
-                      <td>{instructor.email}</td>
-                      <td>
-                        <span className="badge bg-success">
-                          Active
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-success btn-sm me-2"
-                          onClick={() => handleViewClick(instructor._id, 'instructors')}
-                        >
-                          View
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleArchive(instructor._id, 'instructors')}
-                          disabled={!isEditMode} // Disable if not in edit mode
-                        >
-                          Archive
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          )}
-
-          {activeTab === 'Archived' && (
-            <table className="table table-striped table-bordered mt-3">
-              <thead className="table-primary">
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students
-                  .filter(student => student.archived)
-                  .map(student => (
-                    <tr key={student._id}>
-                      <td>{student.studentId}</td>
-                      <td>{student.name}</td>
-                      <td>{student.role}</td>
-                      <td>{student.email}</td>
-                      <td>
-                        <span className="badge bg-danger">
-                          Archived
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-success btn-sm me-2"
-                          onClick={() => handleViewClick(student._id, 'students')}
-                        >
-                          View
-                        </button>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => openRestoreModal(student._id, 'students')}
-                          disabled={!isEditMode} // Disable if not in edit mode
-                        >
-                          Restore
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                {instructors
-                  .filter(instructor => instructor.archived)
-                  .map(instructor => (
-                    <tr key={instructor._id}>
-                      <td>{instructor.uid}</td>
-                      <td>{instructor.name}</td>
-                      <td>{instructor.role}</td>
-                      <td>{instructor.email}</td>
-                      <td>
-                        <span className="badge bg-danger">
-                          Archived
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-success btn-sm me-2"
-                          onClick={() => handleViewClick(instructor._id, 'instructors')}
-                        >
-                          View
-                        </button>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => openRestoreModal(instructor._id, 'instructors')}
-                          disabled={!isEditMode} // Disable if not in edit mode
-                        >
-                          Restore
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+            </div>
           )}
 
           {/* Confirmation Modal for Archive */}
