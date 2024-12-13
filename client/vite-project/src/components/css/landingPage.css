@@ -128,3 +128,68 @@ html, body {
   bottom: 0; 
   width: 100%; 
 }
+
+/* Add these styles for the modals */
+.modal-header {
+  background-color: #4CAF50;
+  color: white;
+  border-bottom: none;
+}
+
+.modal-title {
+  color: white;
+  font-weight: 600;
+}
+
+.modal-header .btn-close {
+  color: white;
+  background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+}
+
+.modal-body h5 {
+  color: #4CAF50;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.modal-body h6 {
+  color: #45a049;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.modal-body p {
+  color: #666;
+  line-height: 1.6;
+}
+
+.modal-body ul {
+  padding-left: 1.2rem;
+}
+
+.modal-body li {
+  color: #666;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.features-list h6 {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.modal-footer {
+  border-top: none;
+  background-color: #f8f9fa;
+}
+
+.modal-footer .btn-secondary {
+  background-color: #4CAF50;
+  border-color: #4CAF50;
+  color: white;
+}
+
+.modal-footer .btn-secondary:hover {
+  background-color: #45a049;
+  border-color: #45a049;
+}
