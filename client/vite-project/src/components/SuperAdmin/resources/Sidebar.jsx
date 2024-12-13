@@ -26,6 +26,14 @@ const Sidebar = () => {
               <i className="fas fa-user search zx"></i> Manage Accounts
             </Link>
           </li>
+           <li className="nav-item">
+            <Link 
+              className={`nav-link ${location.pathname === '/superadmin/superAdmin_userActivity' ? 'active' : ''}`} 
+              to="/superadmin/superAdmin_userActivity"
+            >
+              <i className="fas fa-robot search zx"></i> User Activity
+            </Link>
+          </li>
           <li className="nav-item">
             <Link 
               className={`nav-link ${location.pathname === '/superadmin/superAdmin_repository' ? 'active' : ''}`} 

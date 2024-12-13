@@ -1,197 +1,144 @@
 import express from 'express';
-import SuperAdmin from '../model/SuperAdmin.js';
 import Student from '../model/Student.js';
 import Instructor from '../model/Instructor.js';
 import Research from '../model/Research.js';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import authenticateToken from '../utils/token.js';
-import mongoose from 'mongoose';
-import Admin from '../model/Admin.js';
-import { ADMIN_PERMISSIONS } from '../model/Admin.js';
+import authenticateToken from '../middleware/authenticateToken.js';
 
 const router = express.Router();
-  
-router.post('/admin-login', async (req, res) => {
-    try {
-        const { email, password, recaptchaToken } = req.body;
 
-        // Verify recaptcha token
-        if (!recaptchaToken) {
-            return res.status(400).json({ message: 'Please complete the reCAPTCHA' });
-        }
+// Dashboard stats
+router.get('/dashboard-stats', authenticateToken, async (req, res) => {
+  try {
+    const [studentCount, instructorCount] = await Promise.all([
+      Student.countDocuments(),
+      Instructor.countDocuments()
+    ]);
 
-        // Find admin in both SuperAdmin and Admin collections
-        const admin = await Admin.findOne({ email }) || await SuperAdmin.findOne({ email });
-        
-        if (!admin) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        // Verify password
-        const isPasswordValid = await bcrypt.compare(password, admin.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        // Generate token
-        const token = jwt.sign(
-            { 
-                userId: admin._id,
-                role: admin.role,
-                email: admin.email
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
-
-        // Send response
-        res.json({
-            token,
-            name: admin.name,
-            role: admin.role
-        });
-
-    } catch (error) {
-        console.error('Admin login error:', error);
-        res.status(500).json({ message: 'Login failed' });
-    }
+    res.json({
+      success: true,
+      data: {
+        students: studentCount,
+        instructors: instructorCount,
+        activeUsers: studentCount + instructorCount,
+        totalUsers: studentCount + instructorCount
+      }
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching statistics' });
+  }
 });
 
-// And replace them with these updated routes
-router.get('/instructors', authenticateToken, async (req, res) => {
+// Research stats
+router.get('/research-stats', authenticateToken, async (req, res) => {
   try {
-    console.log('Fetching instructors... Auth user:', req.user);
-    
-    // Check if database is connected
-    if (!mongoose.connection.readyState) {
-      throw new Error('Database not connected');
-    }
-    
-    const instructors = await Instructor.find({ archived: false })
-      .select('name email department isAdmin')
-      .sort({ name: 1 });
-    
-    console.log('Raw instructors data:', instructors);
-    console.log('Found instructors:', instructors.length);
-    
-    const stats = {
-      total: instructors.length,
-      admins: instructors.filter(i => i.isAdmin).length,
-      regular: instructors.filter(i => !i.isAdmin).length
+    const [total, pending, approved, rejected] = await Promise.all([
+      Research.countDocuments(),
+      Research.countDocuments({ status: 'Pending' }),
+      Research.countDocuments({ status: 'Approved' }),
+      Research.countDocuments({ status: 'Rejected' })
+    ]);
+
+    res.json({
+      success: true,
+      total,
+      pending,
+      approved,
+      rejected
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching research stats' });
+  }
+});
+
+// User distribution
+router.get('/user-distribution', authenticateToken, async (req, res) => {
+  try {
+    const [studentCount, instructorCount] = await Promise.all([
+      Student.countDocuments(),
+      Instructor.countDocuments()
+    ]);
+
+    const data = {
+      labels: ['Students', 'Instructors'],
+      datasets: [{
+        data: [studentCount, instructorCount],
+        backgroundColor: ['rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+        borderColor: ['rgb(75, 192, 192)', 'rgb(255, 99, 132)'],
+        borderWidth: 1
+      }]
     };
 
-    console.log('Stats:', stats);
-
-    res.status(200).json({
+    res.json({
       success: true,
-      instructors,
-      stats
+      data
     });
   } catch (error) {
-    console.error('Error in /instructors route:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error fetching instructors',
-      error: error.message 
-    });
+    res.status(500).json({ success: false, message: 'Error fetching distribution' });
   }
 });
 
-// Update instructor admin status
-router.put('/instructors/:instructorId/admin-status', authenticateToken, async (req, res) => {
+// Submission trends
+router.get('/submission-trends', authenticateToken, async (req, res) => {
   try {
-    const { instructorId } = req.params;
-    const { isAdmin } = req.body;
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
 
-    console.log(`Updating instructor ${instructorId} admin status to ${isAdmin}`);
+    // Get all research submissions for the last 6 months
+    const researches = await Research.find({
+      createdAt: { $gte: sixMonthsAgo }
+    }).select('createdAt status');
 
-    const instructor = await Instructor.findByIdAndUpdate(
-      instructorId,
-      { isAdmin },
-      { new: true }
-    ).select('name email department isAdmin');
+    // Process the data month by month
+    const months = {};
+    researches.forEach(research => {
+      const monthKey = `${research.createdAt.getMonth() + 1}-${research.createdAt.getFullYear()}`;
+      
+      if (!months[monthKey]) {
+        months[monthKey] = {
+          month: `${getMonthName(research.createdAt.getMonth() + 1)} ${research.createdAt.getFullYear()}`,
+          count: 0,
+          pendingCount: 0,
+          approvedCount: 0
+        };
+      }
 
-    if (!instructor) {
-      return res.status(404).json({
-        success: false,
-        message: 'Instructor not found'
-      });
-    }
-
-    console.log('Updated instructor:', instructor);
-
-    res.status(200).json({
-      success: true,
-      message: `Instructor admin status updated successfully`,
-      instructor
+      months[monthKey].count += 1;
+      if (research.status === 'Pending') {
+        months[monthKey].pendingCount += 1;
+      }
+      if (research.status === 'Approved' || research.status === 'Accepted') {
+        months[monthKey].approvedCount += 1;
+      }
     });
+
+    // Convert to array and sort by date
+    const formattedData = Object.values(months).sort((a, b) => {
+      const [monthA, yearA] = a.month.split(' ');
+      const [monthB, yearB] = b.month.split(' ');
+      return new Date(`${monthA} 1, ${yearA}`) - new Date(`${monthB} 1, ${yearB}`);
+    });
+
+    console.log('Formatted trend data:', formattedData); // Debug log
+
+    res.json({
+      success: true,
+      data: formattedData
+    });
+
   } catch (error) {
-    console.error('Error updating instructor admin status:', error);
+    console.error('Error fetching submission trends:', error);
     res.status(500).json({
       success: false,
-      message: 'Error updating instructor admin status',
-      error: error.message
+      message: 'Error fetching submission trends'
     });
   }
 });
 
-router.post('/create-admin', authenticateToken, async (req, res) => {
-    try {
-        const { name, email, password, permissions } = req.body;
-
-        // Check if admin already exists
-        const existingAdmin = await Admin.findOne({ email });
-        if (existingAdmin) {
-            return res.status(400).json({
-                success: false,
-                message: 'Admin with this email already exists'
-            });
-        }
-
-        // Validate permissions
-        if (permissions) {
-            const validPermissions = Object.values(ADMIN_PERMISSIONS);
-            const invalidPermissions = permissions.filter(p => !validPermissions.includes(p));
-            if (invalidPermissions.length > 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Invalid permissions: ${invalidPermissions.join(', ')}`
-                });
-            }
-        }
-
-        // Create new admin with raw password
-        const admin = new Admin({
-            name,
-            email,
-            password,  // Raw password - will be hashed by middleware
-            role: 'admin',
-            permissions: permissions || [],
-            uid: Date.now().toString()
-        });
-
-        await admin.save();
-
-        console.log('Created new admin:', {
-            name: admin.name,
-            email: admin.email,
-            role: admin.role,
-            permissions: admin.permissions
-        });
-
-        res.status(201).json({
-            success: true,
-            message: 'Admin created successfully'
-        });
-
-    } catch (error) {
-        console.error('Error creating admin:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to create admin'
-        });
-    }
-});
+function getMonthName(monthNumber) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return months[monthNumber - 1];
+}
 
 export default router; 

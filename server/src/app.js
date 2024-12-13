@@ -12,14 +12,13 @@ import authRoutes from '../routes/auth.js';
 import studentRoutes from '../routes/studentRoutes.js'; 
 import instructorRoutes from '../routes/instructorRoutes.js'; 
 import adminRoutes from '../routes/adminRoutes.js';
+import driveRoutes from '../routes/driveRoutes.js';
+import superAdminRoutes from '../routes/superAdminRoutes.js';
+import calendarRoutes from '../routes/calendarRoutes.js';
 
 import Admin from '../model/Admin.js';
 import Instructor from '../model/Instructor.js';
 import Student from '../model/Student.js'
-import driveRoutes from '../routes/driveRoutes.js';
-//SUPER ADMIN
-import superAdminRoutes from '../routes/superAdminRoutes.js';
-import calendarRoutes from '../routes/calendarRoutes.js';
 
 dotenv.config(); 
 const app = express();
@@ -74,6 +73,7 @@ app.use('/admin', adminRoutes);
 app.use('/api/auth', authRoutes); // Use the email routes under the /api/email path
 
 app.use('/api', calendarRoutes);
+
 
 // Change app.listen to server.listen
 server.listen(PORT, () => {

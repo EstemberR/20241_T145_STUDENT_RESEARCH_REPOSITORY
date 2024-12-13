@@ -32,7 +32,7 @@ import OTPVerification from './components/OTPVerification';
 
 {/*SUPER ADMIN*/}
 import SuperAdminAccounts from './components/SuperAdmin/superAdmin_accounts';
-import SuperAdminActivity from './components/SuperAdmin/superAdmin_acitivty';
+import SuperAdminActivity from './components/SuperAdmin/superAdmin_userActivity';
 import SuperAdminReports from './components/SuperAdmin/superAdmin_reports';
 import SuperAdminRoleRequests from './components/SuperAdmin/superAdmin_roleRequest';
 import SuperAdminRepository from './components/SuperAdmin/superAdmin_repository';
@@ -87,6 +87,7 @@ function App() {
           <Route path="/superadmin/superAdmin_activity" element={<SuperAdminActivity />} />
           <Route path="/superadmin/superAdmin_reports" element={<SuperAdminReports />} />
           <Route path="/superadmin/superAdmin_role-requests" element={<SuperAdminRoleRequests />} />
+          <Route path="/superadmin/superAdmin_userActivity" element={<SuperAdminActivity />} />
           <Route path="/superadmin/logout" element={<Navigate to="/" replace />} />
         </Route>
 
