@@ -18,7 +18,7 @@ const RESEARCH_STATUS = {
 const InstructorStudents = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
-  const [userRole, setUserRole] = useState([]);
+  const [userRole, setUserRole] = useState(['instructor']);
   const [students, setStudents] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newStudent, setNewStudent] = useState({
@@ -51,6 +51,18 @@ const InstructorStudents = () => {
         localStorage.removeItem('token');
         navigate('/');
         return;
+      }
+
+      // First fetch user role
+      const profileResponse = await fetch('http://localhost:8000/instructor/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        setUserRole(['instructor']); // Set role explicitly
       }
 
       const response = await fetch('http://localhost:8000/instructor/students', {
@@ -236,101 +248,77 @@ const InstructorStudents = () => {
         )}
         <div className="content-wrapper" style={{ height: 'calc(100vh - 60px)', overflowY: 'auto' }}>
           <main className="p-4">
-            <h5 className="mb-4">Research Teams</h5>
-            {Object.entries(students).map(([teamId, team]) => (
-              <div key={teamId} className="card mb-4">
-                <div className="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 className="mb-0">Team Leader: {team.teamLeader.name}</h6>
-                    <small>Section: {team.section}</small>
-                  </div>
-                  <button 
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleDeleteGroup(teamId, team.teamLeader.name)}
-                  >
-                    <i className="fas fa-users-slash me-2"></i>
-                    Dissolve Team
-                  </button>
+          <div className="mb-4">
+            <h4>RESEARCH TEAMS</h4>
+          </div>            
+            {/* No Teams Display */}
+            {(!students || Object.keys(students).length === 0) ? (
+              <div className="text-center py-5">
+                <div className="mb-4">
+                  <i className="fas fa-users-slash fa-4x text-muted"></i>
                 </div>
-                <div className="card-body">
-                  <div className="row">
-                    {/* Team Leader Card */}
-                    <div className="col-md-4 mb-3">
-                      <div className="card h-100 border-primary">
-                        <div className="card-body">
-                          <div className="text-center mb-3">
-                            {team.teamLeader.profilePicture ? (
-                              <img
-                                src={team.teamLeader.profilePicture}
-                                alt={team.teamLeader.name}
-                                className="rounded-circle shadow"
-                                style={{ 
-                                  width: '80px', 
-                                  height: '80px',
-                                  border: '3px solid #fff',
-                                  objectFit: 'cover'
-                                }}
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
-                                }}
-                              />
-                            ) : (
-                              <i className="fas fa-user-circle fa-4x"></i>
-                            )}
-                          </div>
-                          <h6 className="card-title">
-                            {team.teamLeader.name}
-                            <span className="badge bg-primary ms-2">Team Leader</span>
-                          </h6>
-                          <p className="card-text">
-                            <strong>Student ID:</strong> {team.teamLeader.studentId}<br />
-                            <strong>Email:</strong> {team.teamLeader.email}<br />
-                            <strong>Course:</strong> {team.teamLeader.course}<br />
-                            <strong>Section:</strong> {team.teamLeader.section}
-                          </p>
-                          <button 
-                            className="btn btn-success btn-sm w-100"
-                            onClick={() => handleViewStudent(team.teamLeader)}
-                          >
-                            <i className="fas fa-eye me-2"></i>
-                            View Details
-                          </button>
-                        </div>
-                      </div>
+                <h4 className="text-muted">No Research Teams Found</h4>
+                <p className="text-muted">
+                  There are currently no research teams formed.
+                </p>
+              </div>
+            ) : (
+              // Existing teams mapping
+              Object.entries(students).map(([teamId, team]) => (
+                <div key={teamId} className="card mb-4">
+                  <div className="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 className="mb-0">Team Leader: {team.teamLeader.name}</h6>
+                      <small>Section: {team.section}</small>
                     </div>
-                    {/* Team Members Cards */}
-                    {team.members.map(member => (
-                      <div key={member._id} className="col-md-4 mb-3">
-                        <div className="card h-100 border-success">
+                    <button 
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleDeleteGroup(teamId, team.teamLeader.name)}
+                    >
+                      <i className="fas fa-users-slash me-2"></i>
+                      Dissolve Team
+                    </button>
+                  </div>
+                  <div className="card-body">
+                    <div className="row">
+                      {/* Team Leader Card */}
+                      <div className="col-md-4 mb-3">
+                        <div className="card h-100 border-primary">
                           <div className="card-body">
                             <div className="text-center mb-3">
-                              <img
-                                src={member.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'}
-                                alt={`${member.name || 'Student'}'s profile`}
-                                className="rounded-circle shadow"
-                                style={{ 
-                                  width: '80px', 
-                                  height: '80px',
-                                  border: '3px solid #fff',
-                                  objectFit: 'cover'
-                                }}
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
-                                }}
-                              />
+                              {team.teamLeader.profilePicture ? (
+                                <img
+                                  src={team.teamLeader.profilePicture}
+                                  alt={team.teamLeader.name}
+                                  className="rounded-circle shadow"
+                                  style={{ 
+                                    width: '80px', 
+                                    height: '80px',
+                                    border: '3px solid #fff',
+                                    objectFit: 'cover'
+                                  }}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+                                  }}
+                                />
+                              ) : (
+                                <i className="fas fa-user-circle fa-4x"></i>
+                              )}
                             </div>
-                            <h6 className="card-title">{member.name}</h6>
+                            <h6 className="card-title">
+                              {team.teamLeader.name}
+                              <span className="badge bg-primary ms-2">Team Leader</span>
+                            </h6>
                             <p className="card-text">
-                              <strong>Student ID:</strong> {member.studentId}<br />
-                              <strong>Email:</strong> {member.email}<br />
-                              <strong>Course:</strong> {member.course}<br />
-                              <strong>Section:</strong> {member.section}
+                              <strong>Student ID:</strong> {team.teamLeader.studentId}<br />
+                              <strong>Email:</strong> {team.teamLeader.email}<br />
+                              <strong>Course:</strong> {team.teamLeader.course}<br />
+                              <strong>Section:</strong> {team.teamLeader.section}
                             </p>
                             <button 
                               className="btn btn-success btn-sm w-100"
-                              onClick={() => handleViewStudent(member)}
+                              onClick={() => handleViewStudent(team.teamLeader)}
                             >
                               <i className="fas fa-eye me-2"></i>
                               View Details
@@ -338,11 +326,51 @@ const InstructorStudents = () => {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      {/* Team Members Cards */}
+                      {team.members.map(member => (
+                        <div key={member._id} className="col-md-4 mb-3">
+                          <div className="card h-100 border-success">
+                            <div className="card-body">
+                              <div className="text-center mb-3">
+                                <img
+                                  src={member.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'}
+                                  alt={`${member.name || 'Student'}'s profile`}
+                                  className="rounded-circle shadow"
+                                  style={{ 
+                                    width: '80px', 
+                                    height: '80px',
+                                    border: '3px solid #fff',
+                                    objectFit: 'cover'
+                                  }}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+                                  }}
+                                />
+                              </div>
+                              <h6 className="card-title">{member.name}</h6>
+                              <p className="card-text">
+                                <strong>Student ID:</strong> {member.studentId}<br />
+                                <strong>Email:</strong> {member.email}<br />
+                                <strong>Course:</strong> {member.course}<br />
+                                <strong>Section:</strong> {member.section}
+                              </p>
+                              <button 
+                                className="btn btn-success btn-sm w-100"
+                                onClick={() => handleViewStudent(member)}
+                              >
+                                <i className="fas fa-eye me-2"></i>
+                                View Details
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </main>
         </div>
       </div>

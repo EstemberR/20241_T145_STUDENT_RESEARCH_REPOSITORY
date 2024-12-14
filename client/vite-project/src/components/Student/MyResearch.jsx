@@ -232,13 +232,20 @@ const MyResearch = () => {
     e.stopPropagation();
   };
 
-  const handleAddNewClick = () => {
-    if (!studentInfo?.course) {
-      alert('Please set your course in your profile before submitting research.');
-      navigate('/profile');
+  const handleAddNewClick = (e) => {
+    e.preventDefault();
+    
+    if (!studentInfo || !studentInfo.course) {
+      showAlertMessage('Please set your course in your profile before submitting research.', 'warning');
       return;
     }
-    setShowForm(true);
+
+    // If student has a course, then show the modal
+    const modal = document.getElementById('submitResearchModal');
+    if (modal) {
+      const bootstrapModal = new bootstrap.Modal(modal);
+      bootstrapModal.show();
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -541,8 +548,6 @@ const MyResearch = () => {
                 <button 
                   className="btn btn-success" 
                   onClick={handleAddNewClick}
-                  data-bs-toggle="modal" 
-                  data-bs-target="#submitResearchModal"
                 >
                   <i className="fas fa-plus me-2"></i>Add New Research
                 </button>

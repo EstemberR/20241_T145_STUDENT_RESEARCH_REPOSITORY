@@ -526,24 +526,33 @@ const ManageMember = () => {
                             <FaChalkboardTeacher className="fs-4" />
                           </div>
                           <div className="ms-3">
-                            <h5 className="mb-1 text-success">{teamStatus.instructor}</h5>
-                            <p className="text-muted mb-0">Instructor</p>
+                            <div className="d-flex align-items-center gap-2">
+                              <h5 className="mb-1 text-success">{teamStatus.instructor}</h5>
+                              <span className="badge bg-primary" 
+                                    style={{ 
+                                      fontSize: '0.7rem', 
+                                      padding: '0.35em 0.65em',
+                                      fontWeight: '500'
+                                    }}>
+                                INSTRUCTOR
+                              </span>
+                            </div>
+                            <div className="d-flex align-items-center mb-2">
+                              <FaBookReader className="text-success me-2" />
+                              <span className="text-muted">Section: {teamStatus.section}</span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="d-flex align-items-center mb-2">
-                          <FaBookReader className="text-success me-2" />
-                          <span className="text-muted">Section: {teamStatus.section}</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Team Members Section */  }
+                  {/* Team Members Section */}
                   {teamStatus.teamMembers.map((member, index) => (
                     <div className="col-md-6" key={index}>
                       <div className="card h-100" style={styles.memberCard}>
                         <div className="card-body">
-                          <div className="d-flex justify-content-between align-items-center">
+                          <div className="d-flex justify-content-between align-items-start">
                             <div className="d-flex align-items-center mb-3">
                               <div className="rounded-circle p-3 bg-success bg-opacity-10">
                                 {index === 0 ? (
@@ -553,12 +562,20 @@ const ManageMember = () => {
                                 )}
                               </div>
                               <div className="ms-3">
-                                <h5 className="mb-1 text-success">{member}</h5>
-                                <p className="text-muted mb-0">
-                                  {index === 0 ? 'Team Leader' : 'Team Member'}
-                                </p>
+                                <div className="d-flex align-items-center gap-2">
+                                  <h5 className="mb-1 text-success">{member}</h5>
+                                  <span className={`badge ${index === 0 ? 'bg-warning' : 'bg-info'}`} 
+                                        style={{ 
+                                          fontSize: '0.7rem', 
+                                          padding: '0.35em 0.65em',
+                                          fontWeight: '500'
+                                        }}>
+                                    {index === 0 ? 'TEAM LEADER' : 'MEMBER'}
+                                  </span>
+                                </div>
                               </div>
                             </div>
+                            {/* Remove Button (if leader) */}
                             {index !== 0 && userName === teamStatus.teamMembers[0] && (
                               <button
                                 className="btn btn-outline-danger btn-sm"
@@ -578,12 +595,6 @@ const ManageMember = () => {
                                 )}
                               </button>
                             )}
-                          </div>
-                          <div className="d-flex align-items-center">
-                            <FaEnvelope className="text-success me-2" />
-                            <span className="text-muted">
-                              {member.toLowerCase().replace(/\s+/g, '.')}@example.com
-                            </span>
                           </div>
                         </div>
                       </div>
