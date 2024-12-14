@@ -31,6 +31,7 @@ const ManageMember = () => {
   const [availableStudents, setAvailableStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [loadingOptions, setLoadingOptions] = useState(false);
 
   // Helper function for showing alerts
   const showAlert = (message, type) => {
@@ -47,7 +48,15 @@ const ManageMember = () => {
       navigate('/');
     }
     checkTeamStatus();
+    fetchStudentsAndInstructors();
   }, [navigate]);
+
+  useEffect(() => {
+    // Only fetch students and instructors if the student needs to create a team
+    if (!loading && (!teamStatus?.hasApprovedTeam && !teamStatus?.hasPendingRequest)) {
+      fetchStudentsAndInstructors();
+    }
+  }, [loading, teamStatus]);
 
   useEffect(() => {
     if (teamStatus?.teamMembers?.length > 0) {
@@ -81,6 +90,7 @@ const ManageMember = () => {
   };
 
   const fetchStudentsAndInstructors = async () => {
+    setLoadingOptions(true);
     try {
       const token = getToken();
       const [studentsRes, instructorsRes] = await Promise.all([
@@ -98,6 +108,10 @@ const ManageMember = () => {
         })
       ]);
 
+      if (!studentsRes.ok || !instructorsRes.ok) {
+        throw new Error('Failed to fetch students or instructors');
+      }
+
       const studentsData = await studentsRes.json();
       const instructorsData = await instructorsRes.json();
 
@@ -113,6 +127,8 @@ const ManageMember = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
       showAlert('Error loading student and instructor data', 'danger');
+    } finally {
+      setLoadingOptions(false);
     }
   };
 
@@ -638,7 +654,9 @@ const ManageMember = () => {
                                 options={students}
                                 value={selectedStudents}
                                 onChange={setSelectedStudents}
-                                placeholder="Search and select students..."
+                                placeholder={loadingOptions ? "Loading students..." : "Search and select students..."}
+                                isLoading={loadingOptions}
+                                isDisabled={loadingOptions}
                                 className="basic-multi-select"
                                 classNamePrefix="select"
                             />
@@ -653,7 +671,9 @@ const ManageMember = () => {
                                 options={instructors}
                                 value={selectedInstructor}
                                 onChange={setSelectedInstructor}
-                                placeholder="Choose an instructor..."
+                                placeholder={loadingOptions ? "Loading instructors..." : "Choose an instructor..."}
+                                isLoading={loadingOptions}
+                                isDisabled={loadingOptions}
                                 className="basic-select"
                                 classNamePrefix="select"
                             />
@@ -725,7 +745,9 @@ const ManageMember = () => {
                       options={students}
                       value={selectedStudents}
                       onChange={setSelectedStudents}
-                      placeholder="Search and select students..."
+                      placeholder={loadingOptions ? "Loading students..." : "Search and select students..."}
+                      isLoading={loadingOptions}
+                      isDisabled={loadingOptions}
                       className="basic-multi-select"
                       classNamePrefix="select"
                     />
@@ -740,7 +762,9 @@ const ManageMember = () => {
                       options={instructors}
                       value={selectedInstructor}
                       onChange={setSelectedInstructor}
-                      placeholder="Choose an instructor..."
+                      placeholder={loadingOptions ? "Loading instructors..." : "Choose an instructor..."}
+                      isLoading={loadingOptions}
+                      isDisabled={loadingOptions}
                       className="basic-select"
                       classNamePrefix="select"
                     />
