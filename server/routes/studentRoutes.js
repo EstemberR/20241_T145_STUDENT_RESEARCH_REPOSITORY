@@ -909,4 +909,108 @@ studentRoutes.post('/bookmark/:researchId', authenticateToken, async (req, res) 
     }
 });
 
+// Remove team member
+studentRoutes.post('/remove-team-member', authenticateToken, async (req, res) => {
+    try {
+        const leaderId = req.user.userId;
+        const { memberToRemove } = req.body;
+
+        // Find the student to be removed
+        const studentToRemove = await Student.findOne({ name: memberToRemove });
+        if (!studentToRemove) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+
+        // Update the student's managedBy field
+        await Student.findByIdAndUpdate(studentToRemove._id, {
+            $unset: { managedBy: "" }
+        });
+
+        // Find and update the research document using findOneAndUpdate
+        const research = await Research.findOneAndUpdate(
+            {
+                $or: [
+                    { mongoId: leaderId },
+                    { teamMembers: leaderId }
+                ]
+            },
+            {
+                $pull: { teamMembers: studentToRemove._id }
+            },
+            { new: true }
+        );
+
+        if (!research) {
+            return res.status(404).json({ message: 'Research team not found' });
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'Team member removed successfully' 
+        });
+
+    } catch (error) {
+        console.error('Error removing team member:', error);
+        res.status(500).json({ 
+            message: 'Error removing team member',
+            error: error.message 
+        });
+    }
+});
+
+// Add team member
+studentRoutes.post('/add-team-member', authenticateToken, async (req, res) => {
+    try {
+        const leaderId = req.user.userId;
+        const { newMemberId } = req.body;
+
+        // Find the research team
+        const research = await Research.findOne({
+            $or: [
+                { mongoId: leaderId },
+                { teamMembers: leaderId }
+            ]
+        }).populate('adviser');
+
+        if (!research) {
+            return res.status(404).json({ message: 'Research team not found' });
+        }
+
+        // Check if student is already in a team
+        const studentToAdd = await Student.findById(newMemberId);
+        if (!studentToAdd) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+
+        if (studentToAdd.managedBy) {
+            return res.status(400).json({ message: 'Student is already in a team' });
+        }
+
+        // Update research using findOneAndUpdate
+        await Research.findOneAndUpdate(
+            { _id: research._id },
+            { $addToSet: { teamMembers: newMemberId } },
+            { new: true }
+        );
+
+        // Update the student's managedBy field
+        await Student.findByIdAndUpdate(newMemberId, {
+            managedBy: research.adviser
+        });
+
+        res.json({ 
+            success: true, 
+            message: 'Team member added successfully',
+            newMember: studentToAdd
+        });
+
+    } catch (error) {
+        console.error('Error adding team member:', error);
+        res.status(500).json({ 
+            message: 'Error adding team member',
+            error: error.message 
+        });
+    }
+});
+
 export default studentRoutes;
