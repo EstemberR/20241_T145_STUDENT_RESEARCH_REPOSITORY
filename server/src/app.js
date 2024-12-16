@@ -74,6 +74,8 @@ app.use('/api/auth', authRoutes); // Use the email routes under the /api/email p
 
 app.use('/api', calendarRoutes);
 
+app.use('/api/admin', adminRoutes);
+
 
 // Change app.listen to server.listen
 server.listen(PORT, () => {

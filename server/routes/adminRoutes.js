@@ -25,28 +25,79 @@ adminRoutes.post('/login', async (req, res) => {
         
         console.log('Admin login attempt:', email);
 
-        // Check for superadmin credentials 
-        if (email === 'superadmin@buksu.edu.ph' && 
-            password === 'BuksuSuperAdmin2024') {
-            const token = jwt.sign(
-                { 
-                    role: 'superadmin',
-                    email: email 
-                },
-                process.env.JWT_SECRET,
-                { expiresIn: '24h' }
-            );
+        // Check for superadmin credentials with detailed logging
+        if (email === 'superadmin@buksu.edu.ph') {
+            console.log('Superadmin login attempt detected');
+            
+            // Add salting verification here
+            const salt = await bcrypt.genSalt(10);
+            const testHash = await bcrypt.hash(password, salt);
+            
+            console.log('\n=== SALTING VERIFICATION ===');
+            console.log('Password being hashed:', password);
+            console.log('Generated Salt:', salt);
+            console.log('Generated Hash:', testHash);
+            console.log('Salt Rounds Used:', testHash.split('$')[2]);
+            console.log('Hash Format:', testHash.split('$')[1]);
+            console.log('Is Properly Hashed:', testHash.startsWith('$2b$'));
+            console.log('===========================\n');
 
-            return res.status(200).json({
-                success: true,
-                token,
-                role: 'superadmin',
-                name: 'Super Administrator',
-                message: 'Superadmin login successful'
+            if (password === 'BuksuSuperAdmin2024') {
+                console.log('Original superadmin verification successful');
+                
+                // Also test the hashed version if hash exists
+                const storedHash = process.env.SUPERADMIN_PASSWORD_HASH;
+                console.log('Salting Process Check:', {
+                    attemptedPassword: password,
+                    storedHashExists: !!storedHash,
+                    storedHashValue: storedHash ? `${storedHash.substring(0, 10)}...` : 'none',
+                    saltingPattern: storedHash ? storedHash.split('$')[2] : 'none'
+                });
+
+                if (storedHash) {
+                    try {
+                        const hashMatch = await bcrypt.compare(password, storedHash);
+                        console.log('Bcrypt Verification Details:', {
+                            hashComparisonPerformed: true,
+                            hashMatchResult: hashMatch,
+                            hashFormat: storedHash.startsWith('$2b$') ? 'valid' : 'invalid',
+                            saltRounds: storedHash.split('$')[2]
+                        });
+                    } catch (bcryptError) {
+                        console.log('Hash Verification Error:', {
+                            error: bcryptError.message,
+                            hashFormat: storedHash ? storedHash.substring(0, 10) : 'invalid',
+                            attemptedComparison: true
+                        });
+                    }
+                }
+
+                const token = jwt.sign(
+                    { 
+                        role: 'superadmin',
+                        email: email 
+                    },
+                    process.env.JWT_SECRET,
+                    { expiresIn: '24h' }
+                );
+
+                return res.status(200).json({
+                    success: true,
+                    token,
+                    role: 'superadmin',
+                    name: 'Super Administrator',
+                    message: 'Superadmin login successful'
+                });
+            }
+            
+            console.log('Superadmin verification failed');
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
             });
         }
 
-        // Regular admin login
+        // Regular admin login with bcrypt
         const admin = await Admin.findOne({ email });
         console.log('Found admin:', admin);
         
@@ -67,9 +118,9 @@ adminRoutes.post('/login', async (req, res) => {
             });
         }
 
-        const isValidPassword = await bcrypt.compare(password, admin.password);
+        const isMatch = await bcrypt.compare(password, admin.password);
         
-        if (!isValidPassword) {
+        if (!isMatch) {
             console.log('Invalid password for admin:', email);
             return res.status(401).json({
                 success: false,
@@ -537,68 +588,46 @@ adminRoutes.post('/create-admin', authenticateToken, async (req, res) => {
             });
         }
 
-        const { name, email, password, permissions } = req.body;
+        const { name, email, password } = req.body;
 
-        // Check if admin already exists
-        const existingAdmin = await Admin.findOne({ email });
-        if (existingAdmin) {
-            return res.status(400).json({
-                success: false,
-                message: 'Admin with this email already exists'
-            });
-        }
+        // Log the password before and after hashing
+        console.log('Before hashing:', {
+            originalPassword: password,
+            passwordLength: password.length
+        });
 
-        // Validate permissions
-        if (permissions && Array.isArray(permissions)) {
-            const invalidPermissions = permissions.filter(
-                p => !Object.values(ADMIN_PERMISSIONS).includes(p)
-            );
-            
-            if (invalidPermissions.length > 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Invalid permissions: ${invalidPermissions.join(', ')}`
-                });
-            }
-        }
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create new admin with permissions
+        console.log('After hashing:', {
+            hashedPassword: hashedPassword,
+            hashedLength: hashedPassword.length,
+            isHashed: hashedPassword.startsWith('$2b$')
+        });
+
+        // Create new admin with hashed password
         const newAdmin = new Admin({
             name,
             email,
-            password,
-            permissions: permissions || [], // Include permissions from request
-            role: 'admin',
-            uid: Date.now().toString()
+            password: hashedPassword
         });
 
-        // Save and let middleware handle hashing
         await newAdmin.save();
 
-        console.log('Created new admin:', {
-            name: newAdmin.name,
-            email: newAdmin.email,
-            role: newAdmin.role,
-            permissions: newAdmin.permissions // Log permissions
+        // Log the saved admin's password
+        console.log('Saved in database:', {
+            savedPassword: newAdmin.password,
+            isSameAsHashed: newAdmin.password === hashedPassword
         });
 
         res.status(201).json({
             success: true,
-            message: 'Admin account created successfully',
-            admin: {
-                name: newAdmin.name,
-                email: newAdmin.email,
-                permissions: newAdmin.permissions
-            }
+            message: 'Admin created successfully',
+            passwordIsHashed: newAdmin.password.startsWith('$2b$')
         });
 
     } catch (error) {
-        console.error('Error creating admin:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error creating admin account',
-            error: error.message
-        });
+        console.error('Error:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -1389,6 +1418,103 @@ adminRoutes.get('/user-distribution', authenticateToken, async (req, res) => {
       message: 'Error fetching user distribution'
     });
   }
+});
+
+// Add this route temporarily to check passwords
+adminRoutes.get('/check-hashing', async (req, res) => {
+    try {
+        // Create two identical passwords
+        const testPassword = "test123";
+        
+        // Hash the same password twice
+        const hash1 = await bcrypt.hash(testPassword, 10);
+        const hash2 = await bcrypt.hash(testPassword, 10);
+        
+        console.log('Test Results:');
+        console.log('Original Password:', testPassword);
+        console.log('First Hash:', hash1);
+        console.log('Second Hash:', hash2);
+        console.log('Hashes are different:', hash1 !== hash2);
+        console.log('Both start with $2b$:', hash1.startsWith('$2b$') && hash2.startsWith('$2b$'));
+        
+        // Verify both hashes work with original password
+        const verify1 = await bcrypt.compare(testPassword, hash1);
+        const verify2 = await bcrypt.compare(testPassword, hash2);
+        
+        res.json({
+            originalPassword: testPassword,
+            hash1: hash1,
+            hash2: hash2,
+            hashesAreDifferent: hash1 !== hash2,
+            properlyHashed: hash1.startsWith('$2b$'),
+            verifyResult1: verify1,
+            verifyResult2: verify2
+        });
+        
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add a utility route to generate hashed password (use this once to generate the hash)
+adminRoutes.post('/generate-superadmin-hash', async (req, res) => {
+    try {
+        const { password } = req.body;
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        
+        console.log('Generated hash:', hashedPassword);
+        
+        res.json({ 
+            message: 'Store this hash in your environment variables',
+            hashedPassword 
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add this simple test endpoint
+adminRoutes.get('/test-console', (req, res) => {
+    console.log('Test endpoint reached');
+    console.log('Basic console logging is working');
+    res.json({ message: 'Test endpoint hit' });
+});
+
+adminRoutes.get('/verify-salting', async (req, res) => {
+    try {
+        // Basic endpoint hit verification
+        console.log('Verify-salting endpoint hit');
+        console.log('Starting salting verification...');
+        
+        // Create test password and log it
+        const testPassword = "test123";
+        console.log('\n=== SALTING VERIFICATION ===');
+        console.log('Test Password:', testPassword);
+        
+        // Generate salt and log it
+        const salt = await bcrypt.genSalt(10);
+        console.log('Generated Salt:', salt);
+        
+        // Generate hash and log it
+        const hashedPassword = await bcrypt.hash(testPassword, salt);
+        console.log('Final Hashed Password:', hashedPassword);
+        
+        // Log verification details
+        console.log('Salt Rounds Used:', hashedPassword.split('$')[2]);
+        console.log('Hash Format:', hashedPassword.split('$')[1]);
+        console.log('Is Properly Hashed:', hashedPassword.startsWith('$2b$'));
+        console.log('===========================\n');
+        
+        res.json({
+            success: true,
+            message: 'Check server console for salting verification'
+        });
+        
+    } catch (error) {
+        console.error('Salting verification error:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 export default adminRoutes;
