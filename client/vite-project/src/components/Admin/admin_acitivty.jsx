@@ -217,7 +217,22 @@ const AdminActivity = () => {
           }
 
           const recentActivityData = await recentActivityResponse.json();
-          setRecentActivity(recentActivityData.activities || []);
+          console.log('Raw activity data:', recentActivityData);
+
+          const filteredActivities = recentActivityData.activities?.filter(activity => {
+            if (activity.type !== 'submission') {
+              return true;
+            }
+            
+            if (activity.research) {
+              console.log('Research title:', activity.research.title);
+              return activity.research.title !== '';
+            }
+            return false;
+          }) || [];
+
+          console.log('Filtered activities:', filteredActivities);
+          setRecentActivity(filteredActivities);
 
         } catch (error) {
           console.error('Error fetching recent activities:', error);
