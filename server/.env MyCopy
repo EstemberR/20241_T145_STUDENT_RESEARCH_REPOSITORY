@@ -1,0 +1,60 @@
+PORT=8000
+
+MONGODB_URI=mongodb+srv://user99:cMYlXBtV3YfXWtAe@cluster0.qpda5.mongodb.net/Student_RepoDB?retryWrites=true&w=majority&appName=Cluster0
+  
+  TYPE: "service_account"
+  MY_PROJECT_ID: "student-research-repository"
+  MY_PRIVATE_KEY_ID: "33600774032fa328a5da600edc77230eeef122cc"
+  MY_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCwLwvT+sLfJak5\nUNisWCL3UY2Zq3e1VPvGUmC1XjC8zeh7njZk4k+G+2uAN3qQC1Y42gV+PRS9+9xt\n1XFSXJGbo3d3knaYhaS5W3IemwUzrt05ACbdcGEmFyFk8LTrIijtEqIY6X6PebJI\nG6t2AUcgzb/A/zNW4pKgrUAVk23c4rksqcnl1LgW+6McPknBOf2a6oGWCWPiD43c\nzHSkRaIXBID4A+SDCh+Y9kEfhIVtinw7uT2eACLg66e3Qo+08z2LU1bvDFnyuWge\nqIjclb3OAEQhDlNodkgtWTop0wZy+REwNelgw8wpqh+0KIYGhkYlXxWQe2916JrJ\nzdng/n51AgMBAAECggEAJkNBZVsrYT0ToF//foZxqZarkvkbOWVofKy9VgZLvWVW\nnSpCE+zWarFFqoXh91CO/C/VS5JGY/BD8hKN1t5FvTBmLLDBUuSLXroOcbknCw9p\n+gwfZK4YWyZg2UQxdnNnwfzu+UwUcWJzppdjyHAEm4ozn92Mr8zrHTwjE8x96p9x\ncOWVkJj4ZX+78sFN2jx5SvFFDemWBv3pyuV7ypQISXft+9GpI7xKyEN1r2ZjXoDe\nlPJP+clSQEXvX4sqDpULLKupjly0ceqg27Zo2nWTywTOQw/esFM03e97p4MN5QpP\nv2vRHMCCfONBjfTTti8/7BINpw5VzHcFlDnAhHjeoQKBgQD1mKZECDfcxpN5CDHt\nwbG56X3PA+hO84snw9gt/DyuzKsboj9tymn6H+lWdj8IKCM30TvCVIh0ly12ScRa\nS/qwgXqWRQxAfyupHBA7J4iFei0kabELNY2ztJYPHv6sG9Noe0zUUKMVgdiqVWr+\nQi2zTzXZOcCyCemgJCr/iTaJmQKBgQC3pahuf4QyjroxMS6BKpFbI8ow1PR+oJC5\nLhCzOJOcFWAdVxGgQziEgLntr3m1OokLS2lfzVH7D6lfCFP3QPMNLbJLLTloT3jC\nlVKrCnYO267XICsok0gHudASXXbRA0XgXH9QFYMz2fyeKMrYoiwuabQmP+MRZ2By\nSbOsvlB9PQKBgFGYy/Tifhzd5PVbYatKpU/NYb074R0KEXu+t75fhZHV8iuWNli1\n3Yv6uj29v6doHntXCvG/wC5sY/BfBduyTrIB8samXjG3jrv61PGyasteEk18yBOf\nUVsZbpnLhHWOMSkPfjE0MVrd7yx4gLnFJwXiFVP8uibs4DASlC6eWf5RAoGAJUkz\nC0xEkOc9kmND5+G2pWR81rFF+req6o4ZwemIvrXwT8SvxXQgc3aXSVTJRyxdSrfC\n6zqKnIivgKX2NksvjctrWawS7cTE5ezfXe6/zYB43SCg4poUk8z8G95yEzmw5D6j\ncqULgGmPyqTJmnZCtiGr++AYwB3XDR09p6L0QJkCgYEAqBuipmivmXCehyvoQiPf\nQA2+XMcap3QYRjV82so8mUly2Coru++wilUcXt4VduN8LLfdyQHeG2DNEC2LLEMg\noQh2r+FZMxt9Ou+NghqXZstoOOLTmRYFzommwiMeNu9Iy0+FnqDE52Fn0XnT75Gl\n7pUNFSU8hYzb2dLV/gfMKAo=\n-----END PRIVATE KEY-----\n",
+  MY_CLIENT_EMAIL: "firebase-adminsdk-8jy3f@student-research-repository.iam.gserviceaccount.com",
+  MY_CLIENT_ID: "105162056559806166247",
+  MY_AUTH_URI: "https://accounts.google.com/o/oauth2/auth",
+  MY_TOKEN_URI: "https://oauth2.googleapis.com/token",
+  MY_AUTH_PROVIDER_X509_CERT_URL: "https://www.googleapis.com/oauth2/v1/certs",
+  MY_CLIENT_X509_CERT_URL: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-8jy3f%40student-research-repository.iam.gserviceaccount.com",
+  MY_UNIVERSE_DOMAIN: "googleapis.com"
+
+
+<ReCAPTCHA className="ReCapcha"  sitekey="6LfhrXEqAAAAAGnZSuJmLvDYlaNiBtWojYht08wy"onChange={onChange}/>
+
+server/student-research-repository-firebase-adminsdk-8jy3f-b8ca9ee8c4
+
+  #Google Drive 
+  MY_DRIVE_TYPE="service_account"
+  MY_DRIVE_PROJECT_ID="gdrive-project-441200"
+  MY_DRIVE_PRIVATE_KEY_ID="452019265bc70273d28ec434e71d6a55720296a1"
+  MY_DRIVE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCNirjuqhZB6Pm1\nPeigs3MDFFUgiwS5g87WRij1bjqBVk03gkJzt6sky9z/lsgQstdtoWGzoOp4urgR\na90hLRVGulPpmRpaSHZ/8zCi1OzQ6WKSTMcFkL5Jb2YHZE1jh1i7vQr/fCqW34m5\njfmWsGiWl7GlII0s2w2CV6pqEobWw1NlG+KaS72c81QXXAsFrGP7zEEm2ptDsnhz\nd9VC8Eq16bU6qJMiwAC1e1OpcYCstUcppA4jqiROetTNZfq65sq3mizf3QFZKeai\nNVilNOES5HegVgmfLN/jpszfZrM8pOTYVf7U58Lc9CLP4wOUxWD9/GxNn3JQMsDJ\n9llYYpQzAgMBAAECggEAIH1k2OfzBvsXAqrs0KKQdnb+2WL/2SOv4VCmizvbsx+f\nxuugHFbfMqmXF5ZBY0/iEni2aBi6aa8WnG0hi8GA/kS8CUWLHok+pj0o/1+X4paH\n+WQlVRo2C75F8dFs0DlbvXB161JRpmM2hoDX92aUA2lbrjdMIK1Bqxc7d3C8QeSp\nvtHsWKR9Hrb3xpXOk0jBkdRs/McNBa93RVSt21G0mnKhiiG1JCHRBqRaILNdh3kd\nEzSaSMJTDvf+9w9dZJA8Z8hgr1/UwFKPzwCYOtX2PgF1FdM7OeIYTMl7V3BDNVFF\nfrQuXcRSqebsbK8ut3RhsY1uPSdrOQYGYPsoil+EeQKBgQDDcXx2Sjx2+N0payKv\nKxqqlpVR1nHdrctH9SRO8ULTz/uP9Zd3+bosuf7i7AO2HO0trz0BhMw56agMr1Ts\na4Dq12noIoo16H3uYY8TQc3f+SMaf1LQ0piH33BDt//Si0Z3mzSpoJyeG3fzPSSo\naRUw6cjoCJho/ks6eyfWDEXuOwKBgQC5Zcn/Yj7X5+P9xYte+8GAt716EeDcVyBc\nHu2USlEJRR8C0oCFt4bIV93eUnMa8hjE8G5+mtuAkz7k0yAQ47XOLWq03vDbnvh1\n2QYxlv7fv0myS7qq7H+dFU+GA/yv6U4cPJ3fdC6MEpaQzMD4UJJUElgf3bREKrNm\n+pZdJwe6aQKBgFk5Uwexpl7uCBFjjqcHd5oPOsXsr3jzYY1NNbEwZUDLf13eUbL8\n9+h5VQqFksAt/n1PtfsehBmgOQ7pcEyqW2VayEeolQ49QFh2g1nYPcOVOlhbbhRV\nQDsvX1IbCxg0awwpd+ZEo5tukNkjvbuAlaMJ56U+X033YaKmHK6UVcyHAoGAYFdM\nyLE9BuUxzMXCzvD0dPcGN1DjEJ0V68kGnHCh+7c3jjflIZdlKua+HLGrruzvgieO\nw6ulNQNPQ4mSuDQcXa+sK6FOeFH7uwGz/kEA4TR+D3Da58dN6UsRsAqSXLdYJ8Q4\nJc4yAggGxeggvujfoWCG+sgyzNmDsJe3W2DU20ECgYANFgaiU2GDbcdcoOugF8Dv\nukX1VwPd6Q77tCSogytVykFv6GDwSJgB88qNrCwsR6SMyXKwtXZ+x63YKHHrbat2\nBjrYRQCFNNJpFH/8pExqmsH+crE7gqRW3bznNFs0l7YlHJGm55/WcdhdMF1ile34\n/YL5GPAcWoOqnpfshxYV3w==\n-----END PRIVATE KEY-----\n"
+  MY_DRIVE_CLIENT_EMAIL="student-reseach-repository@gdrive-project-441200.iam.gserviceaccount.com",
+  MY_DRIVE_CLIENT_ID="115495286781539719246",
+  MY_DRIVE_AUTH_URI="https://accounts.google.com/o/oauth2/auth"
+  MY_DRIVE_TOKEN_URI="https://oauth2.googleapis.com/token"
+  MY_DRIVE_AUTH_PROVIDER_X509_CERT_URL="https://www.googleapis.com/oauth2/v1/certs"
+  MY_DRIVE_CLIENT_X509_CERT_URL="https://www.googleapis.com/robot/v1/metadata/x509/student-reseach-repository%40gdrive-project-441200.iam.gserviceaccount.com"
+  MY_DRIVE_UNIVERSE_DOMAIN="googleapis.com"
+
+  EMAIL_USER=romeoestember8@gmail.com
+  EMAIL_PASSWORD=emuzs vqai hcbx ugbb
+
+
+#Calendar
+      type="service_account"
+      MY_CALENDAR_PROJECT_ID="smart-portfolio-442022-k6"
+      MY_CALENDAR_PRIVATE_KEY_ID="-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDNdiEfHg2xC+bO\njijQi4jjk6rfMhClv5JFkCwbrwxU2/48BPWkLcZF1iUgp5OV7uX2QUHKFH9O4BbS\nF14aNKAHOXLwJkJeydmJYmbXPnRimPJ9PIHUoA6VWGq1H9ZXGUua2O4pbDCzx9Ln\nSJe422KC4SCixfvWAKNeSpWpTc/9qwkYb9512p+0fcKaGRnMc0HCqCcGYAGG+m14\nfg40nnpwmfFJ4kuha/n98xTZOYwFJs8J8zRk9kpBbcJ9EjynhJZi4r3bZbiBhq1C\nuOdgbveTWfHS+rmBvh1HS+HeeQmmvsH2nRMVQ8K4xzsQfEq69OkURcPrjqYjVMS8\nIdIB5GjhAgMBAAECggEAS3JI6FXPXkeKCiheqXHLoxHrCYmnXk3yBvRRlhrZ8uFT\nwrNphk++wo9H0+1lPwXaUOqWn3+WXh7gkmY9Sm8vomeAotnRvl/tr0rAi+Kltz0F\nsmJBJJRftoygpoEZ4qLpxeNJ1VEisym58u8Ps7RvwLKtmsgL2YIje3D08xYdPb7j\nWJuhnNZ2NOAu186LBn2XiwIQOabgQsNikSqJi8q74+U/F9yG5vbO0qyZBEWxHcvc\nfdqo1LOIZw+oOA58Knz9jm1ftCiksdJLA5chmB0cQCzdb2bsr5G1AZkEDcGDTbhP\n+nBovPbB7wUJIuPkEdePcm2bQLK+Me8ArWC4SbEIHwKBgQDz0+qzhjLb+lxdL6rh\nVTZuLKzZzpc0VZm7gf55COqIZgeeKDFY9dWuFBEmVWojCgNJ1iypgr9V2B8RMzqg\n2k/UP3ZBndjj1lCiB2yWKxKnn2j+DG/Xh0Rmy9M2AyhCi3iO/XKUZoSLlnP3Fc3C\n+9DXfXjv+df95I4ZULOE364HWwKBgQDXt+VuPwGHnu+/fBW9DucF4oYLuvd0LPjh\nBJY4/1dLiMp91y8WESydKKKCEiZxbWtKFNAoLw/41erBGVkwRtMSjfBsKUrY2C0w\nlkDwNOE1sNvro+cNNFsfnbrJtVVJmI7HD/2AR5Pv7vY2D4f+8FllvPpe+uug4dEl\ngPUL5NtBcwKBgQCgheG8cxtEq5znVJyBYOJGwm7Brjrpn3locvqfoHkXd2SIgRmL\n4bzdsCRiQlVv4AWuNKyOpJ9m2rQJVNrCTzfDGky2gj7qMIxBP/YDHzRW2qH6ryFq\nmYk0y/evVYDJ3pxuNvmaLawRYenSv64JMlOZqudVxfynEDNlAzZMwh4GhQKBgQCJ\nvPwb9tMNO6itxZdDzl4o3cjleI5Eeeq4EuuwnSmqKz/QNjP0jSbFeoq5LsmpJ0qY\nVM3MurAiHMT2Yy8VqkNf142qInuOFgpUubvhJIKge7sQrOj8/28nstjvrn80rNqN\ntGITJKELVLOVNTmKyQDr+0yKlQEbCtU2cy8EVy7AjQKBgQDzYeeyXCNV+0d2gk5P\nd5RiP7YsofxTrf/NXYw/bdW43MhwJrDB6X2yYWHFnu9HjeXr92l6q/pjKqFbMMyn\nUedu9y6RIKLtJPic+HxYQ/Xu/3PJ3YqjjSavMAJHSP2XwRGn+a/UK0O3htw1oC4B\nAfvi0nH1ANp+r8rkmubFNDxc+Q==\n-----END PRIVATE KEY-----\n"
+      MY_PRIVATE_KEY="student-research-repository-sy@smart-portfolio-442022-k6.iam.gserviceaccount.com"
+      MY_CALEDNDAR_CLIENT_EMAIL="student-research-repository-sy@smart-portfolio-442022-k6.iam.gserviceaccount.com"
+      MY_CLIENT_I="113124221749599288125"
+      MY_ACALENDAR_UTH_URI="https://accounts.google.com/o/oauth2/auth"
+      MY_CALENDAR_TOKEN_URI="https://oauth2.googleapis.com/token"
+      MY_CALENDAR_AUTH_PROVIDER_X509_CERT_URL="https://www.googleapis.com/oauth2/v1/certs"
+      MY_CALENDAR_CLIENT_X509_CERT_URL="https://www.googleapis.com/robot/v1/metadata/x509/student-research-repository-sy%40smart-portfolio-442022-k6.iam.gserviceaccount.com"
+      MY_CALENDAR_UNIVERSE_DOMAIN="googleapis.com"
+
+
+        #Auth
+      GOOGLE_CLIENT_ID=486697591126-k6cbq5q5rtc8oopgdfq5upgkse2ifrcu.apps.googleusercontent.com
+      GOOGLE_CLIENT_SCRT=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
+
+      JWT_SECRET=your_jwt_secret_here
+
+
+

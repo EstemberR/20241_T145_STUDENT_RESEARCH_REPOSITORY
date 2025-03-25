@@ -15,14 +15,18 @@ export const generateUniqueUid = () => uuidv4(); // Generate UID here if you're 
 const determineUserRole = (email) => {
     // Special cases for specific gmail accounts that should be students
     const studentGmailAccounts = [
-        'midnight.rain32145@gmail.com',
         'nezerazami@gmail.com',
         'undefeatable.idiot@gmail.com'
     ];
 
+    // Special case for specific gmail account that should be an instructor
+    const instructorGmailAccounts = [
+        'midnight.rain32145@gmail.com',
+    ];
+
     if (email.endsWith('@student.buksu.edu.ph') || studentGmailAccounts.includes(email.toLowerCase())) {
         return 'student';
-    } else if (email.endsWith('@gmail.com')) {
+    } else if (email.endsWith('@buksu.edu.ph') || instructorGmailAccounts.includes(email.toLowerCase())) {
         return 'instructor';
     }
     return null; // For any other email domains
