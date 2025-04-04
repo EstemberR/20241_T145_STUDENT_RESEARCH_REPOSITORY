@@ -9,6 +9,7 @@ import '../css/Dashboard.css';
 import '../css/UserProfile.css';
 import ProfileCalendar from '../ProfileCalendar';
 import { alignPropType } from 'react-bootstrap/esm/types';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 
 const COURSES = [
   'BS-MATH',
@@ -37,6 +38,7 @@ const Profile = () => {
   const [alertType, setAlertType] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingChanges, setPendingChanges] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Helper function for showing alerts
   const showAlertMessage = (message, type) => {
@@ -184,6 +186,18 @@ const Profile = () => {
       setShowConfirmModal(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   if (!profile) {
     return ; //White screen loading // Wait until profile data is loaded

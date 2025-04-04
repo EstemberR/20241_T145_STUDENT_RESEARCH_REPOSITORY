@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
@@ -183,11 +184,7 @@ const StudentDashboard = () => {
         <Sidebar />
         <div className="main-section col-10 d-flex flex-column">
           <Header userName={userName} />
-          <div className="text-center p-5">
-            <div className="spinner-border text-success" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-          </div>
+          <LoadingWithNetworkCheck />
         </div>
       </div>
     );

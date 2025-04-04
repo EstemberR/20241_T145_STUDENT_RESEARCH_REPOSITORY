@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Notifications.css';
+
 const Notification = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
@@ -96,6 +98,18 @@ const Notification = () => {
     return `badge bg-${statusColors[status] || 'success'}`;
   };
 
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-container d-flex">
       <Sidebar />
@@ -107,13 +121,7 @@ const Notification = () => {
           </div>
           <div className="card shadow-sm">
             <div className="card-body">
-              {loading ? (
-                <div className="text-center p-5">
-                  <div className="spinner-border text-success" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                </div>
-              ) : notifications.length === 0 ? (
+              {notifications.length === 0 ? (
                 <div className="text-center p-5">
                   <i className="fas fa-bell-slash fa-3x text-muted mb-3"></i>
                   <p className="text-muted">No notifications yet</p>

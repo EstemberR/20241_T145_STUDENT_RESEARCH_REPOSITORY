@@ -9,6 +9,7 @@ import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import { Alert } from 'react-bootstrap';
 import { FaUserTie, FaEnvelope, FaUsers, FaChalkboardTeacher, FaBookReader } from 'react-icons/fa';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 
 const ManageMember = () => {
   const navigate = useNavigate();
@@ -474,6 +475,18 @@ const ManageMember = () => {
       }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container d-flex">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import NetworkErrorAlert from './components/common/NetworkErrorAlert';
 
 import Login from './components/Login';
 import StudentDashboard from './components/Student/Dashboard';
@@ -40,6 +41,9 @@ import SuperAdminRepository from './components/SuperAdmin/superAdmin_repository'
 function App() {
   return (
     <Router>
+      {/* Network Error Alert will be shown on all pages when offline */}
+      <NetworkErrorAlert />
+      
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />

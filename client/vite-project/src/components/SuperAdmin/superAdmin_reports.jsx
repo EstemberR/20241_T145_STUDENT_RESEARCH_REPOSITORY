@@ -5,6 +5,7 @@ import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
 import { FaDownload, FaChartBar, FaCalendar, FaUsers, FaBookmark } from 'react-icons/fa';
 import DataTable from 'react-data-table-component';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/admin_dashboard.css';
@@ -156,6 +157,18 @@ const SuperAdminReports = () => {
   ];
 
   const years = Array.from({ length: new Date().getFullYear() - 2019 }, (_, i) => (2020 + i).toString());
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container d-flex">

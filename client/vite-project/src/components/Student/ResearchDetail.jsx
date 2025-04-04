@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getToken } from './resources/Utils';
 import Header from './resources/Header';
 import Sidebar from './resources/Sidebar';
 import { FaUsers, FaGraduationCap, FaTags, FaCalendarAlt, FaFilePdf } from 'react-icons/fa';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '../css/Dashboard.css';
 
 const ResearchDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [userName] = useState(getUserName());
   const [research, setResearch] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -14,13 +19,18 @@ const ResearchDetails = () => {
     const fetchResearchDetails = async () => {
       try {
         const token = getToken();
+        if (!token) {
+          navigate('/');
+          return;
+        }
+
         const response = await fetch(`http://localhost:8000/student/research/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        if (!response.ok) throw new Error('Research not found');
+        if (!response.ok) throw new Error('Failed to fetch research details');
         
         const data = await response.json();
         setResearch(data);
@@ -32,15 +42,19 @@ const ResearchDetails = () => {
     };
 
     fetchResearchDetails();
-  }, [id]);
+  }, [id, navigate]);
 
-  if (loading) return (
-    <div className="d-flex justify-content-center align-items-center min-vh-100">
-      <div className="spinner-border text-success" role="status">
-        <span className="visually-hidden">Loading...</span>
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
   
   if (!research) return (
     <div className="d-flex justify-content-center align-items-center min-vh-100">
@@ -55,7 +69,7 @@ const ResearchDetails = () => {
     <div className="dashboard-container d-flex">
       <Sidebar />
       <div className="main-section col-10 d-flex flex-column">
-        <Header userName={research.student?.name || 'User'} />
+        <Header userName={userName} />
         <main className="main-content p-4">
           <div className="card shadow-lg border-0">
             <div className="card-header text-white py-3">

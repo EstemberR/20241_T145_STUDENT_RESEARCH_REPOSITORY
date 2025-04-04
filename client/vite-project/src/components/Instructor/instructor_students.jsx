@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
@@ -34,6 +35,7 @@ const InstructorStudents = () => {
     teamId: null,
     teamLeaderName: null
   });
+  const [loading, setLoading] = useState(true);
 
   // Add showAlert function
   const showAlert = (message, type) => {
@@ -112,6 +114,8 @@ const InstructorStudents = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
       showAlert('Error fetching data', 'danger');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -233,6 +237,18 @@ const InstructorStudents = () => {
       setConfirmModal({ show: false, teamId: null, teamLeaderName: null });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} userRole={userRole} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container d-flex">

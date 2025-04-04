@@ -5,6 +5,7 @@ import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
 import DataTable from 'react-data-table-component';
 import { FaEye, FaCheck, FaEdit, FaTimesCircle, FaUndoAlt } from 'react-icons/fa';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
@@ -328,6 +329,18 @@ const InstructorSubmissions = () => {
       },
     },
   };
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} userRole={userRole} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container d-flex">

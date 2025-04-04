@@ -4,6 +4,7 @@ import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { Link } from 'react-router-dom';
 import { getUserName, getToken } from './resources/Utils';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 
@@ -501,6 +502,18 @@ const MyResearch = () => {
       showAlertMessage('Failed to fetch version history', 'danger');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container d-flex">

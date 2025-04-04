@@ -25,6 +25,9 @@ import {
   FaTimesCircle,
   FaClock
 } from 'react-icons/fa';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '../css/Dashboard.css';
 
 // Register ChartJS components
 ChartJS.register(
@@ -387,11 +390,7 @@ const AdminActivity = () => {
         <Sidebar />
         <div className="main-section col-10 d-flex flex-column">
           <Header userName={userName} />
-          <div className="d-flex justify-content-center align-items-center h-100">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-          </div>
+          <LoadingWithNetworkCheck />
         </div>
       </div>
     );

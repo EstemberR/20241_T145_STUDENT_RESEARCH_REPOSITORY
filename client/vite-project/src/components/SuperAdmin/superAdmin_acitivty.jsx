@@ -4,6 +4,7 @@ import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
 import { FaUserGraduate, FaChalkboardTeacher, FaUserTie } from 'react-icons/fa';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../components/css/Dashboard.css';
 import '../css/admin_dashboard.css';
@@ -57,11 +58,7 @@ const superAdminActivity = () => {
         <Sidebar />
         <div className="main-section col-10 d-flex flex-column">
           <Header userName={userName} />
-          <div className="d-flex justify-content-center align-items-center h-100">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-          </div>
+          <LoadingWithNetworkCheck />
         </div>
       </div>
     );

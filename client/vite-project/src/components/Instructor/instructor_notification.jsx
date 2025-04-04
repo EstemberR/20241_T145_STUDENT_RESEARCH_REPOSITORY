@@ -7,6 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
 import '../css/admin_dashboard.css';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 
 const InstructorNotification = () => {
   const navigate = useNavigate();
@@ -81,13 +82,7 @@ const InstructorNotification = () => {
         <Sidebar />
         <div className="main-section col-10 d-flex flex-column">
           <Header userName={userName} userRole={userRole} />
-          <main className="main-content">
-            <div className="text-center mt-4">
-              <div className="spinner-border" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
-          </main>
+          <LoadingWithNetworkCheck />
         </div>
       </div>
     );

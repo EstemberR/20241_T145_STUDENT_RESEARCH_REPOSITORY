@@ -10,6 +10,7 @@ import '../css/admin_dashboard.css';
 import axios from 'axios';
 import '../css/adminCreation.css';
 import { Modal } from 'react-bootstrap';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 
 const PERMISSIONS = {
     MANAGE_ACCOUNTS: { 
@@ -397,6 +398,18 @@ const SuperAdminManageAdmins = () => {
       </Modal>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container d-flex">

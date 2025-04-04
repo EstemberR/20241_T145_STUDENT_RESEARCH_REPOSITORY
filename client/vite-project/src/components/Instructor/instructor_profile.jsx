@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
-import { getToken } from './resources/Utils';
+import { getUserName, getToken } from './resources/Utils';
 import { useUser } from './resources/userContext'; // Import useUser
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
@@ -23,6 +24,7 @@ const InstructorProfile = () => {
   const navigate = useNavigate();
   const [alert, setAlert] = useState({ show: false, message: '', type: '' });
   const [profilePic, setProfilePic] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Fetch profile data
   useEffect(() => {
@@ -63,6 +65,8 @@ const InstructorProfile = () => {
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -162,6 +166,18 @@ const InstructorProfile = () => {
       </span>
     ));
   };
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} userRole={profile?.role || ''} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   if (!profile) {
     return <div>Loading...</div>; // Wait until profile data is loaded

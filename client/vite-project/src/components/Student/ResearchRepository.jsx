@@ -9,6 +9,7 @@ import { Modal, Alert } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/ResearchRepository.css';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 
 const Repository = () => {
   const navigate = useNavigate();
@@ -302,6 +303,18 @@ const Repository = () => {
       showAlert('Failed to update bookmark', 'danger');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container d-flex">

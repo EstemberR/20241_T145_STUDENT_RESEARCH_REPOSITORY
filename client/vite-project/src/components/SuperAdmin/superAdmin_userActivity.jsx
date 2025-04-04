@@ -24,6 +24,7 @@ import {
   FaTimesCircle,
   FaClock
 } from 'react-icons/fa';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 
 ChartJS.register(
   CategoryScale,
@@ -224,6 +225,18 @@ const SuperAdminActivity = () => {
 
     fetchGraphData();
   }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container d-flex">

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/FAQ.css';
@@ -11,6 +12,7 @@ const FAQ = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
   const [faqs, setFaqs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch FAQ data from the backend API
@@ -19,22 +21,32 @@ const FAQ = () => {
       alert('Please log in first.');
       localStorage.removeItem('userName');
       localStorage.removeItem('token');
-      navigate('/');ame(storedName);
+      navigate('/');
     }
     const fetchFAQs = async () => {
       try {
         const response = await fetch('http://localhost:8000/student/faqs'); 
         const data = await response.json();
         setFaqs(data); // Set the FAQs to the state
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching FAQs:', error);
+        setLoading(false);
       }
     };
     fetchFAQs();
   }, [navigate]);
 
-  if (!faqs) {
-    return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
   }
 
   return (

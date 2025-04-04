@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
@@ -25,6 +26,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 const SuperAdminAccounts = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
+  const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [instructors, setInstructors] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -121,6 +123,8 @@ const SuperAdminAccounts = () => {
       } catch (error) {
         console.error('Error fetching accounts:', error);
         showAlertMessage('Failed to fetch accounts data', 'danger');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -346,6 +350,18 @@ const SuperAdminAccounts = () => {
   const closeViewModal = () => {
     setSelectedUser(null);
   };
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container d-flex">

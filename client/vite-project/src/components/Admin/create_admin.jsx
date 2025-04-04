@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from './resources/Sidebar';
 import Header from './resources/Header';
 import { getUserName, getToken } from './resources/Utils';
+import LoadingWithNetworkCheck from '../common/LoadingWithNetworkCheck';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
 import '../css/Dashboard2.css';
@@ -11,20 +12,45 @@ import '../css/admin_dashboard.css';
 const CreateAdmin = () => {
   const navigate = useNavigate();
   const [userName] = useState(getUserName());
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [responseMessage, setResponseMessage] = useState('');
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      alert('Please log in first.');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('token');
-      navigate('/');
-    }
+    const fetchData = async () => {
+      try {
+        const token = getToken();
+        if (!token) {
+          alert('Please log in first.');
+          localStorage.removeItem('userName');
+          localStorage.removeItem('token');
+          navigate('/');
+          return;
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="dashboard-container d-flex">
+        <Sidebar />
+        <div className="main-section col-10 d-flex flex-column">
+          <Header userName={userName} />
+          <LoadingWithNetworkCheck />
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault(); // Prevent the default form submission
