@@ -8,6 +8,7 @@ import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import auth from './firebaseConfig';
 import ReCAPTCHA from "react-google-recaptcha";
 import OTPVerification from './OTPVerification'; // Import the OTP modal component
+import LoadingWithNetworkCheck from './common/LoadingWithNetworkCheck';
 
 // Generate a unique UID function
 export const generateUniqueUid = () => uuidv4(); // Generate UID here if you're not using a separate utils file
@@ -52,6 +53,7 @@ const Login = () => {
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [userEmail, setUserEmail] = useState(''); // State to hold the user's email
+    const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
  
     const [showOTPVerification, setShowOTPVerification] = useState(false);
     const [email, setEmail] = useState('');
@@ -250,6 +252,11 @@ const Login = () => {
         setTimeout(() => setShowAlert(false), 5000); // Hide after 5 seconds
     };  
 
+    // Add this function to handle the show password toggle
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
     return (
         <div className={`login-container ${isTransitioning ? 'fade-out' : ''}`}>
          {/* Render OTP Verification Component */}
@@ -361,20 +368,30 @@ const Login = () => {
                             <label htmlFor="emailInput">Email address</label>
                         </div>
 
-                        <div className="form-floating mb-3">
+                        <div className="form-group mb-3">
+                            <label htmlFor="password">Password</label>
                             <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 className="form-control"
-                                id="passwordInput"
-                                placeholder="Password"
+                                id="password"
+                                placeholder="Enter your password"
                                 value={credentials.password}
-                                onChange={(e) => setCredentials(prev => ({
-                                    ...prev,
-                                    password: e.target.value
-                                }))}
+                                onChange={(e) => setCredentials({...credentials, password: e.target.value})}
                                 required
                             />
-                            <label htmlFor="passwordInput">Password</label>
+                        </div>
+
+                        <div className="form-check mb-3">
+                            <input
+                                type="checkbox"
+                                className="form-check-input"
+                                id="showPassword"
+                                checked={showPassword}
+                                onChange={togglePasswordVisibility}
+                            />
+                            <label className="form-check-label" htmlFor="showPassword">
+                                Show Password
+                            </label>
                         </div>
 
                         <div className="recaptcha-container">
