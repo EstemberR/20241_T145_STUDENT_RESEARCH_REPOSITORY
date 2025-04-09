@@ -24,6 +24,7 @@ const determineUserRole = (email) => {
     // Special case for specific gmail account that should be an instructor
     const instructorGmailAccounts = [
         'midnight.rain32145@gmail.com',
+        'nezercursor2@gmail.com'
     ];
 
     if (email.endsWith('@student.buksu.edu.ph') || studentGmailAccounts.includes(email.toLowerCase())) {
